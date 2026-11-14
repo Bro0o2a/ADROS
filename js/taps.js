@@ -82,6 +82,7 @@ document.addEventListener("click", e => {
   if (isExtraTap(ds)) return extraTap(ds, t);
   if (Object.keys(ds).some(k => LEADER_KEYS.includes(k))) return leaderTap(ds);   // 🏆 🎁 prize · 💬 note
   // 📔 My day: open (mine or a kid's), a face, a day in the strip, whose days, 💾 Save
+  if ("fxwin" in ds) return fxWinNow();   // ⭐ v196: a fixed activity wins over the fixed ones it clashes with
   if (ds.dyopen !== undefined) return openDiary(ds.dyopen || me);
   if (ds.dymood) { diaryMood = ds.dymood; document.querySelectorAll("[data-dymood]").forEach(b => { const on = b.dataset.dymood === ds.dymood; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); }); return; }
   if (ds.dyday) { diaryDay = ds.dyday === todayYmd() ? null : ds.dyday; return render(); }
