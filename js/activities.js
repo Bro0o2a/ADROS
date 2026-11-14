@@ -216,6 +216,15 @@ function findFixedOverlaps(act, ignoreId) {
   }
   return found;
 }
+// ⭐ v196 (Broo2a): the other FIXED activities a new/changed one clashes with → [{ other, days: the shared weekdays }]
+function fixedClashes(act, ignoreId) {
+  const s = toMin(act.start), e = toMin(act.end), mine = peopleOf(act);
+  return data.fixed.filter(o => o.id !== ignoreId && !act.overlapWith.includes(o.id) && peopleOf(o).some(p => mine.includes(p))
+    && s < toMin(o.end) && toMin(o.start) < e && act.days.some(d => o.days.includes(d)))
+    .map(other => ({ other, days: act.days.filter(d => other.days.includes(d)) }));
+}
+let fxWinPending = false;   // ⭐ "Use this one" was tapped: the clashing fixed activities make room
+function fxWinNow() { fxWinPending = true; $("fxAdd").click(); }
 
 // ⭐ The Type picker (📚 Study · ⚽ Activity · 🌱 Habit · 🗂️ Other = non-scored). New: "Activity" ("Other" while the name has "school"),
 // until you pick one yourself; editing: its saved type.
@@ -247,13 +256,26 @@ $("fxAdd").onclick = () => {
   if (!start || !end || toMin(end) <= toMin(start)) return $("fxErr").textContent = "End time must be after start time.";
   if (help.err) return $("fxErr").textContent = help.err;
 
+  // ⭐ v196: "Use this one" → the new one wins: the other fixed activities lose those days (no days left → deleted)
+  const win = fxWinPending; fxWinPending = false;
+  if (win) fixedClashes({ days, start, end, overlapWith, users, helper }, editingFixed).forEach(({ other, days: shared }) => {
+    if (!canEdit(other)) return;
+    const left = other.days.filter(d => !shared.includes(d));
+    if (left.length) other.days = left; else deleteActivity(other.id, true, true);
+  });
   // Block clashes for the same person: say who is busy twice, and don't save.
   const overlaps = findFixedOverlaps({ name, days, start, end, overlapWith, users, helper }, editingFixed);
   if (overlaps.length) {
     const tip = "Please change the time or the days"
       + (helper ? `, or pick another parent in “🤝”` : "")
       + (isParentId(me) ? ", or tick it in “Can be done at the same time as”." : ".");
-    $("fxErr").innerHTML = `Not saved:<ul>${overlaps.map(o => `<li>${safe(o)}</li>`).join("")}</ul>${safe(tip)}`;
+    // ⭐ v196: or one tap: this one wins (only when you may change all the others)
+    const cl = fixedClashes({ days, start, end, overlapWith, users, helper }, editingFixed);
+    const canWin = cl.length && cl.every(c => canEdit(c.other));
+    const winTxt = cl.map(c => `${c.days.map(d => DAYS[d]).join(", ")} off “${c.other.name}”`).join(" and ");
+    $("fxErr").innerHTML = `Not saved:<ul>${overlaps.map(o => `<li>${safe(o)}</li>`).join("")}</ul>${safe(tip)}`
+      + (canWin ? `<div class="fx-win"><button type="button" class="pill" data-fxwin>⭐ Use “${safe(name)}” instead</button>`
+        + `<small>This takes ${safe(winTxt)}.</small></div>` : "");
     return;
   }
 
