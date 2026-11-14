@@ -174,7 +174,11 @@ function keepNow() { writeData(); render(); }
 function saveChanges() {
   const short = isParentId(me) && planIsOld() ? timeBudget().filter(x => x.need > x.free) : [];
   if (short.length) { showTimeShort(short); return false; }
-  if (!data.plan || data.plan === "redo" || planIsOld()) makeAndKeepPlan();
+  const p = !data.plan || data.plan === "redo" || planIsOld() ? makeAndKeepPlan() : null;
+  // ⭐ v195: say which flexible sessions moved to make room for a fixed activity
+  const mv = p && p.moved && p.moved.length ? [...new Set(p.moved)] : [];
+  $("savedPop").querySelector(".saved-msg small").textContent = mv.length
+    ? `Fixed activities come first, so we moved: ${mv.join(", ")}.` : "Your plan and the family plan are updated.";
   cloud.stash = null;   // your saved changes win over a change another phone made meanwhile
   writeData();
   render();

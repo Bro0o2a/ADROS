@@ -762,7 +762,7 @@ function spreadDay(day) {
 // Fixed activities and routines go by weekday (a Monday activity is on every Monday date).
 // 📌 One-day events keep their people busy (nothing is planned on top), and an activity "removed for that day" isn't put back on that date.
 function makePlan(mode = "replan") {
-  const warnings = [];
+  const warnings = [], moved = [];   // (moved: flexible sessions that made room for a fixed activity)
   const old = hasPlan() ? data.plan : null, today = todayYmd(), now = dubaiMinutes(), dates = aheadDates();
   // Kept exactly as saved: "replan" / "fresh" → up to today; "roll" → every date that was already planned (none when the plan is
   // older than today); "fill" → every date
@@ -802,7 +802,7 @@ function makePlan(mode = "replan") {
     const pre = act && !it.fixed ? act.getReady || 0 : 0, post = act && !it.fixed ? act.breakAfter || 0 : 0;
     const people = act ? peopleOf(act) : it.gone ? it.gone.people : [];
     day.items.push({ name: act ? act.name : "", start: it.start - pre, end: it.end + post, pre, post, fixed: !!it.fixed,
-                     kept: it, actId: it.actId, users: act ? act.users : people, people });
+                     kept: it, actId: it.actId, users: act ? act.users : people, people, ...(ticked ? { ticked: true } : {}) });
     if (act && !it.fixed) (keptOf[act.id] = keptOf[act.id] || []).push(d);
   }); });
 
@@ -816,6 +816,20 @@ function makePlan(mode = "replan") {
       if (once && once.off) continue;
       const s = toMin(once ? once.start : f.start), e = toMin(once ? once.end : f.end);
       if (day.items.some(it => it.kept && it.actId === f.id) || (day.date === today && e <= now)) continue;   // (already there, or over)
+      // ⭐ v195 (Broo2a): a fixed activity comes first. A flexible session already on that date at the same time for the
+      // same person (not ticked, not started, not allowed together) makes room: it's taken off and STEP C places it again
+      // (later that day or on another day).
+      const together = it => f.overlapWith.includes(baseActId(it.actId)) || f.overlapWith.includes(it.actId);
+      const inWay = days[d].items.filter(it => !it.fixed && it.kept && !it.ticked && (day.date !== today || it.start > now)
+        && it.start < e && s < it.end && it.people.some(p => people.includes(p)) && !together(it));
+      if (inWay.length) {
+        days[d].items = days[d].items.filter(it => !inWay.includes(it));
+        inWay.forEach(it => {
+          const list = keptOf[baseActId(it.actId)] || [], k = list.indexOf(d);
+          if (k >= 0) list.splice(k, 1);
+          moved.push(`${it.name} (${dayName(day.date)})`);
+        });
+      }
       // Same person busy twice at once? (activities you allowed together are fine)
       // (Different people at the same time is always fine.)
       const clash = days[d].items.find(it => it.start < e && s < it.end && it.people.some(p => people.includes(p)) && !f.overlapWith.includes(it.actId));
@@ -853,6 +867,12 @@ function makePlan(mode = "replan") {
     const act = !it.fixed && it.pinned && data.flexible.find(a => a.id === baseActId(it.actId));
     if (!act) return;
     const pre = act.getReady || 0, post = act.breakAfter || 0;
+    // ⭐ v195: a 📌 pinned session on top of a fixed activity for the same person loses its pin and is placed again
+    const people = peopleOf(act), s0 = it.start - pre, e0 = it.start + act.duration + post;
+    const fixedHit = days[d].items.find(x => x.fixed && !x.routine && data.fixed.some(f => f.id === x.actId)
+      && x.start < e0 && s0 < x.end && x.people.some(p => people.includes(p))
+      && !act.overlapWith.includes(x.actId) && !data.fixed.find(f => f.id === x.actId).overlapWith.includes(act.id));
+    if (fixedHit) { moved.push(`${act.name} (${dayName(day.date)})`); return; }
     days[d].items.push({ name: act.name, start: it.start - pre, end: it.start + act.duration + post, pre, post, pinned: true,
                          actId: it.actId, users: act.users, people: peopleOf(act) });   // (2️⃣ a pinned 2nd session keeps its "~2" id)
     (pinnedOf[act.id] = pinnedOf[act.id] || []).push(d);
@@ -960,7 +980,7 @@ function makePlan(mode = "replan") {
 
   // STEP E: Space out each day's activities (with 10-minute breaks when possible).
   days.forEach(day => { spreadDay(day); day.items.sort((a, b) => a.start - b.start); });
-  return { days, warnings };
+  return { days, warnings, moved };
 }
 
 // ---------- The saved plan ----------
@@ -1016,7 +1036,9 @@ function planNow() {
   const p = makeAndKeepPlan();
   writeData();
   go("all");
-  toast(p.warnings.length ? "✨ Planned! A few things need your attention." : "✨ Everyone's week is planned!");
+  const mv = [...new Set(p.moved || [])];
+  toast(p.warnings.length ? "✨ Planned! A few things need your attention."
+    : mv.length ? `✨ Planned! Fixed activities come first, so we moved: ${mv.join(", ")}.` : "✨ Everyone's week is planned!", mv.length ? 5000 : undefined);
 }
 // 🔄 Make a new plan (a parent's device): today (from now) up to the end of the plan is planned again.
 // Fixed activities, everything already ticked (or started, or 📌 pinned) and 📌 one-day events stay (see makePlan, mode "fresh").
