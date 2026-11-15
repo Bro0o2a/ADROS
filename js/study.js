@@ -1841,16 +1841,13 @@ function wsViewNode(w, id, s, isDad) {
         ? "The answers are uploaded. Tap ✅ Check now!"
         : "Do the worksheet on paper, then upload a photo (or PDF) of your answers."),
       done || files.length ? null : h("p", { class: "ws-hand" }, HAND_TIP),
-      // 📸 Before the check: each answer photo as a thumbnail with 🗑 (remove a wrong or blurry one, then take it again).
-      // After the check they're locked: just the list.
-      files.length && !done ? h("div", { class: "ans-thumbs" }, files.map(fid => { const f = s.files[fid];
+      // 📸 Each answer photo as a thumbnail (tap = open it). Before the check: with 🗑 (remove a wrong or blurry one, then take it again).
+      // v197: after the check the photos STAY on the page (before, they turned into a plain list and looked gone); only the 🗑 goes.
+      files.length ? h("div", { class: "ans-thumbs" }, files.map(fid => { const f = s.files[fid];
         return h("div", { class: "ans-thumb" },
           h("button", { class: "ans-open", data: { scfile: fid }, "aria-label": "Open " + f.name },
             f.kind === "image" ? h("img", { alt: f.name, data: { ansimg: fid } }) : h("span", { class: "e" }, FILE_EMOJI[f.kind]), h("small", null, f.name)),
-          canRemoveAnswer(w, f) ? h("button", { class: "ans-del", "aria-label": "Remove " + f.name, title: "Remove this photo", data: { wsfdel: fid } }, "🗑") : null); }))
-      : files.length ? h("ul", { class: "list" }, files.map(fid => h("li", null,
-        h("button", { class: "bd-file", data: { scfile: fid } }, h("span", { class: "e" }, FILE_EMOJI[s.files[fid].kind]),
-          h("span", { class: "what" }, s.files[fid].name, h("small", null, `${shortDate(s.files[fid].date)} · ${sizeText(s.files[fid].size)}`)))))) : null,
+          !done && canRemoveAnswer(w, f) ? h("button", { class: "ans-del", "aria-label": "Remove " + f.name, title: "Remove this photo", data: { wsfdel: fid } }, "🗑") : null); })) : null,
       h("div", { class: "ai-btns", style: "margin-top:12px" },
         canAct ? h("button", { data: { wsact: "upload" } }, "⬆ Upload my answers") : null,
         canAct && files.length ? h("button", { class: "primary", data: { wsact: "check", aiwait: "check|" + id } }, done ? "🤖 Check again" : "✅ Check now") : null,
