@@ -1820,7 +1820,7 @@ document.addEventListener("change", e => {
   render();
 });
 function wsViewNode(w, id, s, isDad) {
-  const done = !!w.check, canAct = isDad || !done, files = w.answers.filter(f => s.files[f]), open = answersOpen(w), show = wsAnswers && open;
+  const done = !!w.check, canAct = isDad || !done, files = w.answers.filter(okId), open = answersOpen(w), show = wsAnswers && open;
   return h("div", null,
     h("div", { class: "ai-toolbar" },
       // (🔒 a kid before the check: the button is there, a tap says why)
@@ -1843,7 +1843,7 @@ function wsViewNode(w, id, s, isDad) {
       done || files.length ? null : h("p", { class: "ws-hand" }, HAND_TIP),
       // 📸 Each answer photo as a thumbnail (tap = open it). Before the check: with 🗑 (remove a wrong or blurry one, then take it again).
       // v197: after the check the photos STAY on the page (before, they turned into a plain list and looked gone); only the 🗑 goes.
-      files.length ? h("div", { class: "ans-thumbs" }, files.map(fid => { const f = s.files[fid];
+      files.length ? h("div", { class: "ans-thumbs" }, files.map(fid => { const f = answerMeta(w, s, fid);
         return h("div", { class: "ans-thumb" },
           h("button", { class: "ans-open", data: { scfile: fid }, "aria-label": "Open " + f.name },
             f.kind === "image" ? h("img", { alt: f.name, data: { ansimg: fid } }) : h("span", { class: "e" }, FILE_EMOJI[f.kind]), h("small", null, f.name)),
@@ -2105,7 +2105,31 @@ async function addAnswerFiles(wsId, files) {
 }
 // 📸 The thumbnails: each answer photo, from this device or the cloud (after the page is drawn)
 function fillAnswerThumbs(root) {
-  root.querySelectorAll("img[data-ansimg]").forEach(img => fileUrl(img.dataset.ansimg).then(url => { if (url) img.src = url; }).catch(() => {}));
+  root.querySelectorAll("img[data-ansimg]").forEach(img => fileUrl(img.dataset.ansimg).then(url => {
+    if (!url) return;
+    if (url.startsWith("data:image/")) img.src = url; else img.replaceWith(h("span", { class: "e" }, FILE_EMOJI.pdf));
+    mendAnswerMeta(img.dataset.ansimg, url);
+  }).catch(() => {}));
+}
+// 🩹 v198: an answer photo the worksheet lists, but whose details (name, kind …) are missing in 🎒 School files on this device
+// (e.g. a cloud change that came in a moment later without them): still shown and checked, never "gone"
+function answerMeta(w, s, fid) {
+  return s.files[fid] || { subject: w.subject, name: `Answers – ${w.title}`.slice(0, 60), kind: "image", size: 0, date: w.date || todayYmd(), by: w.kid };
+}
+// (the photo itself is there: its details go back into 🎒 School files, so it's in the folder again on every phone)
+function mendAnswerMeta(fid, url) {
+  const wsId = Object.keys(aiDocs.worksheets).find(id => (aiDocs.worksheets[id].answers || []).includes(fid));
+  const w = wsId && aiDocs.worksheets[wsId];
+  if (!w || !exists(w.kid)) return;
+  const s = schoolFor(w.kid);
+  if (s.files[fid]) return;
+  if (isKidDevice() && w.kid !== kidDeviceId()) return;
+  const n = w.answers.indexOf(fid) + 1, kind = url.startsWith("data:application/pdf") ? "pdf" : "image";
+  s.files[fid] = { subject: w.subject, name: (`Answers – ${w.title}` + (n > 1 ? ` (${n})` : "")).slice(0, 60), kind, size: bytesOf(url),
+                   date: /^\d{4}-\d{2}-\d{2}$/.test(w.date || "") ? w.date : todayYmd(), by: w.kid, worksheet: wsId };
+  console.warn("🩹 Answer file details put back:", fid);
+  writeData("auto");
+  if (screen === "school") render();
 }
 // 🗑 An answer photo may go before the check: the kid (their own worksheet, also on their own device) or a parent. After the check: locked.
 const canRemoveAnswer = (w, f) => !w.check && canChange(f) && (!isKidDevice() || w.kid === kidDeviceId());
@@ -2224,7 +2248,7 @@ async function checkWorksheetNow(wsId) {
   const w = aiDocs.worksheets[wsId];
   if (!w) return;
   if (w.check && !isDadNow()) return toast(`It's checked already. Ask ${dadName()} 🙂`);
-  const s = schoolOf(w.kid), ids = w.answers.filter(f => s.files[f]);
+  const s = schoolOf(w.kid), ids = w.answers.filter(okId);
   if (!ids.length) return toast("⬆ Upload your answers first.", 3000);
   if (!aiReady()) return toast("🔌 " + AI_OFF, 4500);
   let urls = [];
@@ -2233,7 +2257,7 @@ async function checkWorksheetNow(wsId) {
   const total = urls.reduce((n, u) => n + bytesOf(u), 0);
   if (total > AI_MAX) return toast(tooBigText(total), 6000);
   let files;
-  try { files = await aiFilesFor(ids.map((f, i) => ({ name: s.files[f].name, url: urls[i] }))); }
+  try { files = await aiFilesFor(ids.map((f, i) => ({ name: answerMeta(w, s, f).name, url: urls[i] }))); }
   catch (err) { return toast(aiFileError(err), 6000); }
   const lv = learnRead(w.kid, w.subject);   // (🧠 each question's skill and difficulty, and the level before this worksheet)
   // (✏️ the PDF's ANSWER SHEET: the kid writes the question number + the letter of a choice, so the key says the letter too)
