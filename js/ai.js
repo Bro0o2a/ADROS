@@ -386,6 +386,10 @@ function aiListen() {
       snap.forEach(d => { let x = null;
         try { x = (name === "worksheets" ? cleanWorksheet : cleanExplain)(d.data()); } catch (err) { console.warn("AI " + name + " " + d.id, err); }   // (one odd document never hides the others)
         if (x && okId(d.id)) (x.hidden ? hid : all)[d.id] = x; });
+      // 🩺 v199: a worksheet's answer photos came back from the cloud fewer than this phone had (in ⚙️ App problems, to find out why)
+      if (name === "worksheets") Object.entries(all).forEach(([id, x]) => { const was = aiDocs.worksheets[id];
+        if (was && (was.answers || []).some(f => !x.answers.includes(f)) && !snap.metadata.hasPendingWrites)
+          console.error(`Worksheet answers came back from the cloud without ${(was.answers || []).filter(f => !x.answers.includes(f)).length} photo(s)` + (snap.metadata.fromCache ? " (offline copy)" : "")); });
       aiDocs[name] = all;
       if (name === "worksheets") aiDocs.hiddenWs = hid;
       if (name === "worksheets") topicsFromAllWorksheets();   // 📚 (worksheets made before, or on another phone: their topics too)

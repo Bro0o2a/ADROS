@@ -1820,7 +1820,7 @@ document.addEventListener("change", e => {
   render();
 });
 function wsViewNode(w, id, s, isDad) {
-  const done = !!w.check, canAct = isDad || !done, files = w.answers.filter(okId), open = answersOpen(w), show = wsAnswers && open;
+  const done = !!w.check, canAct = isDad || !done, files = answerIdsOf(w, id, s), open = answersOpen(w), show = wsAnswers && open;
   return h("div", null,
     h("div", { class: "ai-toolbar" },
       // (🔒 a kid before the check: the button is there, a tap says why)
@@ -2089,7 +2089,7 @@ async function addAnswerFiles(wsId, files) {
   if (!ids.length) return;
   writeData();
   const now = aiDocs.worksheets[wsId] || w;
-  aiSave("worksheets", wsId, { ...now, answers: [...now.answers, ...ids].slice(0, 20), status: now.check ? "Checked ✓" : "Answers uploaded" });
+  aiSave("worksheets", wsId, { ...now, answers: [...new Set([...answerIdsOf(now, wsId, s), ...ids])].slice(0, 20), status: now.check ? "Checked ✓" : "Answers uploaded" });
   // ⭐ Free study (outside a planned session): +2 +15 instead of 📤 +5 (once a worksheet; the first 3 a day for each subject)
   if (isFreeStudy(now)) {
     const free = giveFreeUp(now, wsId);
@@ -2110,6 +2110,14 @@ function fillAnswerThumbs(root) {
     if (url.startsWith("data:image/")) img.src = url; else img.replaceWith(h("span", { class: "e" }, FILE_EMOJI.pdf));
     mendAnswerMeta(img.dataset.ansimg, url);
   }).catch(() => {}));
+}
+// 🩹 v199: the worksheet's answers = the ones it lists + every answer file in 🎒 School files that says it belongs to this worksheet
+// (the photo was taken, but the worksheet's own list came back from the cloud without it a few seconds later: it stays)
+function answerIdsOf(w, wsId, s) {
+  const own = (w.answers || []).filter(okId);
+  const more = Object.keys(s.files).filter(fid => s.files[fid].worksheet === wsId && !own.includes(fid))
+    .sort((a, b) => String(s.files[a].date).localeCompare(String(s.files[b].date)));
+  return [...own, ...more].slice(0, 20);
 }
 // 🩹 v198: an answer photo the worksheet lists, but whose details (name, kind …) are missing in 🎒 School files on this device
 // (e.g. a cloud change that came in a moment later without them): still shown and checked, never "gone"
@@ -2140,7 +2148,7 @@ function removeAnswerFile(fid) {
   deleteFileData(fid);
   delete s.files[fid];
   writeData();
-  const answers = w.answers.filter(x => x !== fid);
+  const answers = answerIdsOf(w, schoolDoc, s).filter(x => x !== fid);
   aiSave("worksheets", schoolDoc, { ...w, answers, status: w.check ? "Checked ✓" : answers.length ? "Answers uploaded" : "To do" });
   render();
 }
@@ -2248,7 +2256,7 @@ async function checkWorksheetNow(wsId) {
   const w = aiDocs.worksheets[wsId];
   if (!w) return;
   if (w.check && !isDadNow()) return toast(`It's checked already. Ask ${dadName()} 🙂`);
-  const s = schoolOf(w.kid), ids = w.answers.filter(okId);
+  const s = schoolOf(w.kid), ids = answerIdsOf(w, wsId, s);
   if (!ids.length) return toast("⬆ Upload your answers first.", 3000);
   if (!aiReady()) return toast("🔌 " + AI_OFF, 4500);
   let urls = [];
@@ -2283,7 +2291,7 @@ async function checkWorksheetNow(wsId) {
   if (!c) { aiFail = { key: "check|" + wsId, text: "🤖 The check came back empty. Please try again.", at: Date.now() }; schoolFresh = true; render(); return toast("🤖 The check came back empty. Please try again.", 4000); }
   c.aiScore = c.score;
   const now = aiDocs.worksheets[wsId] || w;
-  aiSave("worksheets", wsId, { ...now, check: c, status: "Checked ✓" });   // (with its subject and part, and 💪 🎯 🦉)
+  aiSave("worksheets", wsId, { ...now, answers: answerIdsOf(now, wsId, s), check: c, status: "Checked ✓" });   // (with its subject and part, and 💪 🎯 🦉)
   if (now.session) {   // 📚 the study session's result: all its worksheets together (weighted by their points), 🔁 a swapped subject too
     const all = sessionWsIds(now.session).map(id => id === wsId ? { ...now, check: c } : aiDocs.worksheets[id]).filter(x => x && x.check);
     const got = all.reduce((n, x) => n + x.check.score, 0), most = all.reduce((n, x) => n + x.check.max_score, 0), swap = all.map(x => x.swap).find(Boolean);
