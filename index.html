@@ -20,7 +20,7 @@
      This section only controls colors, sizes and spacing.
      ============================================================ -->
 <!-- THE LOOK (all the CSS) is in css/app.css -->
-<link rel="stylesheet" href="css/app.css?v=199">
+<link rel="stylesheet" href="css/app.css?v=200">
 </head>
 <body>
 <!-- ============================================================
@@ -651,6 +651,10 @@
         <button class="bk-btn" data-backupimport><b>Bring back a copy</b><small>Only if data was lost. Pick a backup file: it replaces today's data on every device.</small></button>
       </div>
       <p class="print-hint bk-tip">Tip: save a copy every week or two.</p>
+      <!-- ⚠️ v200: App problems here too (easy to find), the same list as ⚙️ Settings → Backup → App problems -->
+      <details class="bk-adv" id="bkErrBox"><summary>App problems</summary>
+        <div id="bkErrList" class="err-list"></div>
+      </details>
       <div class="leave-btns"><button data-backupclose>Close</button></div>
     </div>
     <!-- Step 2 (Import only): "Are you sure?" -->
@@ -898,23 +902,23 @@
 <!-- 🕌 adhan: works out the prayer times on the device (sw.js keeps a copy, so it also works offline) -->
 <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js"></script>
 <!-- THE BRAIN: the app's JavaScript, split by feature in the js/ folder (they load in this order; see CLAUDE.md) -->
-<script src="js/core.js?v=199"></script>
-<script src="js/screens.js?v=199"></script>
-<script src="js/points.js?v=199"></script>
-<script src="js/fun.js?v=199"></script>
-<script src="js/reports.js?v=199"></script>
-<script src="js/profile.js?v=199"></script>
-<script src="js/home.js?v=199"></script>
-<script src="js/activities.js?v=199"></script>
-<script src="js/calendar.js?v=199"></script>
-<script src="js/school.js?v=199"></script>
-<script src="js/ai.js?v=199"></script>
-<script src="js/pictures.js?v=199"></script>
-<script src="js/study.js?v=199"></script>
-<script src="js/settings.js?v=199"></script>
-<script src="js/taps.js?v=199"></script>
-<script src="js/cloud.js?v=199"></script>
-<script src="js/news.js?v=199"></script>
-<script src="js/start.js?v=199"></script>
+<script src="js/core.js?v=200"></script>
+<script src="js/screens.js?v=200"></script>
+<script src="js/points.js?v=200"></script>
+<script src="js/fun.js?v=200"></script>
+<script src="js/reports.js?v=200"></script>
+<script src="js/profile.js?v=200"></script>
+<script src="js/home.js?v=200"></script>
+<script src="js/activities.js?v=200"></script>
+<script src="js/calendar.js?v=200"></script>
+<script src="js/school.js?v=200"></script>
+<script src="js/ai.js?v=200"></script>
+<script src="js/pictures.js?v=200"></script>
+<script src="js/study.js?v=200"></script>
+<script src="js/settings.js?v=200"></script>
+<script src="js/taps.js?v=200"></script>
+<script src="js/cloud.js?v=200"></script>
+<script src="js/news.js?v=200"></script>
+<script src="js/start.js?v=200"></script>
 </body>
 </html>
