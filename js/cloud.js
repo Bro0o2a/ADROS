@@ -685,7 +685,8 @@ function cloudError(err) {
   // It goes in ⚙️ Settings → Backup → App problems with the cloud's own words, so we can see what happened.
   else if (code === "invalid-argument" || /index entries|maximum|too (big|large)/i.test(String(err && err.message || ""))) {
     console.error("Cloud didn't save a change: " + code + " " + String(err.message || "").slice(0, 150));
-    toast("⚠ The cloud didn't save the last change. Please tell a parent.", 6000);
+    // (v200: the cloud's own reason in the message too, so a parent can send a screenshot of it)
+    toast("⚠ The cloud didn't save the last change. Please tell a parent. (" + String(err.message || code).replace(/\s+/g, " ").slice(0, 120) + ")", 9000);
   }
   showSync();
 }

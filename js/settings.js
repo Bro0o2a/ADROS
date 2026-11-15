@@ -719,15 +719,16 @@ $("clearBtn").onclick = () => {
 const errLine = x => `v${x.v} · ${x.at || "?"} · ${x.screen || "?"} · ${x.role || "?"} · ${x.n || 1}× · ${String(x.last).slice(0, 16).replace("T", " ")} UTC — ${x.msg}`;
 const WHY_TEXT = { wrong: "Wrong answer or marking", child: "Not right for a child", unsafe: "Hurtful or unsafe", other: "Something else" };
 const reportLine = r => `🚩 AI report · ${r.kind} ${r.doc || ""} · ${WHY_TEXT[r.why] || r.why} · ${r.role} · ${String(r.at).slice(0, 16).replace("T", " ")} UTC${r.note ? " — " + r.note : ""}`;
-async function drawAppErrors() {
+async function drawAppErrors(boxId = "errList") {
   const [errs, reps] = await Promise.all([allAppErrors(), allAiReports()]);
   const lines = [...reps.map(reportLine), ...errs.map(errLine)];
-  $("errList").textContent = "";
-  if (!lines.length) { $("errList").textContent = "No problems. 👍"; return lines; }
-  lines.forEach(t => { const p = document.createElement("p"); p.textContent = t; $("errList").append(p); });
+  $(boxId).textContent = "";
+  if (!lines.length) { $(boxId).textContent = "No problems. 👍"; return lines; }
+  lines.forEach(t => { const p = document.createElement("p"); p.textContent = t; $(boxId).append(p); });
   return lines;
 }
 $("errBox").addEventListener("toggle", () => { if ($("errBox").open) drawAppErrors(); });
+$("bkErrBox").addEventListener("toggle", () => { if ($("bkErrBox").open) drawAppErrors("bkErrList"); });   // (v200: in the 💾 Backup box too)
 $("errCopy").onclick = async () => {
   const list = await drawAppErrors();
   const text = list.length ? `App problems (${APP_NAME}):\n` + list.join("\n") : "No problems.";
