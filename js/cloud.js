@@ -681,6 +681,12 @@ function cloudError(err) {
   const code = err && err.code;
   if (code === "permission-denied") toast("⚠ The cloud said no. Check the Firestore rules in the Firebase console.", 6000);
   else if (code === "resource-exhausted") toast("⚠ The cloud is busy (daily limit reached). Changes are kept on this device.", 6000);
+  // 🩺 v198: the cloud said no to a change for another reason (e.g. a document too big): never silent any more.
+  // It goes in ⚙️ Settings → Backup → App problems with the cloud's own words, so we can see what happened.
+  else if (code === "invalid-argument" || /index entries|maximum|too (big|large)/i.test(String(err && err.message || ""))) {
+    console.error("Cloud didn't save a change: " + code + " " + String(err.message || "").slice(0, 150));
+    toast("⚠ The cloud didn't save the last change. Please tell a parent.", 6000);
+  }
   showSync();
 }
 

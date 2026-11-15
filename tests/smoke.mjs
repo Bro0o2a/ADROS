@@ -154,6 +154,24 @@ try {
   }, FAKE_WS);
   if (thumbs !== "ok") errors.push("[answer photos after the check] " + thumbs);
 
+  // 🩹 v198 an answer photo whose details are missing in School files (a later cloud change without them) is still on the worksheet
+  const lost = await run("answer photo without its details", async ws => {
+    const s = schoolFor("ex-kid1");
+    delete s.files.anslost;
+    const w = { ...cleanWorksheet(ws), kid: "ex-kid1", subject: "Math", answers: ["anslost"] };
+    delete w.check;
+    const box = document.createElement("div"); box.appendChild(wsViewNode(w, "losttest", s, true));
+    const img = box.querySelector(".ans-thumbs img[data-ansimg='anslost']"), btn = box.querySelector("[data-wsact='check']");
+    // (the photo itself is on this device: its details go back into School files)
+    fileCache.anslost = "data:image/png;base64,iVBORw0KGgo="; aiDocs.worksheets.losttest = w;
+    fillAnswerThumbs(box);
+    await new Promise(r => setTimeout(r, 50));
+    const mended = !!s.files.anslost && s.files.anslost.worksheet === "losttest";
+    delete s.files.anslost; delete aiDocs.worksheets.losttest; delete fileCache.anslost;
+    return img && btn && mended ? "ok" : JSON.stringify({ img: !!img, check: !!btn, mended });
+  }, FAKE_WS);
+  if (lost !== "ok") errors.push("[answer photo without its details] " + lost);
+
   // 🔑 v191 Key words box: kept by cleanWorksheet, printed on the paper, a parent's tick box takes it off
   const kbox = await run("key words box", () => {
     const w = cleanWorksheet({ title: "t", key_words: ["evaporation = gas", "condensation", "condensation", ""], questions: [{ number: 1, kind: "short_answer", prompt: "Why?", answer: "x", points: 1 }] });
