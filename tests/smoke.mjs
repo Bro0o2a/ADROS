@@ -167,6 +167,9 @@ try {
     fillAnswerThumbs(box);
     await new Promise(r => setTimeout(r, 50));
     const mended = !!s.files.anslost && s.files.anslost.worksheet === "losttest";
+    // (v199: the worksheet's own list lost it, but the file says it belongs to this worksheet: still shown)
+    const w2 = { ...w, answers: [] }, box2 = document.createElement("div"); box2.appendChild(wsViewNode(w2, "losttest", s, true));
+    if (!box2.querySelector(".ans-thumbs img[data-ansimg='anslost']")) return "not shown when the worksheet's list lost it";
     delete s.files.anslost; delete aiDocs.worksheets.losttest; delete fileCache.anslost;
     return img && btn && mended ? "ok" : JSON.stringify({ img: !!img, check: !!btn, mended });
   }, FAKE_WS);
