@@ -167,7 +167,7 @@ function drawSchool() {
   $("schoolBody").querySelectorAll(".sc-starpick").forEach(showStars);
   if (focus && $(focus) && $("schoolBody").contains($(focus))) $(focus).focus();
   fillPhotos($("schoolBody"));
-  fillAnswerThumbs($("schoolBody"));   // 📸 the answer photos' thumbnails (before the check)
+  fillAnswerThumbs($("schoolBody"));   // 📸 the answer photos' thumbnails (also after the check)
   showAiWait();
 }
 

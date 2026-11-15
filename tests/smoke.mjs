@@ -142,6 +142,18 @@ try {
   });
   if (part !== "ok") errors.push("[part marks] " + part);
 
+  // 📸 v197 the answer photos stay on the worksheet after ✅ Check (before, they turned into a plain list and looked gone)
+  const thumbs = await run("answer photos after the check", ws => {
+    const s = schoolFor("ex-kid1");
+    s.files.anstest = { subject: "Math", name: "Answers – test", kind: "image", size: 10, date: "2026-11-01", by: "ex-kid1", worksheet: "phototest" };
+    const w = { ...cleanWorksheet(ws), kid: "ex-kid1", subject: "Math", answers: ["anstest"], check: cleanCheck(ws.check, 5) };
+    const box = document.createElement("div"); box.appendChild(wsViewNode(w, "phototest", s, true));
+    const img = box.querySelector(".ans-thumbs img[data-ansimg='anstest']"), del = box.querySelector("[data-wsfdel]");
+    delete s.files.anstest;
+    return img && !del ? "ok" : JSON.stringify({ img: !!img, del: !!del });
+  }, FAKE_WS);
+  if (thumbs !== "ok") errors.push("[answer photos after the check] " + thumbs);
+
   // 🔑 v191 Key words box: kept by cleanWorksheet, printed on the paper, a parent's tick box takes it off
   const kbox = await run("key words box", () => {
     const w = cleanWorksheet({ title: "t", key_words: ["evaporation = gas", "condensation", "condensation", ""], questions: [{ number: 1, kind: "short_answer", prompt: "Why?", answer: "x", points: 1 }] });
