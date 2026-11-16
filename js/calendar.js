@@ -705,6 +705,7 @@ document.addEventListener("click", e => {
     }
     if (!/^\d{2}:\d{2}$/.test(from)) return toast("Pick a start time.", 2500);
     const start = toMin(from), check = moveCheck(actId, ds, ds, start);
+    if (!check.ok && check.room) { closeCard(); openMoveBox(ds, actId, ds, start); moveDirect = !editMode; return; }   // 🔁 offer to make room
     if (!check.ok) return toast(`✗ ${check.why}`, 3500);
     closeCard(); moveActivity(actId, ds, ds, start); editUndo = []; saveChanges(); hideSaved();
     return toast(`✓ ${act.name}: ${onDay} at ${clock(start, true)}`, 3000, "#16a34a");
@@ -916,6 +917,8 @@ function moveCheck(actId, fromDay, toDay, start) {
   const day = planDay(toDay), people = peopleOf(act);
   const mine = x => x.actId === actId || String(x.id || "").includes(`-${actId}-`);   // the activity itself and its own strips
   const busy = [...day.items.filter(it => !mine(it)), ...day.routines.filter(r => !mine(r)).map(r => ({ ...r, people: r.users }))];
+  // 🔁 v201 (Broo2a): when only other flexible sessions are in the way, say which ones ("room"): they can be moved away
+  let first = null, room = [], stuck = false;
   for (const b of busy) {
     const shared = b.people.filter(p => people.includes(p));
     if (!shared.length || !(b.start < E && S < b.end)) continue;
@@ -926,9 +929,69 @@ function moveCheck(actId, fromDay, toDay, start) {
       : b.pad && b.before ? `${who} is getting ready for ${b.before} then.`
       : b.pad && b.after ? `${who} has a break after ${b.after} then.`
       : `${who} has ${b.name} then.`;
-    return { ok: false, why };
+    if (!first) first = why;
+    const other = roomItemOf(toDay, day, b);
+    if (other) { if (!room.includes(other)) room.push(other); } else stuck = true;
   }
-  return { ok: true };
+  if (!first) return { ok: true };
+  return { ok: false, why: first, ...(!stuck && room.length ? { room } : {}) };
+}
+// 🔁 The flexible session (its actId) behind a block in the way, if it may be moved away:
+// a flexible session or its own get ready / break, not ticked yet and not started. Else null.
+function roomItemOf(ds, day, b) {
+  let it = null;
+  if (!b.routine && !b.fixed) it = b;
+  else if (b.pad) {
+    const m = /^(ready|break)-(.+)-(\d+)$/.exec(b.id || "");
+    if (m) it = day.items.find(x => !x.fixed && baseActId(x.actId) === m[2] && (m[1] === "ready" ? x.start : x.end) === Number(m[3]));
+  }
+  if (!it || it.fixed || it.gone || !data.flexible.some(a => a.id === baseActId(it.actId))) return null;
+  if (Object.keys(data.points.marks).some(k => k.startsWith(`${ds}|${it.actId}|`))) return null;   // ✅ ticked: it stays
+  if (ds === todayYmd() && it.start <= dubaiMinutes()) return null;                                // already started
+  return it.actId;
+}
+// 🔁 v201 (Broo2a): put actId at toDay/start and move the sessions in the way ("room") somewhere else:
+// first to the place actId came from (a swap), else the first free place that day, else another day (today … +6).
+// All of it is one step (one ↩️ Undo). → the list of what moved, e.g. ["Reading → Tue 5:00 pm"], or null (no place: nothing changes).
+function makeRoomMove(actId, fromDay, toDay, start) {
+  const check = moveCheck(actId, fromDay, toDay, start);
+  if (check.ok || !check.room) return null;
+  const before = JSON.stringify(data.plan), act = data.flexible.find(a => a.id === baseActId(actId));
+  const fromIt = planItemsOn(fromDay).find(x => !x.fixed && x.actId === actId), origStart = fromIt ? fromIt.start : start;
+  const to = data.plan.dates[toDay] = data.plan.dates[toDay] || { items: [] };
+  to.items = to.items.filter(it => !(!it.fixed && check.room.includes(it.actId)));
+  const undo = () => { data.plan = JSON.parse(before); return null; };
+  if (!moveCheck(actId, fromDay, toDay, start).ok) return undo();
+  const from = data.plan.dates[fromDay];
+  if (from) from.items = from.items.filter(it => !(!it.fixed && it.actId === actId));
+  to.items.push({ actId, fixed: false, start, end: start + act.duration, pinned: true });
+  const moved = [];
+  const oldStart = id => ((JSON.parse(before).dates[toDay] || { items: [] }).items.find(x => !x.fixed && x.actId === id) || {}).start || 0;
+  for (const otherId of check.room) {
+    const other = data.flexible.find(a => a.id === baseActId(otherId));
+    const spot = roomSpotFor(otherId, toDay, fromDay, origStart, oldStart(otherId));
+    if (!spot) return undo();
+    const day = data.plan.dates[spot.ds] = data.plan.dates[spot.ds] || { items: [] };
+    day.items.push({ actId: otherId, fixed: false, start: spot.start, end: spot.start + other.duration, pinned: true });
+    moved.push(`${other.name} → ${dayName(spot.ds)} ${clock(spot.start, true)}`);
+  }
+  Object.values(data.plan.dates).forEach(d => d.items && d.items.sort((a, b) => a.start - b.start));
+  editUndo.push(before);
+  return moved;
+}
+// 🔁 A free place for a session that was taken off ds: the swap place first, then the same day (closest to where it was),
+// then the next days (closest to the same time)
+function roomSpotFor(actId, ds, swapDay, swapStart, was) {
+  if (moveCheck(actId, ds, swapDay, swapStart).ok) return { ds: swapDay, start: swapStart };
+  const days = aheadDates(), i = Math.max(0, days.indexOf(ds));
+  for (const d of [...days.slice(i), ...days.slice(0, i).reverse()]) {
+    const [ws, we] = dayWindow(weekdayOf(d)), times = [];
+    for (let t = Math.ceil(ws / SNAP) * SNAP; t < we; t += SNAP) times.push(t);
+    times.sort((a, b) => Math.abs(a - was) - Math.abs(b - was));
+    const t = times.find(x => moveCheck(actId, ds, d, x).ok);
+    if (t != null) return { ds: d, start: t };
+  }
+  return null;
 }
 
 document.addEventListener("pointerdown", e => {
@@ -979,7 +1042,8 @@ function updateDrag(x, y) {
   else drag.start = drag.keep = Math.max(0, Math.min(24 * 60 - act.duration, Math.round((drag.orig + dy / PX_PER_SNAP * SNAP) / SNAP) * SNAP));
   drag.check = moveCheck(drag.actId, drag.fromDay, drag.toDay, drag.start);
   drag.el.classList.toggle("drop-ok", drag.check.ok);
-  drag.el.classList.toggle("drop-bad", !drag.check.ok);
+  drag.el.classList.toggle("drop-room", !drag.check.ok && !!drag.check.room);
+  drag.el.classList.toggle("drop-bad", !drag.check.ok && !drag.check.room);
   const when = drag.el.querySelector(".when");
   if (when) when.textContent = `${drag.toDay !== drag.fromDay ? dayHead(drag.toDay) + " · " : ""}${clock(drag.start)} - ${clock(drag.start + act.duration)}`;
 }
@@ -996,6 +1060,7 @@ function endDrag(drop) {
   setTimeout(() => suppressClick = false, 400);
   const moved = d.toDay !== d.fromDay || d.start !== d.orig;
   if (!drop || !moved) return render();
+  if (!d.check.ok && d.check.room) { render(); return openMoveBox(d.fromDay, d.actId, d.toDay, d.start); }   // 🔁 orange: ask to make room
   if (!d.check.ok) { render(); return toast(`↩ ${d.check.why}`, 3500); }   // red: it goes back
   moveActivity(d.actId, d.fromDay, d.toDay, d.start);
 }
@@ -1031,14 +1096,16 @@ function unpin(day, actId) {
 
 // ---------- The small "Move" box (edit mode): tap a flexible activity, pick the day and start time ----------
 let moving = null;   // { actId, fromDay, day } (dates)
-function openMoveBox(fromDay, actId) {
+// (toDay / at: open it on another day / start time, e.g. after a drop on a busy place)
+function openMoveBox(fromDay, actId, toDay, at) {
   moveDirect = false;
   const act = data.flexible.find(a => a.id === baseActId(actId));
   const it = act && fromDay >= todayYmd() && planItemsOn(fromDay).find(x => !x.fixed && x.actId === actId);
   if (!it) return;
-  moving = { actId, fromDay, day: fromDay };
+  moving = { actId, fromDay, day: toDay || fromDay };
   $("moveTitle").textContent = `${emojisOf(act.users)} ${act.name}`;
-  $("moveTime").value = String(Math.floor(it.start / 60)).padStart(2, "0") + ":" + String(it.start % 60).padStart(2, "0");
+  const t0 = at != null ? at : it.start;
+  $("moveTime").value = String(Math.floor(t0 / 60)).padStart(2, "0") + ":" + String(t0 % 60).padStart(2, "0");
   drawMoveBox();
   $("moveModal").hidden = false;
 }
@@ -1050,6 +1117,25 @@ function drawMoveBox() {
   const start = toMin(t), check = moveCheck(moving.actId, moving.fromDay, moving.day, start);
   $("moveCheck").className = "move-check " + (check.ok ? "ok" : "bad");
   $("moveCheck").textContent = check.ok ? `✓ Free: ${dayLong(moving.day)} ${clock(start, true)} – ${clock(start + act.duration, true)}` : `✗ ${check.why}`;
+  // 🔁 v201: only other sessions in the way → one button moves them somewhere else
+  if (!check.ok && check.room) {
+    const names = check.room.map(id => (data.flexible.find(a => a.id === baseActId(id)) || {}).name).filter(Boolean);
+    $("moveCheck").insertAdjacentHTML("beforeend", `<button class="pill small primary move-room" data-moveroom>🔁 Put it here, move ${safe(names.join(" and "))} somewhere else</button>`);
+  }
+}
+// 🔁 "Put it here": the sessions in the way go to its old place (swap) or the next free place
+function roomMoveBox() {
+  const t = $("moveTime").value;
+  if (!moving || !t) return;
+  const m = moving, start = toMin(t), act = data.flexible.find(a => a.id === baseActId(m.actId));
+  const moved = makeRoomMove(m.actId, m.fromDay, m.day, start);
+  if (!moved) return toast("✗ There's no free place this week for the session in the way. Nothing changed.", 4000);
+  closeMoveBox();
+  if (m.day !== m.fromDay && !wholeWeek && calDates().includes(m.day)) viewDay = calDates().indexOf(m.day);
+  changed();
+  const msg = `📌 ${act.name} → ${dayName(m.day)} ${clock(start, true)} · ${moved.join(" · ")}`;
+  if (moveDirect) { moveDirect = false; editUndo = []; saveChanges(); hideSaved(); return toast(`✓ Saved: ${msg}`, 5000, "#16a34a"); }
+  toast(`${msg} · tap ✅ Done to save`, 5000);
 }
 $("moveTime").addEventListener("input", () => moving && drawMoveBox());
 function saveMoveBox() {

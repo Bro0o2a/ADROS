@@ -135,6 +135,7 @@ document.addEventListener("click", e => {
   if (ds.unpin) { const [d, id] = ds.unpin.split("|"); return unpin(d, id); }   // (d = the date)
   if (ds.moveday) { moving.day = ds.moveday; return drawMoveBox(); }
   if ("movesave" in ds) return saveMoveBox();
+  if ("moveroom" in ds) return roomMoveBox();
   if ("movecancel" in ds) return closeMoveBox();
   // Save bar and the "Save your changes?" box
   if ("savechanges" in ds) return saveChanges();

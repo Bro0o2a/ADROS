@@ -1132,6 +1132,7 @@
   .k-block.dragging { z-index: 45; cursor: grabbing; transition: none; box-shadow: 0 16px 34px rgba(0, 0, 0, .28); opacity: .96; }
   .k-block.dragging.drop-ok { border-color: #16a34a; background: #dcfce7; }
   .k-block.dragging.drop-bad { border-color: #dc2626; background: #fee2e2; }
+  .k-block.dragging.drop-room { border-color: #ea580c; background: #ffedd5; }
   .k-block.dragging .when { font-weight: 800; }
   .k-day.drop-target { outline: 3px dashed var(--accent); outline-offset: -3px; }
   .k-dbtn.drop-target { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
@@ -1172,6 +1173,7 @@
   .move-check { margin-top: 10px; min-height: 24px; font-size: 16px; font-weight: 800; }
   .move-check.ok { color: #15803d; }
   .move-check.bad { color: var(--danger); }
+  .move-check .move-room { display: block; margin-top: 8px; white-space: normal; text-align: left; }
 
   /* The big round "done" checkbox */
   .k-checks { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
