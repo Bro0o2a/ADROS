@@ -733,12 +733,12 @@ function earliestStart(day, act, mode) {
   return null;
 }
 
-// After the week is planned, this spaces out each day's flexible activities
-// so they're spread over the free time instead of all stacked at the start.
-// It only moves activities that don't share time with anything, and only to times when
-// all their people are free — so no rule can be broken by moving them.
-// Each one moves to where it has the most room around it (so there's a 10-minute break or more when possible).
-// An activity with "Only between" stays inside that time (it.lo / it.hi), and is spread out inside it.
+// After the week is planned, this packs each day's flexible activities CLOSE TOGETHER (v203, Broo2a: no big holes):
+// each one moves to the earliest time when all its people are free, with a 10-minute break after the activity before it,
+// so the free time is one block at the end of the day instead of gaps in the middle.
+// It only moves activities that don't share time with anything, and only to times when all their people are free,
+// so no rule can be broken by moving them. "Only between" (it.lo / it.hi) and 🌙 bedtime are kept.
+const PACK_BREAK = 10;   // minutes between two flexible activities of the same person
 function spreadDay(day) {
   if (!day.window) return;
   const shares = (a, b) => a.people.some(p => b.people.includes(p));
@@ -746,29 +746,24 @@ function spreadDay(day) {
   // (📌 pinned activities stay exactly where Bro2a put them)
   const movable = day.items.filter(it => !it.fixed && !it.pinned && !it.kept && !day.items.some(o => o !== it && shares(it, o) && overlaps(it, o)));
   for (let pass = 0; pass < 3; pass++) {
-    for (const it of movable) {
+    for (const it of [...movable].sort((a, b) => a.start - b.start)) {
       const len = it.end - it.start;
       const ws = it.lo != null ? Math.max(day.window[0], it.lo) : day.window[0];
       const beds = it.people.map(p => bedMin(p, day.date)).filter(b => b != null);   // (🌙 not after bedtime)
       const we = Math.min(it.hi != null ? Math.min(day.window[1], it.hi) : day.window[1], ...beds);
       const others = day.items.filter(o => o !== it && shares(it, o));
-      // The room around it if it starts at s: the smallest gap to its neighbors or the edges of the day (-1 = clash)
-      const room = s => {
+      // Can it start at s? No clash, and a break from the flexible activities next to it (fixed ones have their own get ready / break)
+      const ok = s => {
         const e = s + len;
-        if (s < ws || e > we) return -1;
-        let gap = Math.min(s - ws, we - e);
-        for (const o of others) {
-          if (o.start < e && s < o.end) return -1;
-          gap = Math.min(gap, o.end <= s ? s - o.end : o.start - e);
-        }
-        return gap;
+        if (s < ws || e > we) return false;
+        return others.every(o => {
+          const gap = o.fixed ? 0 : baseActId(o.actId) === baseActId(it.actId) ? 60 : PACK_BREAK;   // (2️⃣ its own 2nd session: an hour away)
+          return o.end + gap <= s || e + gap <= o.start;
+        });
       };
-      let bestStart = it.start, best = room(it.start);
-      for (let s = Math.ceil(ws / 5) * 5; s + len <= we; s += 5) {   // try every 5 minutes (tidy times)
-        const r = room(s);
-        if (r > best) { best = r; bestStart = s; }
+      for (let s = Math.ceil(ws / 5) * 5; s + len <= we; s += 5) {   // (every 5 minutes: tidy times; the earliest place with a break)
+        if (ok(s)) { it.start = s; it.end = s + len; break; }
       }
-      it.start = bestStart; it.end = bestStart + len;
     }
   }
 }
@@ -941,7 +936,8 @@ function makePlan(mode = "replan") {
       // (one block, one tick, one worksheet for the whole time). Each day's session gets longer only once.
       // 2️⃣ v181 (Broo2a): "Can be twice a day" ticked → no new day has room: a 2nd SEPARATE session on a day that has one,
       // in an empty slot at least an hour away from the first one (its own tick, session and worksheet: id "actId~2")
-      if (!best && act0.twiceDay) {
+      // (2️⃣ a 2nd separate session on a day that has one: at least an hour away. → true when placed)
+      const trySecond = () => {
         for (const mode of modes) {
           for (const d of [...new Set(usedDays)]) {
             const day = days[d], mine = day.items.filter(x => baseActId(x.actId) === act.id && !x.fixed);
@@ -958,9 +954,11 @@ function makePlan(mode = "replan") {
           days[best.d].items.push({ name: act.name, start: best.start, end: best.start + act.duration, pre, post,
                                     actId: act.id + "~2", users: act.users, people, ...(only ? { lo: act.lo, hi: act.hi } : {}) });
           usedDays.push(best.d);
-          continue;
+          return true;
         }
-      }
+        return false;
+      };
+      if (!best && act0.twiceDay && trySecond()) continue;
       if (!best && act0.twice !== false) {
         for (const mode of modes) {
           for (const d of [...new Set(usedDays)]) {
@@ -980,6 +978,9 @@ function makePlan(mode = "replan") {
           continue;
         }
       }
+      // 2️⃣ v203 (Broo2a): still no room → a 2nd session on a day that has free time (an hour away from the first one),
+      // instead of a "missing" session while the day is half empty
+      if (!best && !act0.twiceDay && trySecond()) continue;
       if (!best) break; // no day has room left
 
       // (start/end here are the whole span; pre/post say how much of it is get ready / break)
