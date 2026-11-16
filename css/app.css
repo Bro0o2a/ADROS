@@ -1024,6 +1024,11 @@
 
   /* Toast: short messages at the bottom ("Backup downloaded"). pointer-events: none = taps go through it,
      so it never blocks the 💾 Save button. */
+  .ai-making { position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9998;
+    width: max-content; max-width: calc(100vw - 32px); padding: 12px 18px; border-radius: 16px; background: #1e3a8a; color: #fff;
+    font-weight: 800; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: aiMakingPulse 1.6s ease-in-out infinite; }
+  .ai-making[hidden] { display: none; }
+  @keyframes aiMakingPulse { 50% { opacity: .82; } }
   .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%);
            background: var(--text); color: #fff; padding: 12px 22px; border-radius: 999px; font-size: 18px; font-weight: 700;
            z-index: 60; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); max-width: calc(100% - 32px); text-align: center;
@@ -3430,3 +3435,19 @@ button.ip-item:hover { background: rgba(255, 255, 255, .7); }
 .cu-line .btnrow { margin-top: 6px; }
 .k-countdown { margin: 2px 0 4px; padding: 2px 6px; border-radius: 8px; background: #fdecea; color: #8a1c12; font-size: 12px; font-weight: 600; }
 .k-event-note { display: block; font-weight: 400; font-size: 11px; opacity: .85; }
+
+/* 📅 v203 (Broo2a) The Week view: a real hour grid (every 15 minutes is a row; a label + a thin line on each full hour) */
+.k-week.rows.k-grid { --slot-h: 18px; }
+.k-week.rows.k-grid .k-day { z-index: 0; }
+.k-week.rows.k-grid .k-hline { z-index: 0; align-self: start; height: 0; border-top: 1px dashed rgba(120, 100, 80, .18); pointer-events: none; }
+.k-week.rows.k-grid .k-cell { position: relative; z-index: 1; }
+.k-week.rows.k-grid .k-time.k-hour { align-self: start; padding-top: 0; transform: translateY(-50%); }
+.k-week.rows.k-grid .k-span > .k-block { height: 100%; box-sizing: border-box; }
+.k-week.rows.k-grid .k-span > .k-gap { height: 100%; box-sizing: border-box; }
+.k-dayhours { display: block; margin: 4px auto 0; padding: 2px 8px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, .7);
+  color: var(--muted); font: inherit; font-size: 11px; font-weight: 700; text-align: center; white-space: nowrap; }
+button.k-dayhours { cursor: pointer; }
+button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
+.dh-box { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 16px; }
+.dh-box label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
+.k-week .k-head button.k-dayhours, .k-week .k-head div.k-dayhours { min-height: 0; min-width: 0; box-shadow: none; font-size: 11px; line-height: 1.4; padding: 2px 8px; margin-top: 4px; }

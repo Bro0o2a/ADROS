@@ -474,6 +474,7 @@ function emptyData() {
     starV: 2,        // ⭐ 2 = the old Friday 6 PM was moved to Friday 3:30 PM once (v171)
     fixedOn: {},    // 🏫 v180: a fixed activity changed on ONE date: "date|actId" → { off: true } (didn't happen) or { start, end } ("09:00")
     bedOn: {},      // 🌙 v180: a kid's bedtime changed for one night only: "date|kidId" → "21:00" (see bedMin)
+    calWeekStart: 6, // 📅 v203 (Broo2a): the week calendar starts on this weekday (0 = Monday … 6 = Sunday)
     extraLimit: 3, moodRemind: "18:00", previewAt: "6|09:00",   // (📖 v191 next week's preview worksheets: weekday (0 = Monday) | time, Dubai; "" = off)   // (📔 v180: the mood + wish reminder pop-up for kids from this time, Dubai; "" = off)
    // 🤖 extra worksheets (not in a planned study session) a kid may make each day: 3–5 (⚙️ Settings, parents)   // ⭐ the Shining Star is announced on this weekday (0 = Monday) at this time (Dubai); the new week starts the next day
     maxTogether: 2, // most activities one person can be in at the same time (only ones you allowed together)
@@ -851,6 +852,7 @@ function cleanData(d) {
   const max = Math.round(Number(d.maxTogether));
   if (max >= 1 && max <= 5) clean.maxTogether = max;  // otherwise keep the default (2)
   if ([3, 4, 5].includes(Number(d.extraLimit))) clean.extraLimit = Number(d.extraLimit);
+  if (Number.isInteger(d.calWeekStart) && d.calWeekStart >= 0 && d.calWeekStart <= 6) clean.calWeekStart = d.calWeekStart;
   if (d.fixedOn && typeof d.fixedOn === "object" && !Array.isArray(d.fixedOn))   // 🏫 v180 (only the newest 100)
     clean.fixedOn = Object.fromEntries(Object.entries(d.fixedOn).filter(([k, v]) => /^\d{4}-\d{2}-\d{2}\|.+/.test(k) && v && (v.off === true
       || (/^\d{2}:\d{2}$/.test(v.start || "") && /^\d{2}:\d{2}$/.test(v.end || "") && v.start < v.end)))
@@ -1470,6 +1472,13 @@ function addDaysYmd(s, n) { const dt = fromYmd(s); dt.setDate(dt.getDate() + n);
 function daysBetween(a, b) { return Math.round((fromYmd(b) - fromYmd(a)) / 86400000); }
 function weekdayOf(s) { return (fromYmd(s).getDay() + 6) % 7; }   // 0 = Monday
 // 📅 The calendar's 12 dates (5 back, today, 6 ahead) · the plan's window (today + 6) · the 7 days up to today · a Mon–Sun week
+// 📅 v203: the weekday the week calendar starts on (0 = Monday … 6 = Sunday; ⚙️ Settings, default Sunday)
+const calWeekStartOf = () => (data && Number.isInteger(data.calWeekStart) ? data.calWeekStart : 6);
+// The 7 dates of the week calendar: the week (from its start day) that has today, moved by shift weeks
+function calWeekDates(shift = 0) {
+  const t = todayYmd(), back = (weekdayOf(t) - calWeekStartOf() + 7) % 7, first = addDaysYmd(t, shift * 7 - back);
+  return Array.from({ length: 7 }, (_, i) => addDaysYmd(first, i));
+}
 function calDates() { const t = todayYmd(); return Array.from({ length: CAL_LEN }, (_, i) => addDaysYmd(t, i - CAL_BACK)); }
 function aheadDates() { const t = todayYmd(); return Array.from({ length: PLAN_AHEAD + 1 }, (_, i) => addDaysYmd(t, i)); }
 function recentDates() { const t = todayYmd(); return Array.from({ length: 7 }, (_, i) => addDaysYmd(t, i - 6)); }

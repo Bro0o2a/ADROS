@@ -52,6 +52,11 @@ function showAiWait() {
     b.disabled = on;
     b.textContent = on ? "🤖 Thinking…" : b.dataset.label;
   });
+  // 📝 v202 (Broo2a): a study session's worksheet is being made → a banner on every screen until it's ready
+  let bar = document.getElementById("aiMaking");
+  const making = /^(session|more)\|/.test(String(aiWait || ""));
+  if (making && !bar) { bar = document.createElement("div"); bar.id = "aiMaking"; bar.className = "ai-making"; bar.setAttribute("role", "status"); document.body.appendChild(bar); }
+  if (bar) { bar.hidden = !making; bar.textContent = making ? "🤖 Making your worksheet… it takes about a minute. Stay here 🙂" : ""; }
 }
 // Asks the AI server. → the result, or null (then a friendly message was shown)
 // 🤖 This month's AI use for a family with a limit (kept on this device: { used, limit, month }); our family has no limit, so nothing shows
@@ -968,6 +973,7 @@ async function newWorksheet(kid, subject, topics, count, mode, key, extra, open 
   const id = newId();
   aiSave("worksheets", id, ws);
   if (open && screen === "school" && schoolKid === kid) openAiDoc("worksheet", id);
+  else if (open && keep.session) toast("📝 Your worksheet is ready! Tap 📝 My worksheet in the calendar.", 5000, "#16a34a");
   // (👨‍👩‍👧 a parent who makes it earns no school points: the kid earns them when they finish it)
   return id;
 }

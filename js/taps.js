@@ -171,10 +171,13 @@ document.addEventListener("click", e => {
   if ("viewcal" in ds) { calWho = ds.viewcal || me; return go("mine"); }   // (older links: someone's calendar, "" = my own)
   if (ds.allview) { allView = ds.allview; return render(); }
   // (📅 the calendar's 12 days: ‹ › stop at the first and last one)
-  if (ds.kday) { viewDay = Number(ds.kday); wholeWeek = false; return render(); }
+  if (ds.kday) { if (Number(ds.kday) < 0) return toast("📅 That day isn't in the plan yet.", 2500); viewDay = Number(ds.kday); wholeWeek = false; return render(); }
+  // 📅 v203: in the Week view ‹ › go to the week before / after (as far as the plan reaches)
+  if ("kprev" in ds && wholeWeek && screen === "mine") { weekShift = Math.max(-2, weekShift - 1); return render(); }
+  if ("knext" in ds && wholeWeek && screen === "mine") { weekShift = Math.min(1, weekShift + 1); return render(); }
   if ("kprev" in ds) { viewDay = Math.max(0, viewDay - 1); wholeWeek = false; return render(); }
   if ("knext" in ds) { viewDay = Math.min(CAL_LEN - 1, viewDay + 1); wholeWeek = false; return render(); }
-  if (ds.kmode) { wholeWeek = ds.kmode === "week"; return render(); }
+  if (ds.kmode) { wholeWeek = ds.kmode === "week"; weekShift = 0; return render(); }
   if (ds.kblock) return openCard(blocks[Number(ds.kblock)]);
   if (ds.same) return toast(`⇄ ${ds.same}`, 3500);   // "At the same time as: Gym (Bro2a)"
   // View all plan: "📆 Day" / "📅 Week summary", the day buttons and ◀ ▶

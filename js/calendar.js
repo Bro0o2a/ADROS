@@ -158,6 +158,7 @@ const calDays = () => calDates().map(planDay);
 const isPhone = () => window.matchMedia("(max-width: 699px)").matches;
 let viewDay = CAL_BACK;       // which of the calendar's 12 days is showing (0 = 5 days ago … CAL_BACK = today … 11 = today + 6)
 let wholeWeek = !isPhone();   // true = show all 12 days
+let weekShift = 0;             // 📅 v203 the Week view: 0 = this week (from ⚙️ its start day), -1 = last week, 1 = next week
 let blocks = [];              // the blocks on screen, so we know which one was tapped
 
 // The last calendar view and person, remembered on THIS device only (not in the family's data), e.g.
@@ -175,7 +176,7 @@ const savedDay = () => CAL_BACK;
 // When the app comes back after a while (10+ minutes away), or at midnight while it's open: "today" is picked again everywhere
 let dayAway = 0, lastToday = null;   // (set on the first check)
 function backToToday() {
-  viewDay = CAL_BACK; habitDay = weekIndex(); lastToday = todayYmd();
+  viewDay = CAL_BACK; weekShift = 0; habitDay = weekIndex(); lastToday = todayYmd();
   calScrollFresh();
   if (exists(me)) render();
   scrollStripToToday();
@@ -212,7 +213,7 @@ function scrollStripToToday() {
 // Opening "My calendar": the last day, Day / Week and person (or today, and my own week)
 function restoreMine() {
   const p = calPrefs(), m = p.mine || {};
-  viewDay = savedDay(p);
+  viewDay = savedDay(p); weekShift = 0;
   calScrollFresh();
   wholeWeek = typeof m.week === "boolean" ? m.week : !isPhone();
   const who = m.who && m.who[me];
@@ -227,11 +228,11 @@ function navHtml(dates) {
       <div class="seg k-mode"><button class="${wholeWeek ? "" : "on"}" data-kmode="day">📆 Day</button>
         <button class="${wholeWeek ? "on" : ""}" data-kmode="week">📅 Week</button></div>
       <button class="pill small k-planbtn" data-dayplan="${wholeWeek ? today : calDates()[viewDay] || today}" aria-label="Day plan" title="This day's plan">📋 Plan</button></div>
-    <div class="k-days"><button class="k-arrow" data-kprev aria-label="Previous day">‹</button>${dates.map(ds => [ds, calDates().indexOf(ds)])
+    <div class="k-days"><button class="k-arrow" data-kprev aria-label="Previous ${wholeWeek ? "week" : "day"}">‹</button>${dates.map(ds => [ds, calDates().indexOf(ds)])
       // (v154: Day = only the day before, the day, the day after · Week = the 7 days shown)
       .filter(([, i]) => wholeWeek || Math.abs(i - viewDay) <= 1).map(([ds, i]) => { const d = SHORT[weekdayOf(ds)];
       return `<button class="k-dbtn wd-${weekdayOf(ds)} ${i === viewDay && !wholeWeek ? "sel" : ""} ${ds === today ? "istoday" : ""} ${ds < today ? "past" : ""}" data-kday="${i}" data-date="${ds}"
-        ${ds === today ? `aria-label="${d} (today)"` : ""}>${d}<small>${fromYmd(ds).getDate()}</small></button>`; }).join("")}<button class="k-arrow" data-knext aria-label="Next day">›</button></div></div>`;
+        ${ds === today ? `aria-label="${d} (today)"` : ""}>${d}<small>${fromYmd(ds).getDate()}</small></button>`; }).join("")}<button class="k-arrow" data-knext aria-label="Next ${wholeWeek ? "week" : "day"}">›</button></div></div>`;
 }
 
 // 🧸 v159: a 3D icon for an activity, from words in its name (icons/3d, see ico3d in home.js); unknown → by its type
@@ -320,7 +321,7 @@ function weekHtml(days, opts) {
     // 🎈 v182 (Broo2a): an empty gap of 45 minutes or more on one person's calendar (today from now, and the days ahead):
     //  a "Free time" strip → 🎈 ideas, and for a parent ➕ add an activity there
     if (opts.only && !opts.drag && !opts.readOnly && ds >= today) freeGaps(ds, opts.only, day, pacts, odays).forEach(([gs, ge]) =>
-      parts.push({ start: gs, end: gs + 1, strip: true, html: `<div class="k-gap"><span>🎈 Free ${clock(gs, true)}–${clock(ge, true)}</span>
+      parts.push({ start: gs, ...(opts.whole || wholeWeek ? { end: ge } : { end: gs + 1, strip: true }), html: `<div class="k-gap"><span>🎈 Free ${clock(gs, true)}–${clock(ge, true)}</span>
         <button class="pill small" data-freeopen="${safe(opts.only)}">💡 Ideas</button>${isParentDevice()
           ? `<button class="pill small" data-gapadd="${ds}|${safe(opts.only)}|${gs}|${ge}">➕ Add</button>` : ""}</div>` }));
     // 🕌 Prayer times (only for people who want them): inside the activity happening then, otherwise a thin line of its own
@@ -419,7 +420,7 @@ function weekHtml(days, opts) {
   const bars = travelBars(opts.only || null, dates).map(x => ({ ...x, html: travelBarHtml(x, opts) }));
   // opts.whole = always all the days, without the Day / Week switch (View all plan → "🗓️ Full week")
   return (opts.whole ? "" : navHtml(dates)) + weekRowsHtml(dayParts, d => { const ds = dates[d];
-    return `<div class="k-dayname wd-${weekdayOf(ds)}" ${ds === today ? `title="Today"` : ""}><span class="k-daynum">${fromYmd(ds).getDate()}</span>${ds === today ? "Today · " : ""}${dayHead(ds)}</div>${examTagsHtml(ds, opts.only || null)}${countdownHtml(ds, opts.only || null)}${
+    return `<div class="k-dayname wd-${weekdayOf(ds)}" ${ds === today ? `title="Today"` : ""}><span class="k-daynum">${fromYmd(ds).getDate()}</span>${ds === today ? "Today · " : ""}${dayHead(ds)}</div>${dayHoursHtml(ds, opts)}${examTagsHtml(ds, opts.only || null)}${countdownHtml(ds, opts.only || null)}${
       eventsOn(ds, opts.only || null).filter(e => !e.time).map(e => eventHtml(e, opts.only || null)).join("")}${
       pactsOn(ds, opts.only || null).filter(a => a.type !== "travel" && !a.from).map(a => pactDayHtml(a, ds, opts)).join("")}`; }, opts.whole || wholeWeek, bars, dates);
 }
@@ -505,7 +506,9 @@ function padIdsOf(it) {
 }
 // Works out the rows and, for each day, each thing's row, how many rows it spans, its lane and how many lanes wide it is.
 // dayParts = per day a list of { start, end, html, strip, padId, padIds, free }.
-function rowLayout(dayParts) {
+// grid = 📅 v203 (Broo2a) the Week view: a real hour grid (every 15 minutes is a row, even empty ones) from the earliest
+// thing to the latest one (at least the days' own time), so a longer thing is a taller card and the times never jump.
+function rowLayout(dayParts, grid = false, span = null) {
   // "Get ready" / "Break" never get a lane of their own: they're glued above / below their own activity's card
   dayParts = dayParts.map(parts => {
     const cards = parts.filter(p => p.padIds);
@@ -518,12 +521,20 @@ function rowLayout(dayParts) {
     });
     return rest.map(p => p.above || p.below ? { ...p, html: (p.above || "") + p.html + (p.below || "") } : p);
   });
-  const times = [...new Set(dayParts.flatMap(parts => parts.filter(p => !p.free).map(p => slot15(p.start))))].sort((a, b) => a - b);
+  let times = [...new Set(dayParts.flatMap(parts => parts.filter(p => !p.free).map(p => slot15(p.start))))].sort((a, b) => a - b);
+  if (grid && (times.length || span)) {
+    const all = dayParts.flatMap(parts => parts.filter(p => !p.free));
+    let lo = Math.min(...all.map(p => p.start), ...(span ? [span[0]] : [])), hi = Math.max(...all.map(p => p.end), ...(span ? [span[1]] : []));
+    if (span) { lo = Math.max(lo, span[0]); hi = Math.min(hi, span[1]); }   // (an all-day fixed thing like "Play time 12:30 AM" doesn't stretch the grid)
+    lo = Math.floor(lo / 60) * 60; hi = Math.max(lo + 60, Math.ceil(hi / 60) * 60);
+    times = []; for (let t = lo; t < hi; t += 15) times.push(t);
+  }
+  const rowOf = min => { if (!grid) return times.indexOf(slot15(min)); const i = (slot15(min) - times[0]) / 15; return Math.max(0, Math.min(times.length - 1, i)); };
   const rows = times.length ? times : [null];   // (a week with nothing: one empty row)
   const days = dayParts.map(parts => {
     let items = [];
     parts.filter(p => !p.free).sort((a, b) => a.start - b.start).forEach(p => {
-      const r0 = times.indexOf(slot15(p.start));
+      const r0 = rowOf(p.start);
       // Two things in the same row that don't really overlap (e.g. 5:00–5:20 and 5:20): one under the other, same lane
       // (a card that stretches over several columns — View all plan — always stays on its own)
       const prev = !p.solo && items.find(o => !o.solo && o.r0 === r0 && o.end <= p.start);
@@ -573,7 +584,10 @@ function rowLayout(dayParts) {
 // dates = each column's date (📅 today is highlighted; the days before it are greyed a little: look-only)
 function weekRowsHtml(dayParts, headHtml, whole = wholeWeek, bars = [], dates = []) {
   const today = dates.indexOf(todayYmd());
-  const { rows, days } = rowLayout(dayParts);
+  // (📅 v203 the Week view: an hour grid over the days' own time, "My day" in ⚙️ Settings)
+  const wins = dates.filter(Boolean).map(ds => dayWindow(weekdayOf(ds)));
+  const grid = whole && wins.length > 0, span = grid ? [Math.min(...wins.map(w => w[0])), Math.max(...wins.map(w => w[1]))] : null;
+  const { rows, days } = rowLayout(dayParts, grid, span);
   const B = bars.length;
   const last = rows.length + 2 + B;             // the day names row + the bars + the rows + a little space at the bottom
   const cls = d => `${d === today ? "today" : ""} ${today >= 0 && d < today ? "past" : ""} ${d === viewDay ? "sel" : ""}`;
@@ -593,8 +607,8 @@ function weekRowsHtml(dayParts, headHtml, whole = wholeWeek, bars = [], dates = 
       fluid.push(`minmax(0,${fr})`); wide.push(lane); one.push(d === viewDay ? `minmax(0,${fr})` : "0px");
     }
   });
-  let html = `<div class="k-scroll ${whole ? "wide" : ""}"><div class="k-week rows ${whole ? "" : "one-day"}"
-    style="--cols:${fluid.join(" ")};--cols-wide:${wide.join(" ")};--cols-day:${one.join(" ")};grid-template-rows:auto ${B ? `repeat(${B}, auto) ` : ""}repeat(${rows.length}, auto) 6px">
+  let html = `<div class="k-scroll ${whole ? "wide" : ""}"><div class="k-week rows ${whole ? "" : "one-day"} ${grid ? "k-grid" : ""}"
+    style="--cols:${fluid.join(" ")};--cols-wide:${wide.join(" ")};--cols-day:${one.join(" ")};grid-template-rows:auto ${B ? `repeat(${B}, auto) ` : ""}repeat(${rows.length}, ${grid ? "minmax(var(--slot-h, 18px), auto)" : "auto"}) 6px">
     <div class="k-corner"></div>`;
   days.forEach((x, d) => {
     const span = `grid-column:${first[d]} / span ${x.L}`;
@@ -613,6 +627,9 @@ function weekRowsHtml(dayParts, headHtml, whole = wholeWeek, bars = [], dates = 
   // The time labels (on the phone's one-day view: only the times that day has)
   rows.forEach((t, r) => {
     const used = (days[viewDay] || { items: [] }).items.some(it => it.r0 === r);
+    // (📅 the hour grid: a label on each full hour only, and a thin line across the week)
+    if (grid) { if (t % 60 === 0) html += `<div class="k-time k-hour" style="grid-row:${r + 2 + B}"><span class="k-tpill">${rowTime(t)}</span></div>
+      <div class="k-hline" style="grid-column:2 / -1;grid-row:${r + 2 + B}" aria-hidden="true"></div>`; return; }
     html += `<div class="k-time ${used ? "" : "not-sel"}" style="grid-row:${r + 2 + B}">${t === null ? "" : `<span class="k-tpill">${rowTime(t)}</span>`}</div>`;
   });
   return html + `</div></div>`;
@@ -1293,10 +1310,11 @@ function drawMine() {
   const sk = subjFilterKid(who), subj = sk && calSubj !== "all" ? { kid: sk, name: calSubj } : null;
   keepCalScroll("mineWeek");
   // 📅 v154: the Week view = today and the next 6 days only (no past days); the Day view still reaches back with ‹
-  const keepDay = viewDay, wk = wholeWeek && !editing;
-  if (wk) viewDay = Math.max(0, viewDay - CAL_BACK);
+  // 📅 v203 (Broo2a): the Week view = 7 days, from ⚙️ the week's start day (Sunday … Saturday), ‹ › = another week
+  const keepDay = viewDay, wk = wholeWeek, wdays = wk ? calWeekDates(weekShift).map(planDay) : days;
+  if (wk) viewDay = Math.max(0, wdays.findIndex(x => x.date === todayYmd()));
   navSubj = subjPickHtml(sk, who);
-  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + weekHtml(wk ? days.slice(CAL_BACK) : days, { only: who, readOnly: editing, drag: editing, subj }); }
+  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj }); }
   finally { viewDay = keepDay; navSubj = ""; }
   putCalScroll("mineWeek");   // (📅 opens with today in view; a tick or a tap keeps it where it was)
   $("mineSubj").innerHTML = sk ? subjFilterHtml(sk, who) : "";   // (v180: only the picked subject's summary; the picker is in the days row)
@@ -1646,4 +1664,45 @@ function familyPage() {
 // If someone prints from the browser's own menu instead, print their own week.
 window.addEventListener("beforeprint", () => {
   if (!$("printArea").innerHTML.trim() && exists(me) && planDays()) buildPrint(me);
+});
+
+// 🕗 v203 (Broo2a): the day's own time under each day's name ("🕗 8 AM – 11 PM"). A parent taps it to change it for every
+// Sunday (or that weekday) right here; nothing is planned outside it. (The same times as ⚙️ Settings → My day.)
+function dayHoursHtml(ds, opts) {
+  if (!wholeWeek && !opts.whole) return "";
+  const [s, e] = dayWindow(weekdayOf(ds)), can = isParentDevice() && !opts.readOnly && ds >= todayYmd();
+  const txt = `🕗 ${clock(s, true)} – ${clock(e, true)}`;
+  return can ? `<button class="k-dayhours" data-dayhours="${ds}" title="Change this day's time">${txt}</button>` : `<div class="k-dayhours">${txt}</div>`;
+}
+function openDayHours(ds) {
+  if (!isParentDevice()) return;
+  const wd = weekdayOf(ds), [s, e] = dayWindow(wd);
+  $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
+  $("kCard").innerHTML = `<div class="k-card-top"><div class="big">🕗</div><div class="nm">Every ${DAYS[wd]}</div></div>
+    <p class="hint" style="text-align:center;margin:6px 16px">When the day starts and ends. Nothing is planned outside it.</p>
+    <div class="dh-box"><label>Starts at <input type="time" id="dhStart" value="${clock24(s)}" step="900"></label>
+      <label>Ends at <input type="time" id="dhEnd" value="${clock24(e)}" step="900"></label></div>
+    <div class="err" id="dhErr"></div>
+    <div class="btnrow" style="justify-content:center"><button class="pill primary" data-dhsave="${wd}">💾 Save and plan again</button></div>
+    <button class="k-ok" id="kOk">Cancel</button>`;
+  $("kModal").hidden = false;
+}
+function saveDayHoursOf(wd) {
+  const st = $("dhStart").value, en = $("dhEnd").value;
+  if (!/^\d{2}:\d{2}$/.test(st) || !/^\d{2}:\d{2}$/.test(en) || toMin(en) <= toMin(st)) return $("dhErr").textContent = "The day must end after it starts.";
+  if (hasDraft()) return $("dhErr").textContent = "💾 Save your other changes first.";
+  const days = DAYS.map((_, i) => { const [a, b] = dayWindow(i); return { start: clock24(a), end: clock24(b) }; });
+  days[wd] = { start: st, end: en };
+  data.myDay = { start: days[0].start, end: days[0].end, weekendOwn: days[5].start !== days[0].start || days[5].end !== days[0].end,
+                 weekendStart: days[5].start, weekendEnd: days[5].end, days };
+  closeCard();
+  const w = calWho, wk = wholeWeek, sh = weekShift;
+  planNow();   // (saved and planned again: the new time counts straight away)
+  go("mine"); calWho = w; wholeWeek = wk; weekShift = sh; render();
+  toast(`🕗 Every ${DAYS[wd]}: ${clock(toMin(st), true)} – ${clock(toMin(en), true)}. The week is planned again.`, 4000);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-dayhours], [data-dhsave]"); if (!b) return;
+  if (b.dataset.dayhours) return openDayHours(b.dataset.dayhours);
+  saveDayHoursOf(Number(b.dataset.dhsave));
 });
