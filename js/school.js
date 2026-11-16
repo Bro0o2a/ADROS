@@ -100,12 +100,14 @@ function openSchool(kid) {
   schoolFresh = true;
   go("school");
 }
-// 🎒 v180: the School button in every top bar (kids: their own School; parents: the kid they looked at last, else the first kid)
+// 🎒 v180: the School button in every top bar (kids: their own School; parents: the kid on the screen, else the kid they looked at last, else the first kid)
 document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("[data-schoolnav]");
   if (!b || !exists(me)) return;
   if (!isParentId(me)) return openSchool(me);
-  const kids = kidsList(), pick = [schoolKid, kidPage].find(id => id && kids.some(k => k.id === id)) || (kids[0] || {}).id;
+  // 🧒 v201 (Broo2a): the kid on the screen right now wins (their page, or their calendar), then the last School kid
+  const onScreen = screen === "kid" ? kidPage : screen === "mine" && calWho !== "all" ? calWho : null;
+  const kids = kidsList(), pick = [onScreen, schoolKid, kidPage].find(id => id && kids.some(k => k.id === id)) || (kids[0] || {}).id;
   if (!pick) return toast("Add a kid first 🙂", 3000);
   openSchool(pick);
 });
