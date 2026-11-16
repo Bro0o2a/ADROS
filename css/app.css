@@ -1024,6 +1024,11 @@
 
   /* Toast: short messages at the bottom ("Backup downloaded"). pointer-events: none = taps go through it,
      so it never blocks the 💾 Save button. */
+  .ai-making { position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9998;
+    width: max-content; max-width: calc(100vw - 32px); padding: 12px 18px; border-radius: 16px; background: #1e3a8a; color: #fff;
+    font-weight: 800; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); animation: aiMakingPulse 1.6s ease-in-out infinite; }
+  .ai-making[hidden] { display: none; }
+  @keyframes aiMakingPulse { 50% { opacity: .82; } }
   .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%);
            background: var(--text); color: #fff; padding: 12px 22px; border-radius: 999px; font-size: 18px; font-weight: 700;
            z-index: 60; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); max-width: calc(100% - 32px); text-align: center;
