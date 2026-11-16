@@ -11,6 +11,7 @@ function drawSettings() {
   $("starDay").innerHTML = DAYS.map((d, i) => `<option value="${i}" ${i === starTime().day ? "selected" : ""}>${d}</option>`).join("");
   $("starClock").value = starTime().time;
   $("extraLimit").value = String(data.extraLimit || 3);
+  $("calWeekStart").innerHTML = DAYS.map((d, i) => `<option value="${i}" ${i === calWeekStartOf() ? "selected" : ""}>${d}</option>`).join("");
   $("moodRemind").value = data.moodRemind === undefined ? "18:00" : data.moodRemind;
   const pa = previewAtOf();
   $("previewDay").innerHTML = DAYS.map((d, i) => `<option value="${i}" ${pa && i === pa.day ? "selected" : ""}>${d}</option>`).join("") + `<option value="" ${pa ? "" : "selected"}>Off</option>`;
@@ -129,6 +130,7 @@ $("maxTogether").addEventListener("change", () => {
 
 // 🤖 Extra worksheets per kid per day (3–5)
 $("moodRemind").addEventListener("change", () => { data.moodRemind = $("moodRemind").value; changed(); });
+$("calWeekStart").addEventListener("change", () => { const n = Number($("calWeekStart").value); if (n >= 0 && n <= 6) data.calWeekStart = n; changed(); });
 $("extraLimit").addEventListener("change", () => { const n = Number($("extraLimit").value); if ([3, 4, 5].includes(n)) data.extraLimit = n; changed(); });
 
 // ---------- 🌙 v180 Bedtimes (Broo2a): per kid, school nights (Sun–Thu) and weekend nights (Fri, Sat). "" = no bedtime.
