@@ -142,6 +142,21 @@ try {
   });
   if (part !== "ok") errors.push("[part marks] " + part);
 
+  // 📚 v204 a parent fixes an answer of a session worksheet → the session's % and the week's score follow the new mark
+  const fixSess = await run("session score after a parent fix", ws => {
+    const kid = "ex-kid1", sub = (subjectList(schoolOf(kid), true)[0] || {}).name, key = `${todayYmd()}|testact|${kid}`;
+    if (!sub) return "no subject";
+    const w = { ...cleanWorksheet(ws), kid, subject: sub, session: key, at: "t1", check: cleanCheck(JSON.parse(JSON.stringify(ws.check)), 5) };
+    aiDocs.worksheets.sesstest = w;
+    learnAfterCheck(w, w.check, "sesstest"); saveWsMark(kid, "sesstest", w, w.check); sessionFromWs(w, "sesstest", w.check);
+    const before = data.points.sessions[key].pct, scoreBefore = scoreOf(kid).overall;
+    fixQuestion("sesstest", 2, "right");
+    const after = data.points.sessions[key].pct, scoreAfter = scoreOf(kid).overall, c = aiDocs.worksheets.sesstest.check;
+    delete aiDocs.worksheets.sesstest; delete data.points.sessions[key];
+    return before === 80 && after === 100 && c.score === 5 && scoreAfter > scoreBefore ? "ok" : JSON.stringify({ before, after, scoreBefore, scoreAfter, score: c.score });
+  }, FAKE_WS);
+  if (fixSess !== "ok") errors.push("[session score after a parent fix] " + fixSess);
+
   // 📸 v197 the answer photos stay on the worksheet after ✅ Check (before, they turned into a plain list and looked gone)
   const thumbs = await run("answer photos after the check", ws => {
     const s = schoolFor("ex-kid1");

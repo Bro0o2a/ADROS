@@ -1974,6 +1974,7 @@ function fixQuestion(wsId, number, to) {
   aiSave("worksheets", wsId, { ...w, check: c, status: "Checked ✓" });
   learnAfterCheck(w, c, wsId);   // 🧠 (its % in the history)
   saveWsMark(w.kid, wsId, w, c);
+  sessionFromWs(w, wsId, c);   // 📚 the session's % too
   schoolFresh = true;
   render();
   toast(`✓ Q${number} is now ${to === "part" ? `${num(pts)} of ${num(full)} points` : to}. Score: ${num(score)} / ${num(c.max_score)}`, 3000);
@@ -2292,11 +2293,7 @@ async function checkWorksheetNow(wsId) {
   c.aiScore = c.score;
   const now = aiDocs.worksheets[wsId] || w;
   aiSave("worksheets", wsId, { ...now, answers: answerIdsOf(now, wsId, s), check: c, status: "Checked ✓" });   // (with its subject and part, and 💪 🎯 🦉)
-  if (now.session) {   // 📚 the study session's result: all its worksheets together (weighted by their points), 🔁 a swapped subject too
-    const all = sessionWsIds(now.session).map(id => id === wsId ? { ...now, check: c } : aiDocs.worksheets[id]).filter(x => x && x.check);
-    const got = all.reduce((n, x) => n + x.check.score, 0), most = all.reduce((n, x) => n + x.check.max_score, 0), swap = all.map(x => x.swap).find(Boolean);
-    saveSession(now.session, most ? got / most * 100 : c.score / c.max_score * 100, { ws: wsId, ...(swap ? { swap } : {}) });
-  }
+  sessionFromWs(now, wsId, c);
   learnAfterCheck(now, c, wsId);   // 🧠 skills, level and history (saved with the mark just below)
   const first = saveWsMark(now.kid, wsId, now, c);
   // (👨‍👩‍👧 no school points for a parent who checks it: the kid earns them)
@@ -2315,6 +2312,15 @@ async function checkWorksheetNow(wsId) {
 function notifyCheck(w, c) {
   const text = `🦉 ${kidNameOf(w.kid)} · ${w.subject}: ${num(c.score)}/${num(c.max_score)}${c.coach_tip ? " — " + c.coach_tip : ""}`;
   addNews([newsItem("school", text.slice(0, 700), "", w.kid)]);
+}
+// 📚 The study session's result: all its worksheets together (weighted by their points), 🔁 a swapped subject too.
+// Also after a parent fixes an answer (✓ / ✗ / part marks) or the mark by hand, so the session's % follows the new score.
+function sessionFromWs(w, wsId, c) {
+  if (!w || !w.session || !(c && c.max_score > 0)) return;
+  const all = sessionWsIds(w.session).map(id => id === wsId ? { ...w, check: c } : aiDocs.worksheets[id]).filter(x => x && x.check);
+  const got = all.reduce((n, x) => n + x.check.score, 0), most = all.reduce((n, x) => n + x.check.max_score, 0), swap = all.map(x => x.swap).find(Boolean);
+  const { pct, by, at, ...old } = data.points.sessions[w.session] || {};   // (keeps a 🔁 swap or a note already there)
+  saveSession(w.session, most ? got / most * 100 : c.score / c.max_score * 100, { ...old, ws: old.ws || wsId, ...(swap ? { swap } : {}) });
 }
 // The worksheet's mark in its subject (type "Worksheet"). true = the first time (that's when the +10 ⭐ come)
 function saveWsMark(kid, wsId, w, c) {
@@ -2339,6 +2345,7 @@ function saveWsFix(wsId) {
   aiSave("worksheets", wsId, { ...w, check: c, status: "Checked ✓" });
   learnAfterCheck(w, c, wsId);   // 🧠 (a mark fixed by hand: its % in the history)
   const first = saveWsMark(w.kid, wsId, w, c);
+  sessionFromWs(w, wsId, c);   // 📚 the session's % too
   if (w.purpose === "placement") afterPlacement(w.kid, wsId, c, first);
   if (w.purpose === "level_check") afterLevelCheck(w.kid, w, c);
   wsFix = false; schoolFresh = true;
