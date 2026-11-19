@@ -140,6 +140,7 @@ function loginMode(mode) {
   $("lgFamilyRow").hidden = mode !== "create";
   $("lgNameRow").hidden = mode === "signin";
   $("lgCodeRow").hidden = mode !== "code";
+  $("lgForgot").hidden = mode !== "signin";
   $("loginPass").autocomplete = mode === "signin" ? "current-password" : "new-password";
   document.querySelectorAll("[data-lgmode]").forEach(b => { b.classList.toggle("on", b.dataset.lgmode === mode); b.setAttribute("aria-selected", b.dataset.lgmode === mode); });
   $("loginErr").textContent = "";
@@ -151,10 +152,12 @@ $("loginScreen").addEventListener("click", e => {
   if (b.dataset.lg === "kid") return loginStep("kid");
   if (b.dataset.lg === "back") return loginStep("choose");
   if (b.dataset.lgmode) return loginMode(b.dataset.lgmode);
+  if (b.dataset.lg === "forgot") return forgotPassword();
 });
 // A code as typed → "ABC234" (spaces gone, capitals; O → 0 is not a code letter, so it stays and fails)
 const typedCode = id => $(id).value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-// Friendly words for Firebase's error codes
+// Friendly words for Firebase's error codes (no developer words: a family sees these)
+const helpLine = () => CONTACT ? ` If it keeps happening, email ${CONTACT}.` : "";
 function loginError(err) {
   const code = (err && err.code) || "";
   if (/invalid-credential|wrong-password|user-not-found|invalid-login-credentials/.test(code)) return "That email or password isn't right. Please try again.";
@@ -162,9 +165,10 @@ function loginError(err) {
   if (code.includes("missing-password")) return "Please type the password.";
   if (code.includes("too-many-requests")) return "Too many tries. Please wait a few minutes, then try again.";
   if (code.includes("network-request-failed")) return "No internet. Connect to the internet and try again.";
-  if (code.includes("user-disabled")) return "This account is turned off. Check it in the Firebase console.";
-  if (code.includes("operation-not-allowed")) return "Email/Password sign-in isn't turned on in Firebase yet.";
-  if (code.includes("unauthorized-domain")) return "This web address isn't allowed yet. Add it in Firebase → Authentication → Settings → Authorized domains.";
+  if (code.includes("weak-password")) return "The password needs 6 or more letters or numbers.";
+  if (code.includes("email-already-in-use")) return "This email already has an account. Tap “Sign in” and use its password.";
+  if (code.includes("user-disabled")) return "This account is turned off." + helpLine();
+  if (code.includes("operation-not-allowed") || code.includes("unauthorized-domain")) return "Signing in isn't working right now." + helpLine();
   return "Couldn't sign in. Please try again." + (code ? ` (${code})` : "");
 }
 // 👨‍👩‍👧 Parent: sign in, or create the account (new family / parent code). Then cloudSignedIn() → resolveMember() takes over.
@@ -185,12 +189,31 @@ $("loginForm").addEventListener("submit", async e => {
     else {
       // A new account. (Already has one? Then sign in with it.)
       try { await fb.createUserWithEmailAndPassword(cloud.auth, email, pass); }
-      catch (err) { if ((err.code || "").includes("email-already-in-use")) await fb.signInWithEmailAndPassword(cloud.auth, email, pass); else throw err; }
+      catch (err) {
+        if (!(err.code || "").includes("email-already-in-use")) throw err;
+        // Wrong password for that email: say the email already has an account (not just "isn't right")
+        await fb.signInWithEmailAndPassword(cloud.auth, email, pass).catch(() => { throw err; });
+      }
     }
   } catch (err) { cloud.pending = null; $("loginErr").textContent = loginError(err); }
   $("loginBtn").disabled = false;
-  loginMode(lgMode);
+  $("loginBtn").textContent = LG_MODES[lgMode][2];   // (only the button: loginMode() would also wipe the error message)
 });
+// 🔑 Forgot password: Firebase emails a link to choose a new one (same answer whether or not the email has an account)
+async function forgotPassword() {
+  const email = $("loginEmail").value.trim(), fb = cloud.fb;
+  if (!email) { $("loginErr").textContent = "Type your email above first, then tap “Forgot password?” again."; return $("loginEmail").focus(); }
+  if (!fb) return $("loginErr").textContent = "No internet yet. Connect to the internet and try again.";
+  try {
+    await fb.sendPasswordResetEmail(cloud.auth, email);
+    $("loginErr").textContent = "";
+    toast("📧 If " + email + " has an account, we sent it a link to choose a new password. Check your inbox (and spam).", 7000);
+  } catch (err) {
+    const code = (err && err.code) || "";
+    if (code.includes("user-not-found")) return toast("📧 If " + email + " has an account, we sent it a link to choose a new password. Check your inbox (and spam).", 7000);
+    $("loginErr").textContent = loginError(err);
+  }
+}
 // 🧒 Kid: the code → signed in without an email (anonymous), as that kid. This device remembers it.
 $("kidForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -203,7 +226,7 @@ $("kidForm").addEventListener("submit", async e => {
   try { await fb.signInAnonymously(cloud.auth); }
   catch (err) {
     cloud.pending = null;
-    $("kidErr").textContent = (err.code || "").includes("operation-not-allowed") ? "Kid sign-in isn't turned on yet. Ask your parent (Firebase → Anonymous)." : loginError(err);
+    $("kidErr").textContent = (err.code || "").includes("operation-not-allowed") ? "Kid sign-in isn't working right now. Please ask your parent." : loginError(err);
   }
   $("kidBtn").disabled = false;
 });
@@ -221,7 +244,11 @@ async function resolveMember(user) {
     if (user.uid === OLD_FAMILY_UID) return { familyId: user.uid, role: "parent" };
     throw err;
   }
-  if (snap.exists()) return snap.data();
+  if (snap.exists()) {
+    // "New family" / "Parent code" with an email that is already in a family: open that family, and say so
+    if (pending && (pending.kind === "create" || pending.kind === "parentcode")) cloud.alreadyNote = true;
+    return snap.data();
+  }
   if (user.uid === OLD_FAMILY_UID) {
     const m = { familyId: user.uid, role: "parent" };
     await fb.setDoc(ref, m).catch(err => console.warn("Member:", err));
@@ -268,7 +295,7 @@ async function cloudSignedIn(user) {
       // Wrong code / no family / not allowed: signed out again, with a friendly message on the right step
       const msg = err.message === "badcode" ? (wasKid ? "Ask your parent for your code." : "That parent code isn't right. Ask the other parent for a new one.")
         : err.message === "nofamily" ? "This account isn't in a family yet. Tap “New family”, or “Parent code”."
-        : "The cloud said no. The family's Firestore rules need updating (see firestore.rules).";
+        : "The cloud said no to this account." + helpLine();
       if (user.isAnonymous) fb_deleteQuietly(user); else cloud.fb.signOut(cloud.auth).catch(() => {});
       showLogin();
       loginStep(wasKid ? "kid" : "parent");
@@ -286,6 +313,7 @@ async function cloudSignedIn(user) {
                  ...(typeof m.person === "string" ? { person: m.person } : {}), ...(typeof m.name === "string" ? { name: m.name } : {}) } });   // (👤 who this account is)
   applyRole();
   appErrors.forEach(sendAppError);   // ⚠️ problems from before the sign-in
+  if (cloud.alreadyNote) { cloud.alreadyNote = false; toast("ℹ️ This email already has a family, so we opened it.", 5000); }
   // 🆕 A new family: this device starts with only the parent (then "Add your kids")
   if (cloud.fresh) {
     data = freshFamilyData(cloud.fresh.parentName);
@@ -679,7 +707,7 @@ function cloudApply(name, remote) {
 function cloudError(err) {
   console.warn("Cloud:", err);
   const code = err && err.code;
-  if (code === "permission-denied") toast("⚠ The cloud said no. Check the Firestore rules in the Firebase console.", 6000);
+  if (code === "permission-denied") toast("⚠ The cloud said no to this change. Changes are kept on this device." + helpLine(), 6000);
   else if (code === "resource-exhausted") toast("⚠ The cloud is busy (daily limit reached). Changes are kept on this device.", 6000);
   // 🩺 v198: the cloud said no to a change for another reason (e.g. a document too big): never silent any more.
   // It goes in ⚙️ Settings → Backup → App problems with the cloud's own words, so we can see what happened.

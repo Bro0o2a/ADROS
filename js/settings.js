@@ -531,7 +531,7 @@ async function makeCode(kidId) {
     toast(`🔑 New code: ${code}`, 3500);
   } catch (err) {
     console.warn("Code:", err);
-    toast(err && err.code === "permission-denied" ? "⚠ The cloud said no. Deploy the new Firestore rules first (firestore.rules)." : "Couldn't make a code. Please try again.", 5000);
+    toast(err && err.code === "permission-denied" ? "⚠ The cloud said no. Please try again later." : "Couldn't make a code. Please try again.", 5000);
   }
 }
 // The words to send: the code and how to use it
