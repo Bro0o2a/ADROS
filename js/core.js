@@ -47,7 +47,7 @@ const PRAYER_AMMAN = { city: "Amman, Jordan", lat: 31.9539, lng: 35.9106 };   //
 const PRAYERS_LIST = [["fajr", "Fajr"], ["dhuhr", "Dhuhr"], ["asr", "Asr"], ["maghrib", "Maghrib"], ["isha", "Isha"]];
 const PRAYER_MIN = 15;                            // the reminder shows during the first 15 minutes
 const SAVE_KEY = "weeklyPlanner.v1";             // the name we save our data under in the browser
-const APP_NAME = "StudyCal";
+const APP_NAME = "ADROS";
 const CONTACT = "studycalapp.help@gmail.com";                           // 🔒 Privacy: who to ask (an email, …). Empty = the "Questions?" line is hidden.
 const PRIVACY_UPDATED = "8 November 2026";        // 🔒 Privacy: change this when the text changes
 const DAD = "dad";                               // Dad's id. Dad can't be removed. (Only the shown name can change.)
