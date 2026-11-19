@@ -537,13 +537,13 @@ async function makeCode(kidId) {
 // The words to send: the code and how to use it
 function codeText(kidId) {
   const link = location.origin + location.pathname;
-  if (kidId === "parent") return `👨‍👩‍👧 Join our family in Family Plan: open ${link}, tap “I'm a parent” → “Parent code”, sign up with your email, and type ${famParentCode}.`;
+  if (kidId === "parent") return `👨‍👩‍👧 Join our family in ADROS: open ${link}, tap “I'm a parent” → “Parent code”, sign up with your email, and type ${famParentCode}.`;
   const u = userById(kidId);
-  return `🧒 ${u.name}'s code for Family Plan: ${u.code}\nOpen ${link}, tap “I'm a kid”, and type the code.`;
+  return `🧒 ${u.name}'s code for ADROS: ${u.code}\nOpen ${link}, tap “I'm a kid”, and type the code.`;
 }
 function shareCode(kidId, how) {
   const text = codeText(kidId);
-  if (how === "share" && navigator.share) return navigator.share({ title: "Family Plan code", text }).catch(() => {});
+  if (how === "share" && navigator.share) return navigator.share({ title: "ADROS code", text }).catch(() => {});
   copyText(text).then(ok => toast(ok ? "📋 Copied! Paste it in a message." : "Couldn't copy on this device.", 3000));
 }
 // 🗑️ Remove a kid: like removing a person in Settings, kept right away, and their code stops working

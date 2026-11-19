@@ -57,7 +57,7 @@ async function startAnalytics(app) {
   try {
     const mod = await import(FIREBASE_URL + "firebase-analytics.js");
     if (!(await mod.isSupported())) return;
-    const a = mod.initializeAnalytics(app, { config: { page_title: "Family Plan", page_location: location.origin + location.pathname,
+    const a = mod.initializeAnalytics(app, { config: { page_title: "ADROS", page_location: location.origin + location.pathname,
                                                       allow_google_signals: false, allow_ad_personalization_signals: false } });
     an = { mod, a };
     sendAnalyticsRole();
@@ -363,7 +363,7 @@ async function familyMaybeGone() {
   cloud.unsub.forEach(stop => stop()); cloud.unsub = []; cloud.ready = false;
   if (cloud.user.isAnonymous) await cloud.fb.deleteUser(cloud.user).catch(() => {});
   try { await cloud.fb.signOut(cloud.auth); } catch (e) {}
-  accountGone("🗑️ This family account was deleted. Thank you for using StudyCal.");
+  accountGone("🗑️ This family account was deleted. Thank you for using ADROS.");
 }
 
 // ---------- The first time (on this device, since opening the app): match up the cloud and this device ----------
@@ -769,7 +769,7 @@ $("daDel").onclick = async () => {
     return $("daErr").textContent = "⚠ Not everything was deleted (" + (err.code || err.message || "error") + "). Please try again, or email us.";
   }
   closeDeleteAccount();
-  accountGone("🗑️ Your account was deleted. Thank you for using StudyCal.");
+  accountGone("🗑️ Your account was deleted. Thank you for using ADROS.");
 };
 // The deleting itself (after the password). Throws if a step fails, so it can be tried again: each step can run twice.
 async function deleteAccountNow() {

@@ -1,4 +1,4 @@
-/* StudyCal website (site/): the home page, privacy policy and delete-account page. Not part of the app. */
+/* ADROS website (site/): the home page, privacy policy and delete-account page. Not part of the app. */
 :root { --bg: #fff6e5; --card: #fff; --text: #2e2a5a; --muted: #6b6190; --line: #efe3cc; --accent: #5b5bd6; --accent-dark: #4646c0; --soft: #eeeefc; --danger: #b91c1c; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 "Baloo 2", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
