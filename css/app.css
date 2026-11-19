@@ -3131,6 +3131,13 @@ button.ip-item:hover { background: rgba(255, 255, 255, .7); }
 .st-left { border: 2px solid #e8a020; background: #fff8e6; }
 .st-left ul { margin: 6px 0; padding-left: 1.1em; }
 .st-left li { margin: 4px 0; }
+/* ⚠️ v205 uploaded topics that are not in the kid's official curriculum + 🗑 delete a topic */
+.st-off { border: 2px solid #dc2626; background: #fef2f2; }
+.st-off ul { margin: 6px 0; padding-left: 1.1em; }
+.st-off li { margin: 4px 0; }
+.aw-off-box { margin: 8px 0; padding: 8px 12px; border-radius: 10px; background: #fef2f2; border: 1.5px solid #fca5a5; color: #991b1b; font-weight: 700; }
+.aw-topics small.aw-off { color: #b91c1c; font-weight: 700; }
+.st-hist .btnrow { margin-top: 8px; }
 
 /* v162: 📖 This year's topics (simple screen) */
 .cur-go { width: 100%; font-size: 17px; }

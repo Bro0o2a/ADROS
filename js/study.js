@@ -99,7 +99,7 @@ function topicsCardHtml(s, f, parent) {
   const count = k => all.filter(t => t.st === k).length;
   const rowHtml = t => {
     const on = stPick.includes(t.id), n = t.info.list.length, last = t.info.results[t.info.results.length - 1];
-    const meta = [t.added ? `Added ${dayMon(t.added)}` : "", t.src === "ws" ? WS_TOPIC_TAG : "", n ? `${n} ${n === 1 ? "worksheet" : "worksheets"}` : "", last ? `last ${last.pct}%` : ""].filter(Boolean).join(" · ");
+    const meta = [t.added ? `Added ${dayMon(t.added)}` : "", t.src === "ws" ? WS_TOPIC_TAG : parent && topicOffCurr(s, f.id, t.title) ? "⚠️ not in the curriculum" : "", n ? `${n} ${n === 1 ? "worksheet" : "worksheets"}` : "", last ? `last ${last.pct}%` : ""].filter(Boolean).join(" · ");
     return `<li class="st-topic ${on ? "on" : ""}"><label class="st-tick"><input type="checkbox" data-sttick="${safe(t.id)}" ${on ? "checked" : ""} aria-label="Pick ${safe(t.title)}"></label>
       ${statusDot(t.st)}${parent ? `<button class="st-name" data-sthist="${safe(t.id)}" aria-expanded="${stOpen === t.id}"><b>${safe(topicShort(t.title))}</b>${meta ? `<small>${safe(meta)}</small>` : ""}</button>`
         : `<span class="st-name"><b>${safe(topicShort(t.title))}</b>${t.src === "ws" ? `<small>${WS_TOPIC_TAG}</small>` : ""}</span>`}
@@ -133,12 +133,13 @@ function topicsCardHtml(s, f, parent) {
   }
   const cmpBtn = `<div class="btnrow st-cmp-row"><button class="pill ${stCmp ? "on" : ""}" data-stcmp aria-pressed="${stCmp}">📊 ${stCmp ? "Back to my topics" : "Compare with the official curriculum"}</button></div>`;
   if (stCmp) return cmpBtn + compareHtml(schoolKid, s, f, parent);
-  return `${cmpBtn}${leftBehindHtml(schoolKid, s, f, all)}<div class="card bd-card st-card"><h2>📚 ${parent ? "Topics" : "My topics"}</h2>
+  return `${cmpBtn}${parent ? offCurrHtml(schoolKid, s, f, all) : ""}${leftBehindHtml(schoolKid, s, f, all)}<div class="card bd-card st-card"><h2>📚 ${parent ? "Topics" : "My topics"}</h2>
     ${parent && all.length ? `<div class="chips st-filters">${ST_FILTERS.map(([k, label]) => `<button class="chip ${stFilter === k ? "on" : ""}" data-stfilter="${k}" aria-pressed="${stFilter === k}">${label}${k === "all" ? "" : ` (${count(k)})`}</button>`).join("")}</div>` : ""}
     ${parent && all.length && !(m && m.list.length) && !unitsHtml ? `<p class="hint st-nounits">📖 Tip: open 📖 This year's topics and get the official list: then these are grouped into big units.</p>` : ""}
     ${all.length ? `${unitsHtml ? `<div class="st-units">${unitsHtml}</div>` : `<ul class="st-list">${rows || `<li class="sc-empty">No topics here.</li>`}</ul>`}
       <p class="st-legend">⚪ New · 🟡 Practising · 🔴 Needs work · 🟢 Mastered</p>
-      <div class="btnrow"><button class="primary st-make ${stPick.length ? "" : "off"}" data-stmake data-aiwait="stmake" aria-disabled="${!stPick.length}">✏️ Make a worksheet${stPick.length ? ` (${stPick.length})` : ""}</button></div>`
+      <div class="btnrow"><button class="primary st-make ${stPick.length ? "" : "off"}" data-stmake data-aiwait="stmake" aria-disabled="${!stPick.length}">✏️ Make a worksheet${stPick.length ? ` (${stPick.length})` : ""}</button>${
+        parent && stPick.length ? `<button class="danger-text" data-stdelpick>🗑 Delete (${stPick.length})</button>` : ""}</div>`
       : `<p class="sc-empty">📂 No topics yet. Tap ⬆️ Upload topic and add a school file (a photo or PDF).</p>`}</div>`;
 }
 // ---------- 📊 v192 COMPARE: the official curriculum, unit by unit (its small topics = parts), against what the school
@@ -237,7 +238,39 @@ function topicHistoryHtml(t) {
       return `<li><button class="linkbtn" data-aiopen="worksheet|${safe(w.id)}">📝 ${safe(w.title)}</button>
         <small>${dayMon(w.date)} · ${pct != null ? `${pct}%` : safe(w.status)}</small>${weak.length ? `<small class="st-weak">🎯 ${safe(weak.join(", "))}</small>` : ""}</li>`; }).join("")}</ul>`
     : `<p class="hint">No worksheets on this topic yet.</p>`}${t.note ? `<p class="hint">${safe(t.note)}</p>` : ""}${t.sum ? `<p class="hint st-sum">📄 <b>From the school file:</b> ${safe(t.sum)}</p>` : ""}${
-      stuckSkipped(schoolKid, t.sub, t.title) ? `<p class="hint">⏭ Skipped for now (not in sessions). <button class="linkbtn" data-stuckback="${safe(schoolKid)}|${safe(t.sub)}|${safe(encodeURIComponent(t.title))}">↩ Bring it back</button></p>` : ""}${t.files.length ? `<p class="hint">📂 ${t.files.length} school ${t.files.length === 1 ? "file" : "files"}</p>` : ""}</div>`;
+      stuckSkipped(schoolKid, t.sub, t.title) ? `<p class="hint">⏭ Skipped for now (not in sessions). <button class="linkbtn" data-stuckback="${safe(schoolKid)}|${safe(t.sub)}|${safe(encodeURIComponent(t.title))}">↩ Bring it back</button></p>` : ""}${t.files.length ? `<p class="hint">📂 ${t.files.length} school ${t.files.length === 1 ? "file" : "files"}</p>` : ""}
+    <div class="btnrow"><button class="danger-text" data-stdel="${safe(t.id)}">🗑 Delete this topic</button></div></div>`;
+}
+// ⚠️ v205: is a school topic NOT in the kid's official curriculum? (no official list yet: we can't tell → false)
+// It matches a unit's title (curSame) or one of its small topics (partSame)
+function topicOffCurr(s, sid, title) {
+  const m = s.map && s.map[sid];
+  if (!m || !m.list.length) return false;
+  return !m.list.some(u => curSame(title, u.title) || (u.parts || []).some(p => curSame(title, p) || partSame(title, p, u.title)));
+}
+// ⚠️ The parents' warning on 📚 Topics: the uploaded topics that are not in the curriculum (☑ Tick them → 🗑 Delete)
+function offCurrHtml(kid, s, f, all) {
+  const off = all.filter(t => t.src !== "ws" && topicOffCurr(s, f.id, t.title));
+  if (!off.length) return "";
+  return `<div class="card st-off" role="status"><h3>⚠️ Not in ${safe(kidNameOf(kid))}'s curriculum <span class="wsg-n">${off.length}</span></h3>
+    <p class="hint">These uploaded topics are not in the official ${safe(f.name)} curriculum${gradeOf(kid) ? ` for ${safe(gradeOf(kid))}` : ""}. Wrong file, or the wrong kid? You can delete them.</p>
+    <ul>${off.map(t => `<li><b>${safe(t.title)}</b>${t.added ? ` <small>added ${dayMon(t.added)}</small>` : ""}</li>`).join("")}</ul>
+    <div class="btnrow"><button class="pill" data-stoffpick="${safe(off.map(t => t.id).join(","))}">☑ Tick them</button></div></div>`;
+}
+// 🗑 v205: a parent deletes school topics (uploaded by mistake). Their worksheets stay; a worksheet doesn't bring the topic back.
+function deleteTopics(ids) {
+  if (!isParentId(me)) return;
+  const s = schoolFor(schoolKid), list = ids.filter(id => s.curr[id]);
+  if (!list.length) return;
+  const names = list.map(id => s.curr[id].title);
+  if (!confirm(list.length === 1 ? `Delete the topic “${names[0]}”?\n\nIts worksheets stay.` : `Delete these ${list.length} topics?\n\n${names.join("\n")}\n\nTheir worksheets stay.`)) return;
+  list.forEach(id => { delete s.curr[id]; });
+  s.currGone = [...new Set([...(s.currGone || []), ...list])].slice(-300);
+  stPick = stPick.filter(id => !list.includes(id));
+  if (list.includes(stOpen)) stOpen = null;
+  writeData();
+  render();
+  toast(`🗑️ ${list.length === 1 ? "Topic deleted" : `${list.length} topics deleted`}`);
 }
 // ✏️ Make a worksheet on the ticked topics (one section a topic; focus = their weak skills)
 async function makeFromTopics() {
@@ -456,7 +489,8 @@ function cleanCurriculum(s, subs, r) {
       const title = aiTxt(t.title, 80), sameAs = aiTxt(t.same_as, 80);
       if (!title || g.topics.some(y => lowerT(y.title) === lowerT(title))) return;
       const hit = (sameAs && have.find(y => lowerT(y.title) === lowerT(sameAs))) || have.find(y => lowerT(y.title) === lowerT(title));
-      g.topics.push({ title, note: aiTxt(t.note, 200), sum: aiTxt(t.summary, 1200), same: hit ? hit.id : "", on: !hit });   // (📄 v179: what the file teaches on it)
+      g.topics.push({ title, note: aiTxt(t.note, 200), sum: aiTxt(t.summary, 1200), same: hit ? hit.id : "", on: !hit,
+        ...(!hit && topicOffCurr(s, sid, title) ? { off: true } : {}) });   // (⚠️ v205: not in the kid's official curriculum)   // (📄 v179: what the file teaches on it)
     });
   });
   const events = aiObjs(r.events, 30).map(e => ({ date: isYmd(e.date) ? e.date : "", time: hmOf(e.time), title: aiTxt(e.title, 80), on: true })).filter(e => e.date && e.title);
@@ -467,13 +501,18 @@ function curriculumReviewNodes(s) {
   const res = aw.result, out = [];
   if (!res.groups.length && !res.events.length) out.push(h("p", { class: "sc-empty" }, "🤖 I couldn't find any topics for these subjects in this file."));
   else if (res.groups.length) out.push(h("p", { class: "print-hint" }, "Untick what you don't want, then tap ✅ Add."));
+  // ⚠️ v205: topics that are not in the kid's official curriculum (a file of another kid or another year?)
+  const offN = res.groups.reduce((n, g) => n + g.topics.filter(t => t.off).length, 0);
+  if (offN) out.push(h("p", { class: "aw-off-box", role: "alert" }, `⚠️ ${offN} ${offN === 1 ? "topic is" : "topics are"} not in ${kidNameOf(aw.kid)}'s official curriculum${
+    gradeOf(aw.kid) ? ` (${gradeOf(aw.kid)})` : ""}. Is this the right kid's file? Untick ${offN === 1 ? "it" : "them"} if ${offN === 1 ? "it's" : "they're"} wrong.`));
   res.groups.forEach((g, gi) => {
     const f = s.subjects[g.sid];
     out.push(h("h3", { class: "ph-group" }, `${f.emoji} ${f.name}`),
       h("ul", { class: "list aw-topics" }, g.topics.map((t, ti) => { const old = t.same && s.curr[t.same];
         return h("li", { class: old ? "aw-same" : null }, h("label", { class: "checkline" },
           h("input", { type: "checkbox", checked: t.on, data: { awt: gi + "|" + ti } }),
-          h("span", null, h("b", null, t.title), old ? h("small", null, `Already in ${f.name} as “${old.title}”`) : t.note ? h("small", null, t.note) : null))); })));
+          h("span", null, h("b", null, t.title), old ? h("small", null, `Already in ${f.name} as “${old.title}”`)
+            : t.off ? h("small", { class: "aw-off" }, `⚠️ Not in ${kidNameOf(aw.kid)}'s ${f.name} curriculum`) : t.note ? h("small", null, t.note) : null))); })));
   });
   if (res.events.length) out.push(h("h3", { class: "ph-group" }, "📅 Add to calendar"),
     h("ul", { class: "list" }, res.events.map((e, i) => h("li", null, h("label", { class: "checkline" }, h("input", { type: "checkbox", checked: e.on, data: { awe: i } }),
@@ -493,10 +532,12 @@ function addCurriculum() {
   //    worksheets follow what was taught, topic after topic in the school's order
   const addSum = (x, t) => { if (t.sum && !(x.sum || "").includes(t.sum)) x.sum = [t.sum, x.sum].filter(Boolean).join(" ").slice(0, 1200); };
   const touch = (x, t) => { x.added = today; x.files = [...new Set([...x.files, ...files])].slice(0, 30); addSum(x, t); };
-  let added = 0, linked = 0, dates = 0;
+  let added = 0, linked = 0, dates = 0, off = 0;
   box.result.groups.forEach(g => g.topics.forEach((t, i) => {
     if (t.on) {
       const id = topicIdOf(g.sid, t.title);
+      if (s.currGone) s.currGone = s.currGone.filter(x => x !== id);   // (added again on purpose)
+      if (t.off) off++;
       if (s.curr[id]) { touch(s.curr[id], t); linked++; }   // (the very same title)
       else { s.curr[id] = { sub: g.sid, title: t.title, note: t.note, added: today, files: files.slice(0, 30), by: me, ord: i, ...(t.sum ? { sum: t.sum } : {}) }; added++; }
     } else if (t.same && s.curr[t.same]) { touch(s.curr[t.same], t); linked++; }
@@ -509,7 +550,8 @@ function addCurriculum() {
   writeData();
   closeWork();
   render();
-  toast(`📚 ${added} new ${added === 1 ? "topic" : "topics"}${linked ? ` · ${linked} already there (moved to the top)` : ""}${dates ? ` · 📅 ${dates} school ${dates === 1 ? "date" : "dates"}` : ""}`, 4000);
+  toast(`📚 ${added} new ${added === 1 ? "topic" : "topics"}${linked ? ` · ${linked} already there (moved to the top)` : ""}${dates ? ` · 📅 ${dates} school ${dates === 1 ? "date" : "dates"}` : ""}${
+    off ? ` · ⚠️ ${off} not in ${kidNameOf(box.kid)}'s curriculum: check them in 📚 Topics` : ""}`, off ? 6000 : 4000);
 }
 // ---------- 📚 Every topic a kid practises in ANY worksheet is in that subject's 📚 My topics too ----------
 // (⚡ instant, 📚 study session, ➕ more questions, 🔁 practice, 🚀 challenge …) Each of its topics (the questions' topics, else its part,
@@ -552,6 +594,7 @@ function topicsFromWorksheet(id, w) {
     const hit = have.find(t => lowerT(t.title) === lowerT(title)) || have.find(t => sameTopicTitle(t.title, title));
     if (hit) { const x = s.curr[hit.id]; x.links = { ...(x.links || {}), [id]: title }; return; }   // (the existing topic is used)
     const tid = topicIdOf(f.id, title);
+    if ((s.currGone || []).includes(tid)) return;   // (🗑 a parent deleted it: it stays deleted)
     s.curr[tid] = { sub: f.id, title, note: "", added, files: [], src: "ws", links: { [id]: title }, ...(exists(w.by) ? { by: w.by } : {}) };
     have.unshift({ id: tid, ...s.curr[tid] });
   });
@@ -842,6 +885,9 @@ document.addEventListener("click", e => {
   if (ds.stfilter) { stFilter = ds.stfilter; stOpen = null; return render(); }
   if (ds.sthist) { stOpen = stOpen === ds.sthist ? null : ds.sthist; return render(); }
   if ("stmake" in ds) return makeFromTopics();
+  if (ds.stdel) return deleteTopics([ds.stdel]);
+  if ("stdelpick" in ds) return deleteTopics([...stPick]);
+  if (ds.stoffpick) { stPick = [...new Set([...stPick, ...ds.stoffpick.split(",").filter(Boolean)])]; return render(); }
   if (ds.stleft) { stPick = ds.stleft.split(",").filter(Boolean).slice(0, 4); return makeFromTopics(); }   // (📌 left behind: practise them)
   if (ds.sessmore) return moreQuestions(ds.sessmore);
   if (ds.sessdone) return sessionDone(ds.sessdone);

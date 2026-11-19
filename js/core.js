@@ -1124,7 +1124,7 @@ function emptySchool() {
            subjects: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)), files: {}, notes: {}, work: {},
            profile: { asked: false, subjects: {}, other: "", skip: [] }, events: {}, week: null, requests: {}, syllabus: null, brief: null, topics: {},
            learn: {}, reviewDue: [], previewDue: [], revDone: [], gapDone: "",   // (🧠 the learning profile per subject: see LEARNING PROFILE · 📖 v191 previews, 📝 test revisions, 📋 missing topics)
-           curr: {}, map: {}, bench: {},   // (📚 the school topics, 🌍 the official curriculum, 📏 the benchmark: see STUDY TOPICS)
+           curr: {}, currGone: [], map: {}, bench: {},   // (📚 the school topics, 🌍 the official curriculum, 📏 the benchmark: see STUDY TOPICS)
            wsScores: {} };   // (📝 a small copy of every worksheet's check, so the score stays: see ALL MY WORKSHEETS)
 }
 const isHm = x => typeof x === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(x);   // "08:30"
@@ -1304,6 +1304,8 @@ function cleanSchool(s) {
               ...(t.links && typeof t.links === "object" && !Array.isArray(t.links) ? { links: Object.fromEntries(Object.entries(t.links)
                 .filter(([id, w]) => okKey(id) && txt(w, 80)).slice(-200).map(([id, w]) => [id, txt(w, 80)])) } : {}) })
       : currFromOld(c);
+    // 🗑 v205: the school topics a parent deleted (topic ids): a worksheet on it doesn't bring it back into 📚 My topics
+    c.currGone = (Array.isArray(k.currGone) ? k.currGone : []).filter(x => okKey(String(x || "")) && !c.curr[x]).slice(-300);
     // 🌍 The official curriculum per subject (parents only, never mixed with the school topics): subject id → { at, list: [{ title, term, now }] }
     //    (older data: the 🤖 /topics lists kept by subject name)
     c.map = {};
