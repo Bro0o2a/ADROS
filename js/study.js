@@ -933,8 +933,8 @@ function drawNewsletter() {
            h("span", null, h("b", null, `📌 ${shortDate(e.date)}${e.time ? " · " + clock(toMin(e.time), true) : ""}`), " " + e.title,
              e.note ? h("small", null, e.note) : null)))))
          : h("p", { class: "sc-empty" }, "No school dates in this newsletter."),
-       res.subjects.length ? h("p", { class: "hint" }, "📰 This week: " + res.subjects.map(x => `${x.subject} (${x.topics.join(", ")})`).join(" · ")
-         + ". On Friday after school, a week review worksheet is made for each subject.") : null,
+       ...newsletterTopicsNodes(nl),
+       res.subjects.length ? h("p", { class: "hint" }, "📰 On Friday after school, a week review worksheet is made for each subject on these topics.") : null,
        res.reminders.length ? h("p", { class: "hint" }, "🔔 Reminders: " + res.reminders.join(" · ")) : null,
        h("div", { class: "err" }, nl.err),
        h("div", { class: "btnrow" }, h("button", { class: "primary", data: { nladd: "" } }, "✅ Add to the plan"), h("button", { data: { nlclose: "" } }, "Close"))]
@@ -981,7 +981,7 @@ function cleanNewsletter(r) {
   return { week_label: aiTxt(r.week_label, 60),
            events: aiObjs(r.events, 30).map(e => ({ date: isYmd(e.date) ? e.date : "", time: hmOf(e.time), title: aiTxt(e.title, 80), note: aiTxt(e.note, 300) }))
              .filter(e => e.date && e.title),
-           subjects: aiObjs(r.subjects, 12).map(x => ({ subject: aiTxt(x.subject, 30), topics: aiArr(x.topics, 8).map(t => aiTxt(t, 60)).filter(Boolean) }))
+           subjects: aiObjs(r.subjects, 12).map(x => ({ subject: aiTxt(x.subject, 30), topics: aiArr(x.topics, 12).map(t => aiTxt(t, 80)).filter(Boolean) }))
              .filter(x => x.subject && x.topics.length),
            reminders: aiArr(r.reminders, 10).map(t => aiTxt(t, 200)).filter(Boolean) };
 }
@@ -997,8 +997,30 @@ async function readNewsletter() {
   const r = await callAi("newsletter", { files, ...kidInfo(box.kid), today: todayYmd() }, "newsletter");
   if (!r || nl !== box) return;
   box.result = cleanNewsletter(r);
+  box.tp = newsletterTopics(box.kid, box.result);
   box.err = "";
   drawNewsletter();
+}
+// 📚 v211 (Broo2a): the newsletter's topics, per subject, to tick into 📚 My topics (the curriculum):
+// [{ subject, sid (its folder, "" = a new subject), topics: [{ title, same (already there as …), off (not in the official curriculum) }] }]
+function newsletterTopics(kid, res) {
+  const s = schoolOf(kid);
+  return res.subjects.map(x => { const sid = folderIdFor(s, x.subject) || "", have = sid ? topicsOf(s, sid) : [];
+    return { subject: sid ? s.subjects[sid].name : x.subject, sid, topics: x.topics.map(t => { const hit = have.find(y => sameTopicTitle(y.title, t));
+      return { title: t, same: hit ? hit.title : "", off: !hit && sid ? topicOffCurr(s, sid, t) : false }; }) }; });
+}
+function newsletterTopicsNodes(box) {
+  const tp = box.tp || [];
+  if (!tp.length) return [h("p", { class: "sc-empty" }, "📚 No subject topics found in this newsletter.")];
+  const offN = tp.reduce((n, g) => n + g.topics.filter(t => t.off).length, 0);
+  return [h("h3", { class: "ph-group" }, "📚 Add to the curriculum"),
+    h("p", { class: "print-hint" }, `Ticked topics go into ${kidNameOf(box.kid)}'s 📚 My topics in each subject. Untick what isn't a real topic.`),
+    offN ? h("p", { class: "aw-off-box", role: "alert" }, `⚠️ ${offN} ${offN === 1 ? "topic is" : "topics are"} not in ${kidNameOf(box.kid)}'s official curriculum. Is this the right kid's newsletter?`) : null,
+    ...tp.map((g, gi) => h("div", { class: "nl-tp" }, h("p", { class: "nl-tp-sub" }, h("b", null, g.subject), g.sid ? null : h("small", null, " 🆕 new subject")),
+      h("ul", { class: "list aw-topics" }, g.topics.map((t, ti) => h("li", { class: t.same ? "aw-same" : null }, h("label", { class: "checkline" },
+        h("input", { type: "checkbox", checked: !t.same, data: { nltp: gi + "|" + ti } }),
+        h("span", null, h("b", null, t.title), t.same ? h("small", null, `Already in ${g.subject} as “${t.same}”`)
+          : t.off ? h("small", { class: "aw-off" }, `⚠️ Not in ${kidNameOf(box.kid)}'s ${g.subject} curriculum`) : null)))))))].filter(Boolean);
 }
 // "Week 6" → 6 (otherwise the week number of the year)
 function weekNumberOf(label) {
@@ -1063,10 +1085,18 @@ async function addNewsletter() {
   if ((now.getDay() + 6) % 7 >= 4) now.setDate(now.getDate() + 7);
   const start = mondayOf(now), end = new Date(fromYmd(start)), n = weekNumberOf(res.week_label);
   end.setDate(end.getDate() + 6);
-  const subjects = res.subjects.map(x => ({ sid: ensureFolder(s, x.subject), topics: x.topics })).map(x => ({ ...x, subject: s.subjects[x.sid].name }));
-  // 📚 Its topics go into each subject's 📚 My topics (⚪ new, no doubles), so next week's worksheets follow them
-  const newTopics = subjects.reduce((sum, x) => sum + addSchoolTopics(s, x.sid, x.topics, start), 0);
-  s.week = { label: res.week_label, n, start, end: ymd(end), subjects: subjects.map(({ sid, ...x }) => x), reminders: res.reminders };
+  // 📚 v211: only the TICKED topics go into each subject's 📚 My topics (⚪ new, no doubles), so next week's worksheets follow them.
+  //    The week's reviews and previews use the ticked ones + the ones already there (an unticked new one was not a real topic).
+  const tick = new Set([...$("nlBody").querySelectorAll("input[data-nltp]:checked")].map(x => x.dataset.nltp));
+  const tp = box.tp || newsletterTopics(kid, res);
+  const subjects = tp.map((g, gi) => ({ name: g.subject, add: g.topics.filter((t, ti) => tick.has(gi + "|" + ti)).map(t => t.title),
+      keep: g.topics.filter((t, ti) => tick.has(gi + "|" + ti) || t.same).map(t => t.title) }))
+    .filter(x => x.keep.length).map(x => { const sid = ensureFolder(s, x.name); return { sid, subject: s.subjects[sid].name, topics: x.keep, add: x.add }; });
+  const told = [];
+  const newTopics = subjects.reduce((sum, x) => { const ids = x.add.map(t => topicIdOf(x.sid, t));
+    if (s.currGone) s.currGone = s.currGone.filter(id => !ids.includes(id));   // (added again on purpose)
+    const n = addSchoolTopics(s, x.sid, x.add, start); if (n) told.push(`${n} in ${x.subject}`); return sum + n; }, 0);
+  s.week = { label: res.week_label, n, start, end: ymd(end), subjects: subjects.map(x => ({ subject: x.subject, topics: x.topics })), reminders: res.reminders };
   writeData();
   closeNewsletter();
   if (screen === "school") { schoolKid = kid; goSchool("home"); }
@@ -1082,7 +1112,7 @@ async function addNewsletter() {
     s.previewDue = [...(s.previewDue || []).filter(x => x.start !== start), { n, label: res.week_label, start, on: pv, subjects: subjects.map(x => ({ subject: x.subject, topics: x.topics })) }].slice(-3);
     writeData();
   }
-  toast(`📰 Added ${added} school ${added === 1 ? "date" : "dates"}${newTopics ? ` and ${newTopics} new ${newTopics === 1 ? "topic" : "topics"}` : ""}${subjects.length && pv ? `. 📖 The previews come ${dayMon(pv)}` : ""}${subjects.length ? `. The week reviews come on Friday ${dayMon(addDaysYmd(start, 4))} after school.` : ""}`, 6000);
+  toast(`📰 Added ${added} school ${added === 1 ? "date" : "dates"}${newTopics ? `. 📚 ${newTopics} new ${newTopics === 1 ? "topic" : "topics"} (${told.join(", ")})` : ""}${subjects.length && pv ? `. 📖 The previews come ${dayMon(pv)}` : ""}${subjects.length ? `. The week reviews come on Friday ${dayMon(addDaysYmd(start, 4))} after school.` : ""}`, 6000);
 }
 // 📰 Friday after school (a parent's device opens the app from Friday 3 PM on): each waiting week review, one per subject.
 //    🔴 needs-work topics of that week get more of the worksheet. (Older than 2 weeks: dropped, not made.)
