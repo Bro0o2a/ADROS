@@ -89,7 +89,8 @@ function routineBed(person, wd) {
 function bedUsual(person, wd) {
   const u = data && Array.isArray(data.users) && data.users.find(x => x.id === person);
   const own = u && u.bed ? toMin(isWeekendNight(wd) ? u.bed.we : u.bed.wd) : null, rt = routineBed(person, wd);
-  return own == null ? rt : rt == null ? own : Math.min(own, rt);
+  // (🌙 v212 Broo2a: the time a parent set wins; a "Bedtime routine" is only a guess when nothing is set, and the app asks for it)
+  return own != null ? own : rt;
 }
 // 2️⃣ v181: an activity's 2nd session on the same date has its own id "actId~2" in the plan (own ✅ tick, own study session and
 // worksheet); baseActId gives the activity's own id back (for its name, people, length …)

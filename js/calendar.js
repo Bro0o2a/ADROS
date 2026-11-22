@@ -939,6 +939,9 @@ function moveCheck(actId, fromDay, toDay, start) {
   if (S < ws || E > we) return { ok: false, why: `That's outside “My day” (${showTime(ws)}–${showTime(we)}).` };
   const only = onlyWindow(act);
   if (only && (start < only[0] || end > only[1])) return { ok: false, why: `${act.name} is only between 🕓 ${betweenText(act.between)}.` };
+  // 🌙 v212 (Broo2a): never after a kid's bedtime (planning stops then)
+  const late = peopleOf(act).find(p => { const b = bedMin(p, toDay); return b != null && end > b; });
+  if (late) return { ok: false, why: `🌙 ${userById(late).name}'s planning stops at ${clock(bedMin(late, toDay), true)}.` };
   if (toDay !== fromDay && planItemsOn(toDay).some(it => it.actId === actId)) return { ok: false, why: `${act.name} is already on ${dayName(toDay)}.` };
   const day = planDay(toDay), people = peopleOf(act);
   const mine = x => x.actId === actId || String(x.id || "").includes(`-${actId}-`);   // the activity itself and its own strips
