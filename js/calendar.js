@@ -217,8 +217,16 @@ function restoreMine() {
   calScrollFresh();
   wholeWeek = typeof m.week === "boolean" ? m.week : !isPhone();
   const who = m.who && m.who[me];
+  // 🧒 v212 (Broo2a): a parent coming from one kid's page or School opens THAT kid's calendar; a link to a kid's calendar
+  // (📅 on the kid's card) keeps that kid; else the last one on this device
+  if (calOpenKid === "all") { calOpenKid = null; calWho = "all"; return; }   // (📅 Everyone was asked for)
+  const ctx = calOpenKid && exists(calOpenKid) ? calOpenKid
+    : calOpenKid === "all" || !isParentDevice() ? null : screen === "school" && exists(schoolKid) ? schoolKid : screen === "kid" && exists(kidPage) ? kidPage : null;
+  calOpenKid = null;
+  if (ctx) { calWho = ctx; return; }
   if (calWho !== "all") calWho = who === "all" || exists(who) ? who : null;   // (a link to "Everyone" keeps "Everyone")
 }
+let calOpenKid = null;   // (📅 a kid's calendar was asked for: restoreMine opens it)
 
 let navSubj = "";   // (🔍 v180: the "Find a subject" picker, in the days row of 📅 Calendar only)
 // A small Day / Week switch, then ‹ Thu 23 · Fri 24 … › (the calendar's 12 dates). Phone: swiping also changes the day.
@@ -230,7 +238,8 @@ function navHtml(dates) {
       <button class="pill small k-planbtn" data-dayplan="${wholeWeek ? today : calDates()[viewDay] || today}" aria-label="Day plan" title="This day's plan">📋 Plan</button></div>
     <div class="k-days"><button class="k-arrow" data-kprev aria-label="Previous ${wholeWeek ? "week" : "day"}">‹</button>${dates.map(ds => [ds, calDates().indexOf(ds)])
       // (v154: Day = only the day before, the day, the day after · Week = the 7 days shown)
-      .filter(([, i]) => wholeWeek || Math.abs(i - viewDay) <= 1).map(([ds, i]) => { const d = SHORT[weekdayOf(ds)];
+      // (📱 v212 ✏️ Edit calendar: every day from today shows, so a session can be dropped on any of them)
+      .filter(([ds, i]) => wholeWeek || (editMode && isParentId(me) ? ds >= today : Math.abs(i - viewDay) <= 1)).map(([ds, i]) => { const d = SHORT[weekdayOf(ds)];
       return `<button class="k-dbtn wd-${weekdayOf(ds)} ${i === viewDay && !wholeWeek ? "sel" : ""} ${ds === today ? "istoday" : ""} ${ds < today ? "past" : ""}" data-kday="${i}" data-date="${ds}"
         ${ds === today ? `aria-label="${d} (today)"` : ""}>${d}<small>${fromYmd(ds).getDate()}</small></button>`; }).join("")}<button class="k-arrow" data-knext aria-label="Next ${wholeWeek ? "week" : "day"}">›</button></div></div>`;
 }
@@ -1343,14 +1352,22 @@ function subjMatch(b, ds, opts, sessOf) {
 }
 // "📐 Math this week: 4 sessions (Mon, Tue, Thu, Sat) · 3 h · done 2 of 4 · worksheets done 3 of 5 · topics covered 6 of 14"
 function subjSummaryHtml(kid, f) {
-  const sess = studySessions(kid).filter(x => sameSubject(x.subject, f.name)), mins = sess.reduce((n, x) => n + x.minutes, 0);
-  const days = [...new Set(sess.map(x => SHORT[weekdayOf(x.date)]))];
+  // 📅 v212 (Broo2a): the sessions on the days the calendar shows (Week: that week; Day: today … +6), each with its day and time.
+  // Tap one → that day opens (Day view), so there's no need to look through every day.
+  const dates = wholeWeek ? calWeekDates(weekShift) : aheadDates(), today = todayYmd(), now = dubaiMinutes();
+  const sess = sessionsIn(kid, dates).filter(x => sameSubject(x.subject, f.name) || (x.needsPick && x.options.some(o => sameSubject(o.name, f.name))));
+  const mins = sess.reduce((n, x) => n + x.minutes, 0);
   const from = data.points.week, to = weekEnd(), ws = wsOf(kid, f.name).filter(w => w.date >= from && w.date < to);
   const done = ws.filter(w => w.check || w.answers.length).length, rows = topicRows(kid, schoolOf(kid), f);
   const covered = rows.filter(t => t.st === "practising" || t.st === "mastered").length;   // (🟡 / 🟢)
-  return `<div class="card subj-sum" style="--c:${subjectColors(f).color}"><b>${safe(f.emoji)} ${safe(f.name)} this week:</b>
-    ${sess.length} ${sess.length === 1 ? "session" : "sessions"}${days.length ? ` (${days.join(", ")})` : ""} · ${hmText(mins)} · done ${sess.filter(x => x.done).length} of ${sess.length}
-    · worksheets done ${done} of ${ws.length} · topics covered ${covered} of ${rows.length}</div>`;
+  const chip = x => { const i = calDates().indexOf(x.date), past = x.date < today || (x.date === today && x.end <= now);
+    const tag = x.done ? " ✅" : x.needsPick ? " ❔" : past ? " ⏳" : "";
+    return `<button class="pill small subj-when ${x.date === today ? "on" : ""}" ${i >= 0 ? `data-kday="${i}"` : "disabled"} title="${safe(dayLong(x.date))}">
+      <b>${SHORT[weekdayOf(x.date)]} ${fromYmd(x.date).getDate()}</b> ${clock(x.start, true)}–${clock(x.end, true)}${tag}</button>`; };
+  return `<div class="card subj-sum" style="--c:${subjectColors(f).color}"><b>${safe(f.emoji)} ${safe(f.name)} · ${userById(kid).name}</b>
+    <small>${sess.length} ${sess.length === 1 ? "session" : "sessions"} · ${hmText(mins)} · done ${sess.filter(x => x.done).length} of ${sess.length}</small>
+    <div class="subj-whens">${sess.length ? sess.map(chip).join("") : `<span class="hint">No ${safe(f.name)} sessions on these days.</span>`}</div>
+    <small>📝 Worksheets this week: done ${done} of ${ws.length} · topics covered ${covered} of ${rows.length}</small></div>`;
 }
 // 🔍 v180 (Broo2a): "Find a subject" sits in the days row (‹ Tue · Wed · Thu › 🔍). A parent on Everyone / their own calendar
 //   picks "kid · subject" (each kid's subjects in a group); a kid's calendar: that kid's subjects.
