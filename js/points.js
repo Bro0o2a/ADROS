@@ -170,13 +170,15 @@ function habitPoints(user, from, to) {
 // MAX = 100 × the weights of the types the person HAS items of this week (e.g. no habits → 90). Shown as "37 / 90".
 // The leaderboard and the ⭐ Shining Star compare the OVERALL as it is (not divided by the max); a tie: whoever reached it first.
 // (The old points are still collected: they grow the ✨ Spark and show in "✅ · ⭐ · 🧩", but they're not the score any more.)
-const SCORE_WEIGHTS = { marks: 0.70, extra: 0.10, ticks: 0.20 };   // (v149: 📝 session marks 70 · ⚡ extra worksheets 10 · ✅ ticks 20)
-const EXTRA_MAX = 10;   // ⚡ at most 10 points a week from checked extra worksheets (each adds its mark: 90 % → 0.9)
+const SCORE_WEIGHTS = { marks: 0.80, ticks: 0.20 };   // (v208: 📝 worksheets 80 · ✅ ticks 20)
+// 📝 v208 Every checked worksheet adds points from its mark, a session one or an extra one the same: 100 % → WS_POINTS (80 % → 8).
+// A study-session worksheet gets 5 % more (100 % → 10.5). At most WS_MAX a week, so doing more worksheets wins, not one perfect one.
+const WS_POINTS = 10, WS_SESSION_PLUS = 1.05, WS_MAX = 80;
 // An activity's type: the one picked in ✏️ Add activities (older ones got theirs once, see defaultActType)
 const actTypeOf = a => defaultActType(a);
 const actTypeInfo = k => ACT_TYPES.find(t => t[0] === k) || ACT_TYPES.find(t => t[0] === "other");
 // The score's parts: the activity types + 🎓 Level (not an activity type)
-const scorePartInfo = k => k === "marks" ? ["marks", "📝", "Session marks"] : k === "extra" ? ["extra", "⚡", "Extra worksheets"] : k === "ticks" ? ["ticks", "✅", "Ticks"] : k === "level" ? ["level", "🎓", "Level"] : actTypeInfo(k);
+const scorePartInfo = k => k === "marks" ? ["marks", "📝", "Worksheets"] : k === "ticks" ? ["ticks", "✅", "Ticks"] : k === "level" ? ["level", "🎓", "Level"] : actTypeInfo(k);
 // One type, one person, this week SO FAR: the planned items (days up to today; today's only once they've started, Dubai time)
 // and how many of them are ticked ✅
 function typeTally(id, type) {
@@ -461,8 +463,8 @@ function extraBonus(kid, from = data.points.week, to = weekEnd()) {
   const up = list.filter(x => x.up > 0);
   return { count: up.length, bonus: up.reduce((n, x) => n + 1 + (x.bonus >= FREE_POINTS.top ? 2 : x.bonus > 0 ? 1 : 0), 0) };
 }
-// 📝 Marks: the PLANNED session worksheets checked this week · ⚡ Extra: the extra (free study) ones, each adds its mark (90 % → 0.9),
-// at most EXTRA_MAX a week; one over the day's limit (3 per subject) adds nothing. From the 🧠 learning profiles' history, each worksheet once.
+// 📝 Worksheets checked this week (from the 🧠 learning profiles' history, each worksheet once): each adds its mark × WS_POINTS,
+// a study-session one × WS_SESSION_PLUS; an extra one over the day's limit (3 per subject) adds nothing. At most WS_MAX.
 function scoreMarks(id) {
   const s = schoolOf(id), from = data.points.week, to = weekEnd(), seen = {}, free = {};
   Object.entries(data.points.free).forEach(([k, x]) => { const [, ws, who] = k.split("|"); if (who === id) free[ws] = x; });
@@ -471,8 +473,11 @@ function scoreMarks(id) {
   }));
   const list = Object.entries(seen).filter(([ws]) => !free[ws]).map(([, x]) => x);
   const extras = Object.entries(seen).filter(([ws]) => free[ws] && !free[ws].capped).map(([, x]) => x);
-  const raw = extras.reduce((n, x) => n + Math.max(0, Math.min(100, x.pct)) / 100, 0), pts = Math.min(EXTRA_MAX, Math.round(raw * 10) / 10);
-  return { count: list.length, avg: list.length ? Math.round(list.reduce((n, x) => n + x.pct, 0) / list.length) : null, extraCount: extras.length, extraPts: pts };
+  const one = x => Math.max(0, Math.min(100, x.pct)) / 100 * WS_POINTS;
+  const sessPts = list.reduce((n, x) => n + one(x) * WS_SESSION_PLUS, 0), extraPts = extras.reduce((n, x) => n + one(x), 0);
+  const all = [...list, ...extras], pts = Math.min(WS_MAX, Math.round((sessPts + extraPts) * 10) / 10);
+  return { count: list.length, extraCount: extras.length, wsCount: all.length, pts, sessPts: Math.round(sessPts * 10) / 10, extraPts: Math.round(extraPts * 10) / 10,
+           avg: all.length ? Math.round(all.reduce((n, x) => n + x.pct, 0) / all.length) : null };
 }
 // ✅ Ticks: 📚 ⚽ 🌱 items this week; today's items count only once they're ticked (so the score never drops in the morning)
 function ticksTally(id) {
@@ -541,18 +546,18 @@ function scoreOf(id) {
   const sessions = studySessions(id), sp = studyParts(sessions);
   const fs = freeStudy(id), free = { ...fs, bonus: 0 }, lv = levelScore(id), mk = scoreMarks(id), tk = ticksTally(id);
   const study = sessions.length ? Math.min(100, sp.study) : 0;
-  const subs = { marks: mk.avg || 0, extra: Math.round(mk.extraPts / EXTRA_MAX * 100), ticks: 0 };
+  const subs = { marks: mk.avg || 0, ticks: 0 };   // (📝 marks = the average mark, only for showing; the score uses mk.pts)
   // ✅ Ticks = half 📅 the calendar's 📚 ⚽ items, half ⭐ the kids' habits (only one of them this week: that one alone)
   const ht = habitsTally(id), calPct = tk.planned ? tk.done / tk.planned * 100 : null, habPct = ht.planned ? ht.done / ht.planned * 100 : null;
   subs.ticks = Math.round(calPct != null && habPct != null ? (calPct + habPct) / 2 : calPct != null ? calPct : habPct || 0);
   tk.habits = { done: Math.round(ht.done * 10) / 10, planned: ht.planned, pct: habPct == null ? null : Math.round(habPct) };
   tk.calPct = calPct == null ? null : Math.round(calPct);
-  const has = { marks: mk.count > 0, extra: true, ticks: tk.planned > 0 || ht.planned > 0 };   // (⚡ always counts in the max: extras are how to reach 100)
-  const missed = mustMissed(id), base = Math.round(SCORE_WEIGHTS.marks * subs.marks + mk.extraPts + SCORE_WEIGHTS.ticks * subs.ticks);
+  const has = { marks: true, ticks: tk.planned > 0 || ht.planned > 0 };   // (📝 always counts in the max: worksheets are how to reach 100)
+  const missed = mustMissed(id), base = Math.round(mk.pts + SCORE_WEIGHTS.ticks * subs.ticks);
   const overall = Math.round(base * missed.ratio);   // ✖️ the total × how much of the ⭐ must-dos was done
   const max = Math.round(100 * Object.keys(SCORE_WEIGHTS).reduce((s, k) => s + (has[k] ? SCORE_WEIGHTS[k] : 0), 0));
   return { ...subs, study, level: lv.score, activity: activityScore(id), habit: habitScore(id), has, base, overall, max, must: missed,
-           sp: sessions.length ? sp : null, free, levels: lv.subs, extra: { count: 0, bonus: 0 }, marksCount: mk.count, extraCount: mk.extraCount, extraPts: mk.extraPts, tk };
+           sp: sessions.length ? sp : null, free, levels: lv.subs, extra: { count: 0, bonus: 0 }, marksCount: mk.count, extraCount: mk.extraCount, wsCount: mk.wsCount, wsPts: mk.pts, sessPts: mk.sessPts, extraPts: mk.extraPts, tk };
 }
 // 📈 SCORE THROUGH ONE DAY (v184): the week's score again at each moment something changed it on that day.
 // Rebuilt from what the app already keeps: ✅ calendar ticks have their time (marks[key].at), 📝 worksheets their check time
@@ -604,12 +609,11 @@ const scoreText = s => `${s.overall} / ${s.max}${s.extra && s.extra.bonus ? ` (�
 // The small bars: 📝 Marks (with each subject under it) · ✅ Ticks (a part with nothing this week: "–")
 function subBarsHtml(s) {
   return `<div class="score-subs">${Object.keys(SCORE_WEIGHTS).map(k => { const [, e, w] = scorePartInfo(k), on = s.has[k];
-    // (⚡ s.extra is an older { count, bonus } object, so the extras' % comes from extraPts)
-    const v = k === "extra" ? Math.round((s.extraPts || 0) / EXTRA_MAX * 100) : s[k];
+    const v = k === "marks" ? Math.round((s.wsPts || 0) / WS_MAX * 100) : s[k];   // (📝 the bar: the worksheet points of WS_MAX)
     return `<div class="score-sub ${on ? "" : "none"}"><span class="score-sub-l">${e} ${w}</span><span class="score-sub-bar"><i style="width:${on ? Math.min(100, v) : 0}%"></i></span><b>${on ? v + "%" : "–"}</b></div>${
-      k === "marks" && on ? `<div class="score-parts">📝 ${s.marksCount} ${s.marksCount === 1 ? "worksheet" : "worksheets"} from study sessions checked this week (average ${s.marks}%)</div>${
+      k === "marks" && on ? `<div class="score-parts">📝 ${num(s.wsPts || 0)} of ${WS_MAX} points · ${s.marksCount} from study sessions (+5%) · ${s.extraCount || 0} extra${
+        s.wsCount ? ` · average ${s.marks}%` : ""} (100% = ${WS_POINTS} points each)</div>${
         (s.levels || []).filter(x => x.avg != null).map(x => `<div class="score-parts">${safe(x.emoji)} ${safe(x.name)} · ${x.avg}% · Level ${x.level}/10</div>`).join("")}` : ""}${
-      k === "extra" ? `<div class="score-parts">⚡ ${s.extraPts} of ${EXTRA_MAX} points · ${s.extraCount || 0} checked ${s.extraCount === 1 ? "extra" : "extras"} (each adds its mark)</div>` : ""}${
       k === "ticks" && on && s.tk ? `<div class="score-parts">📅 Calendar: ${s.tk.done} of ${s.tk.planned} ticked${s.tk.calPct != null ? ` (${s.tk.calPct}%)` : ""}${
         s.tk.habits && s.tk.habits.planned ? ` · ⭐ Habits: ${s.tk.habits.pct}%` : ""}</div>` : ""}`; }).join("")}</div>`;
 }

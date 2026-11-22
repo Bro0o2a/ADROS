@@ -399,7 +399,7 @@ function kidSectionHtml(k, sec) {
         ${stars().includes(k.id) ? `<p>${want && want.text ? `🎁 Gift: <b>${safe(want.text)}</b>${want.ok ? " ✅" : ""}` : "🎁 No gift picked yet."}</p>` : ""}
         <div class="btnrow"><button class="pill" data-go="points">🏆 Points and leaderboard</button></div></div>`,
     score: () => `<div class="card"><h2>🏆 Score this week</h2>${scoreBlockHtml(sc)}${sc.free && sc.free.count ? `<p class="kid-free">${freeLine(sc.free)}</p>` : ""}</div>${dayGraphHtml(k, c.color)}`,
-    study: () => `<div class="card rp-card"><h2>📚 Study per subject</h2><p class="rp-free">📚 Sessions: ${sc.sp ? sc.sp.study + "%" : "–"} · 📝 Marks: ${sc.has.marks ? sc.marks + "%" : "–"}${
+    study: () => `<div class="card rp-card"><h2>📚 Study per subject</h2><p class="rp-free">📚 Sessions: ${sc.sp ? sc.sp.study + "%" : "–"} · 📝 Marks: ${sc.wsCount ? sc.marks + "%" : "–"}${
         sc.free.count ? ` <small>(${sc.free.count} ${sc.free.count === 1 ? "worksheet" : "worksheets"}, ${sc.free.points} points)</small>` : ""}</p>${studyTableHtml(k.id, null)}</div>
       <div class="card rp-card"><h2>🎒 Topics</h2>${topicsSummaryHtml(k.id)}</div>`,
     points: () => `<p class="hint ks-intro">Each subject in a few words, from ${safe(k.name)}'s checked worksheets.</p>${kidSubjectsHtml(k.id)}`,
@@ -468,7 +468,7 @@ function kidSecLine(k, id) {
   if (id === "habits") return h.all ? `${h.done} of ${h.all} done today` : "No habits on";
   if (id === "star") return kidStarLine(k.id) || "No scores yet";
   if (id === "score") return `${sc.overall} / ${sc.max}`;
-  if (id === "study") return `Sessions ${sc.sp ? sc.sp.study + "%" : "–"} · Marks ${sc.has.marks ? sc.marks + "%" : "–"}`;
+  if (id === "study") return `Sessions ${sc.sp ? sc.sp.study + "%" : "–"} · Marks ${sc.wsCount ? sc.marks + "%" : "–"}`;
   if (id === "points") { const n = subjectList(schoolOf(k.id)).length; return n ? `${n} ${n === 1 ? "subject" : "subjects"}: good at, weak at, practise` : "No subjects yet"; }
   if (id === "tasks") { const t = sc.tk || {}; return t.planned ? `${Math.round(t.done / t.planned * 100)}% done this week` : "Nothing planned yet"; }
   if (id === "school") return "Files, worksheets, marks";
@@ -737,7 +737,7 @@ const TOUR_KID = [["✅", "Tick your tasks", "When you finish something, tap its
                   ["✨", "Grow your Spark", "All your points help your Spark grow. Can you reach the next level?"]];
 const TOUR_PARENT = [["📅", "Family calendar", "Everyone's week in one place. ✨ Plan my week fits all the activities together."],
                      ["🎒", "School coach", "Upload today's school work: 🤖 makes worksheets, checks the answers and tells you what to practise."],
-                     ["⭐", "Points & the kids' habits", "⭐ Score (out of 100, each week): 📝 marks of the study-session worksheets (70) + ⚡ checked extra worksheets (each adds its mark, up to 10) + ✅ 📚 ⚽ 🌱 items ticked (20). Points still grow the ✨ Spark."],
+                     ["⭐", "Points & the kids' habits", "⭐ Score (out of 100, each week): 📝 every checked worksheet adds points from its mark (100% = 10, 80% = 8; a study-session one 5% more), up to 80 + ✅ 📚 ⚽ 🌱 items ticked (20). Points still grow the ✨ Spark."],
                      ["⚙️", "Settings", "Turn features on or off for your family, and set up the people and the day."]];
 let tourShown = false;   // (once per opening of the app)
 function maybeShowTour() {
