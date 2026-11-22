@@ -1273,19 +1273,19 @@ function cleanSchool(s) {
     c.week = wk && typeof wk === "object" && isDate(wk.start) && isDate(wk.end)
       ? { label: txt(wk.label, 60), n: Math.max(0, Math.round(Number(wk.n)) || 0), start: wk.start, end: wk.end,
           subjects: (Array.isArray(wk.subjects) ? wk.subjects : []).filter(x => x && txt(x.subject, 30)).slice(0, 12)
-            .map(x => ({ subject: txt(x.subject, 30), topics: (Array.isArray(x.topics) ? x.topics : []).map(t => txt(t, 60)).filter(Boolean).slice(0, 8) })),
+            .map(x => ({ subject: txt(x.subject, 30), topics: (Array.isArray(x.topics) ? x.topics : []).map(t => txt(t, 80)).filter(Boolean).slice(0, 12) })),
           reminders: (Array.isArray(wk.reminders) ? wk.reminders : []).map(t => txt(t, 200)).filter(Boolean).slice(0, 10) }
       : null;
     // 📰 v179: week reviews waiting for Friday after school: [{ n, label, start, fri, subjects: [{ subject, topics }] }]
     c.reviewDue = (Array.isArray(k.reviewDue) ? k.reviewDue : []).filter(x => x && isDate(x.start) && isDate(x.fri)).slice(-3)
       .map(x => ({ n: Math.max(0, Math.round(Number(x.n)) || 0), label: txt(x.label, 60), start: x.start, fri: x.fri,
                    subjects: (Array.isArray(x.subjects) ? x.subjects : []).filter(y => y && txt(y.subject, 30)).slice(0, 12)
-                     .map(y => ({ subject: txt(y.subject, 30), topics: (Array.isArray(y.topics) ? y.topics : []).map(t => txt(t, 60)).filter(Boolean).slice(0, 8) })) }));
+                     .map(y => ({ subject: txt(y.subject, 30), topics: (Array.isArray(y.topics) ? y.topics : []).map(t => txt(t, 80)).filter(Boolean).slice(0, 12) })) }));
     // 📖 v191 next week's preview worksheets, made on the parents' day + time ("on" = that date): [{ n, label, start, on, subjects }]
     c.previewDue = (Array.isArray(k.previewDue) ? k.previewDue : []).filter(x => x && isDate(x.start) && isDate(x.on)).slice(-3)
       .map(x => ({ n: Math.max(0, Math.round(Number(x.n)) || 0), label: txt(x.label, 60), start: x.start, on: x.on,
                    subjects: (Array.isArray(x.subjects) ? x.subjects : []).filter(y => y && txt(y.subject, 30)).slice(0, 12)
-                     .map(y => ({ subject: txt(y.subject, 30), topics: (Array.isArray(y.topics) ? y.topics : []).map(t => txt(t, 60)).filter(Boolean).slice(0, 8) })) }));
+                     .map(y => ({ subject: txt(y.subject, 30), topics: (Array.isArray(y.topics) ? y.topics : []).map(t => txt(t, 80)).filter(Boolean).slice(0, 12) })) }));
     c.revDone = (Array.isArray(k.revDone) ? k.revDone : []).map(x => String(x).slice(0, 40)).filter(Boolean).slice(-30);   // (📝 tests already revised for)
     c.gapDone = isDate(k.gapDone) ? k.gapDone : "";   // (📋 the last week whose missing topics were told)
     c.notes = list(k.notes, n => txt(n.text, 1000) && isDate(n.date)

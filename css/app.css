@@ -3459,3 +3459,7 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .dh-box { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 16px; }
 .dh-box label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
 .k-week .k-head button.k-dayhours, .k-week .k-head div.k-dayhours { min-height: 0; min-width: 0; box-shadow: none; font-size: 11px; line-height: 1.4; padding: 2px 8px; margin-top: 4px; }
+/* 📚 v211 newsletter: the topics per subject to add to the curriculum */
+.nl-tp { margin: 6px 0 10px; }
+.nl-tp-sub { margin: 8px 0 2px; font-size: 16px; }
+.nl-tp-sub small { color: var(--muted, #7a6a5a); font-weight: 700; }
