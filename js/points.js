@@ -500,11 +500,15 @@ function ticksTally(id) {
 // until yesterday (today never counts: the kid has until midnight). Each habit-day counts its part done: 🕌 3 of 5 prayers = 0.6,
 // 💧 4 of 6 drops = 0.67, a one-tick habit 1 or 0. → { ratio (0–1, 1 when nothing is due yet), due, done, missed: [{ name, date }] }
 // The week's ⭐ Score = the total × ratio (✖️ the must-do multiplier).
+// 🏖️ v209 Off days (Friday and Saturday, the family's weekend): missed must-dos there don't lower the score
+const MUST_OFF_DAYS = [4, 5];   // (0 = Monday)
+const mustOffDay = ymd => MUST_OFF_DAYS.includes(weekdayOf(ymd));
 function mustMissed(id) {
   const today = todayYmd(), missed = [];
   let due = 0, done = 0;
   data.habits.filter(h => h.must && !h.gone && !h.off.includes(id)).forEach(h => {
     for (let d = h.must > data.points.week ? h.must : data.points.week; d < today && d < weekEnd(); d = addDaysYmd(d, 1)) {
+      if (mustOffDay(d)) continue;   // (🏖️ Friday / Saturday: must-dos don't count)
       const v = data.habitMarks[habitKey(d, h.id, id)];
       const part = h.kind === "prayers" ? (Array.isArray(v) ? v.filter(Boolean).length : 0) / PRAYERS.length
         : h.kind === "water" ? Math.min(WATER_DROPS, Number(v) || 0) / WATER_DROPS : v === true ? 1 : 0;
@@ -516,7 +520,7 @@ function mustMissed(id) {
   // yesterday counts as one must-do, done when ✅ ticked
   const acts = allActs().filter(a => a.must);
   if (acts.length) (planDays() || []).forEach(day => {
-    if (day.date >= today || day.date >= weekEnd()) return;
+    if (day.date >= today || day.date >= weekEnd() || mustOffDay(day.date)) return;
     day.items.forEach(it => {
       if (it.gone || !it.users.includes(id)) return;
       const a = acts.find(x => x.id === baseActId(it.actId));
