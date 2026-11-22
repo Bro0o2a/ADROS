@@ -500,7 +500,7 @@ function cleanCurriculum(s, subs, r) {
 function curriculumReviewNodes(s) {
   const res = aw.result, out = [];
   if (!res.groups.length && !res.events.length) out.push(h("p", { class: "sc-empty" }, "🤖 I couldn't find any topics for these subjects in this file."));
-  else if (res.groups.length) out.push(h("p", { class: "print-hint" }, "Untick what you don't want, then tap ✅ Add."));
+  else if (res.groups.length) out.push(h("p", { class: "print-hint" }, "☑ Ticked = add it. ☐ Untick = don't add it. Then tap ✅ Add."));
   // ⚠️ v205: topics that are not in the kid's official curriculum (a file of another kid or another year?)
   const offN = res.groups.reduce((n, g) => n + g.topics.filter(t => t.off).length, 0);
   if (offN) out.push(h("p", { class: "aw-off-box", role: "alert" }, `⚠️ ${offN} ${offN === 1 ? "topic is" : "topics are"} not in ${kidNameOf(aw.kid)}'s official curriculum${
@@ -510,8 +510,8 @@ function curriculumReviewNodes(s) {
     out.push(h("h3", { class: "ph-group" }, `${f.emoji} ${f.name}`),
       h("ul", { class: "list aw-topics" }, g.topics.map((t, ti) => { const old = t.same && s.curr[t.same];
         return h("li", { class: old ? "aw-same" : null }, h("label", { class: "checkline" },
-          h("input", { type: "checkbox", checked: t.on, data: { awt: gi + "|" + ti } }),
-          h("span", null, h("b", null, t.title), old ? h("small", null, `Already in ${f.name} as “${old.title}”`)
+          h("input", { type: "checkbox", checked: t.on || !!old, ...(old ? { disabled: true } : {}), data: { awt: gi + "|" + ti } }),
+          h("span", null, h("b", null, t.title), old ? h("small", null, `✅ Already added${lowerT(old.title) === lowerT(t.title) ? "" : ` as “${old.title}”`}`)
             : t.off ? h("small", { class: "aw-off" }, `⚠️ Not in ${kidNameOf(aw.kid)}'s ${f.name} curriculum`) : t.note ? h("small", null, t.note) : null))); })));
   });
   if (res.events.length) out.push(h("h3", { class: "ph-group" }, "📅 Add to calendar"),
@@ -1014,12 +1014,12 @@ function newsletterTopicsNodes(box) {
   if (!tp.length) return [h("p", { class: "sc-empty" }, "📚 No subject topics found in this newsletter.")];
   const offN = tp.reduce((n, g) => n + g.topics.filter(t => t.off).length, 0);
   return [h("h3", { class: "ph-group" }, "📚 Add to the curriculum"),
-    h("p", { class: "print-hint" }, `Ticked topics go into ${kidNameOf(box.kid)}'s 📚 My topics in each subject. Untick what isn't a real topic.`),
+    h("p", { class: "print-hint" }, `☑ Ticked = add it to ${kidNameOf(box.kid)}'s 📚 My topics. ☐ Untick = don't add it.`),
     offN ? h("p", { class: "aw-off-box", role: "alert" }, `⚠️ ${offN} ${offN === 1 ? "topic is" : "topics are"} not in ${kidNameOf(box.kid)}'s official curriculum. Is this the right kid's newsletter?`) : null,
     ...tp.map((g, gi) => h("div", { class: "nl-tp" }, h("p", { class: "nl-tp-sub" }, h("b", null, g.subject), g.sid ? null : h("small", null, " 🆕 new subject")),
       h("ul", { class: "list aw-topics" }, g.topics.map((t, ti) => h("li", { class: t.same ? "aw-same" : null }, h("label", { class: "checkline" },
-        h("input", { type: "checkbox", checked: !t.same, data: { nltp: gi + "|" + ti } }),
-        h("span", null, h("b", null, t.title), t.same ? h("small", null, `Already in ${g.subject} as “${t.same}”`)
+        h("input", { type: "checkbox", checked: true, ...(t.same ? { disabled: true } : {}), data: { nltp: gi + "|" + ti } }),
+        h("span", null, h("b", null, t.title), t.same ? h("small", null, `✅ Already added${lowerT(t.same) === lowerT(t.title) ? "" : ` as “${t.same}”`}`)
           : t.off ? h("small", { class: "aw-off" }, `⚠️ Not in ${kidNameOf(box.kid)}'s ${g.subject} curriculum`) : null)))))))].filter(Boolean);
 }
 // "Week 6" → 6 (otherwise the week number of the year)
