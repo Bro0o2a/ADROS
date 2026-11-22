@@ -1445,8 +1445,7 @@
   /* 👨‍👩‍👧 THE PARENT'S HOME: 🔔 Needs you · a card per kid · the Family row (simple, big touch targets, fits a phone for 3 kids) */
   .p-home { display: grid; gap: 8px; margin-top: 4px; font-family: "Baloo 2", inherit; }
   #scr-home:not(.kid-home) .enc-line { display: none !important; }   /* (📊 is on each kid's card and in ☰ More) */
-  /* (a parent's home: the hello and the date a little smaller; 📅 is in the Family row, so no big Calendar bar here) */
-  #scr-home:not(.kid-home) .bar .cal-btn { display: none; }
+  /* (a parent's home: the hello and the date a little smaller; 📅 v212 (Broo2a): 📅 Calendar and 🎒 School side by side at the top) */
   #scr-home:not(.kid-home) .home-date { margin: 0 0 6px; }
   #scr-home:not(.kid-home) .home-date b { font-size: 26px; }
   #scr-home:not(.kid-home) .home-date span { font-size: 15px; }
@@ -3463,3 +3462,14 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .nl-tp { margin: 6px 0 10px; }
 .nl-tp-sub { margin: 8px 0 2px; font-size: 16px; }
 .nl-tp-sub small { color: var(--muted, #7a6a5a); font-weight: 700; }
+
+/* 📚 v212 the subject card above the calendar: each session as a chip with its day and time */
+.subj-sum { display: flex; flex-direction: column; gap: 6px; }
+.subj-sum .subj-whens { display: flex; flex-wrap: wrap; gap: 6px; }
+.subj-sum .subj-when { font-weight: 600; }
+.subj-sum .subj-when.on { border-color: var(--c, #f97316); }
+.subj-sum .subj-when { min-height: 0; padding: 4px 10px; font-size: 14px; box-shadow: none; }
+/* ✕ v212 close a "Needs you" line */
+.needs-row { display: flex; align-items: stretch; gap: 6px; }
+.needs-row > button:first-child { flex: 1; min-width: 0; }
+.needs-row .needs-x { flex: none; min-width: 44px; min-height: 44px; padding: 0 10px; border-radius: 12px; font-weight: 800; }

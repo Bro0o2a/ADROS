@@ -71,7 +71,7 @@ document.addEventListener("click", e => {
   if ("extraset" in ds) { go("settings"); return setTimeout(() => { $("extraLimit").closest(".setting").scrollIntoView({ block: "center" }); $("extraLimit").focus(); }, 300); }   // 🤖 v171
   if ("starset" in ds) { go("settings"); return setTimeout(() => $("starCard").scrollIntoView({ block: "start" }), 300); }   // 🌟 v171
   if ("kidhabits" in ds) { go("settings"); return requestAnimationFrame(() => $("kidHabitsCard").scrollIntoView({ behavior: "smooth", block: "start" })); }
-  if ("calall" in ds) { calWho = "all"; return go("mine"); }
+  if ("calall" in ds) { calWho = "all"; calOpenKid = "all"; return go("mine"); }
   // ✨ Make the app yours (parents)
   if ("setupopen" in ds) return openSetup();
   if (ds.setupfeat) { if (setupDraft) setupDraft[ds.setupfeat] = !setupDraft[ds.setupfeat]; return render(); }
@@ -168,7 +168,7 @@ document.addEventListener("click", e => {
     if (!isParentDevice() && ds.calwho !== me && ds.calwho !== "all") return;
     calWho = ds.calwho; return render();
   }
-  if ("viewcal" in ds) { calWho = ds.viewcal || me; return go("mine"); }   // (older links: someone's calendar, "" = my own)
+  if ("viewcal" in ds) { calWho = ds.viewcal || me; calOpenKid = ds.viewcal || null; return go("mine"); }   // (older links: someone's calendar, "" = my own)
   if (ds.allview) { allView = ds.allview; return render(); }
   // (📅 the calendar's 12 days: ‹ › stop at the first and last one)
   if (ds.kday) { if (Number(ds.kday) < 0) return toast("📅 That day isn't in the plan yet.", 2500); viewDay = Number(ds.kday); wholeWeek = false; return render(); }

@@ -134,19 +134,34 @@ function needsItems() {
   const cu = isParentId(me) ? kidsList().flatMap(k => comingUp(k.id)) : [];
   if (cu.length) out.push({ key: "coming", text: `📌 Coming up: ${cu.slice(0, 2).map(e => `${whenWord(e.days).toLowerCase()} ${e.title} (${kidNameOf(e.kid)})`).join(", ")}${cu.length > 2 ? ` +${cu.length - 2}` : ""}`,
     html: comingCardHtml(cu, true) });
+  // 🌙 v212 (Broo2a): a kid with no bedtime: ask for the time planning stops (nothing is planned or moved after it)
+  const noBed = isParentId(me) ? kidsList().filter(k => !k.bed) : [];
+  if (noBed.length) out.push({ key: "bed", text: `🌙 Set when planning stops for ${noBed.map(k => k.name).join(", ")}`,
+    html: `<div class="card bed-set"><p><b>🌙 Bedtime: planning stops at</b></p><p class="hint">Nothing is planned for a kid after this time. Pick school nights and weekend nights.</p>${bedRowsHtml(noBed)}</div>` });
   const nl = newsletterDue();
   if (nl.length) out.push({ key: "nl", text: `📰 Newsletter for ${nl.map(k => k.name).join(", ")}`, html: newsletterNudgeHtml() });
   return out;
 }
+// ✕ v212 (Broo2a): a "Needs you" line can be closed (this device only). It comes back when its text changes (something new).
+const NEEDS_HIDE_KEY = SAVE_KEY + ".needsHidden";
+function needsHidden() { try { return JSON.parse(localStorage.getItem(NEEDS_HIDE_KEY)) || {}; } catch (e) { return {}; } }
+const needsSig = x => x.key + "|" + x.text;
+function hideNeed(sig) {
+  const h = needsHidden(), old = addDaysYmd(todayYmd(), -30);
+  Object.keys(h).forEach(k => { if (h[k] < old) delete h[k]; });   // (old ones are forgotten after a month)
+  h[sig] = todayYmd();
+  try { localStorage.setItem(NEEDS_HIDE_KEY, JSON.stringify(h)); } catch (e) {}
+}
 function needsLineHtml() {
-  const list = needsItems();
+  const hid = needsHidden(), list = needsItems().filter(x => !hid[needsSig(x)]);
   if (needsOpen && needsOpen !== "list" && !list.some(x => x.key === needsOpen)) needsOpen = null;
   if (!list.length) return "";
   const one = list.length === 1, open = needsOpen === "list" || (one && needsOpen === list[0].key) || list.some(x => x.key === needsOpen);
-  const head = `<button class="needs-line ${open ? "on" : ""}" data-needs="${one ? list[0].key : "list"}" aria-expanded="${open}">
-    ${one ? safe(list[0].text) : `🔔 ${list.length} things need you`}<span aria-hidden="true">${open ? "▲" : "›"}</span></button>`;
+  const x1 = x => `<button class="needs-x" data-needsx="${safe(needsSig(x))}" aria-label="Close: ${safe(x.text)}" title="Close">✕</button>`;
+  const head = `<div class="needs-row"><button class="needs-line ${open ? "on" : ""}" data-needs="${one ? list[0].key : "list"}" aria-expanded="${open}">
+    ${one ? safe(list[0].text) : `🔔 ${list.length} things need you`}<span aria-hidden="true">${open ? "▲" : "›"}</span></button>${one ? x1(list[0]) : ""}</div>`;
   const shown = list.find(x => x.key === needsOpen);
-  return `<div class="needs">${head}${needsOpen === "list" && !one ? `<div class="needs-list">${list.map(x => `<button data-needs="${x.key}">${safe(x.text)} ›</button>`).join("")}</div>` : ""}
+  return `<div class="needs">${head}${needsOpen === "list" && !one ? `<div class="needs-list">${list.map(x => `<div class="needs-row"><button data-needs="${x.key}">${safe(x.text)} ›</button>${x1(x)}</div>`).join("")}</div>` : ""}
     ${shown ? `<div class="needs-panel">${shown.html}</div>` : ""}</div>`;
 }
 // 🎯 The score ring (0–100) in the kid's colour
@@ -243,9 +258,10 @@ function familyRowHtml() {
 let hubOpen = "";   // which big button is open (kept when the home redraws)
 document.addEventListener("toggle", e => { const d = e.target; if (d && d.dataset && d.dataset.hubg) { if (d.open) hubOpen = d.dataset.hubg; else if (hubOpen === d.dataset.hubg) hubOpen = ""; } }, true);
 document.addEventListener("click", e => {
-  const b = e.target.closest && e.target.closest("[data-needs], [data-homeaddplan], [data-kidpage], [data-kidreport]");
+  const b = e.target.closest && e.target.closest("[data-needsx], [data-needs], [data-homeaddplan], [data-kidpage], [data-kidreport]");
   if (!b) return;
   const ds = b.dataset;
+  if (ds.needsx) { hideNeed(ds.needsx); if (needsOpen !== "list") needsOpen = null; toast("✕ Closed. It comes back if something new happens.", 2500); return render(); }
   if (ds.needs) { needsOpen = needsOpen === ds.needs || (ds.needs === "list" && needsOpen) ? null : ds.needs; return render(); }
   if ("homeaddplan" in ds) { homeAddPlan = !homeAddPlan; homeMore = false; return render(); }
   if (ds.kidpage) return openKidPage(ds.kidpage);

@@ -139,14 +139,18 @@ function sleepActs() {
   return [...data.fixed.map(a => ["fixed", a]), ...data.flexible.map(a => ["flex", a]), ...data.routines.map(a => ["rt", a])]
     .filter(([, a]) => SLEEP_WORDS.test(a.name) && !/routine|story|chat/i.test(a.name));
 }
-function drawBedtimes() {
+// One row per kid: 🌙 the time planning stops on school nights and on weekend nights (⚙️ Settings, and 🔔 Needs you when one is missing)
+function bedRowsHtml(kids) {
   const hm = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
-  const sel = (id, which, now) => { const o = [`<option value="">None</option>`];
-    for (let m = 18 * 60; m < 24 * 60; m += 15) o.push(`<option value="${hm(m)}" ${now === hm(m) ? "selected" : ""}>${clock(m, true)}</option>`);
+  const sel = (id, which, now) => { const o = [`<option value="">${now ? "None" : "Pick…"}</option>`];
+    for (let m = 17 * 60; m < 24 * 60; m += 15) o.push(`<option value="${hm(m)}" ${now === hm(m) ? "selected" : ""}>${clock(m, true)}</option>`);
     return `<select data-bedusual="${safe(id)}|${which}" aria-label="${which === "wd" ? "School nights" : "Weekend nights"}">${o.join("")}</select>`; };
+  return kids.map(k => `<div class="bed-row"><span class="bed-nm">${faceHtml(k)} ${safe(k.name)}</span>
+      <label>Sun–Thu ${sel(k.id, "wd", k.bed ? k.bed.wd : "")}</label><label>Fri, Sat ${sel(k.id, "we", k.bed ? k.bed.we : "")}</label></div>`).join("");
+}
+function drawBedtimes() {
   const old = sleepActs();
-  $("bedSet").innerHTML = kidsList().map(k => `<div class="bed-row"><span class="bed-nm">${faceHtml(k)} ${safe(k.name)}</span>
-      <label>Sun–Thu ${sel(k.id, "wd", k.bed ? k.bed.wd : "")}</label><label>Fri, Sat ${sel(k.id, "we", k.bed ? k.bed.we : "")}</label></div>`).join("")
+  $("bedSet").innerHTML = bedRowsHtml(kidsList())
     + (old.length && data.users.some(u => u.bed) ? `<p class="hint" style="margin:8px 0 4px">You still have ${old.length} old 😴 Sleep ${old.length === 1 ? "activity" : "activities"}
       (${safe([...new Set(old.map(([, a]) => a.name))].join(", "))}). The bedtime does their job now.</p>
       <button class="btn small" data-bedclean>🗑️ Remove the old Sleep activities</button>` : "");
@@ -158,6 +162,7 @@ document.addEventListener("change", e => {
   if (!t) delete u.bed;
   else { const b = u.bed || { wd: t, we: t }; b[which] = t; u.bed = b; }   // (the first one picked fills both)
   saveChanges();   // (the week is planned again with the new bedtime)
+  if (screen === "home") render();   // (🔔 the Needs you card: the kid's row is done)
 });
 document.addEventListener("click", e => {
   if (!e.target.closest("[data-bedclean]") || !isParentId(me)) return;

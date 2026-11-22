@@ -16,7 +16,7 @@ function go(name, fromHistory) {
     if (exists(me) && ["start", "settings", "family"].includes(name)) name = "home";
   }
   // 📅 The old calendar pages ("Everyone's plan", "View all plan") are now 📅 Calendar → Everyone
-  if (name === "all" || name === "view") { name = "mine"; calWho = "all"; if (screen === "mine") screen = ""; }
+  if (name === "all" || name === "view") { name = "mine"; calWho = "all"; calOpenKid = "all"; if (screen === "mine") screen = ""; }
   if (name === "family" && !isParentId(me)) name = "home";   // 👨‍👩‍👧 Family: parents only
   if (name === "kidswork" && !isParentDevice()) name = "home";   // 👀 Your kids' work today: parents only
   if (name === "kid" && (!isParentDevice() || !exists(kidPage))) name = "home";   // 👧 the Kid page: parents only
@@ -113,7 +113,7 @@ document.addEventListener("click", e => {
   toast(`👋 Hi ${userById(id).name}!`, 2500, colorsOf(userById(id)).color);
 });
 // (older links to "View all plan": 📅 Calendar → Everyone)
-function openViewAll() { calWho = "all"; go("mine"); }
+function openViewAll() { calWho = "all"; calOpenKid = "all"; go("mine"); }
 
 // Draws the screen that's showing
 function render() {
