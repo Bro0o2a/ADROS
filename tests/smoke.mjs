@@ -157,6 +157,21 @@ try {
   }, FAKE_WS);
   if (fixSess !== "ok") errors.push("[session score after a parent fix] " + fixSess);
 
+  // 📝 v208 every worksheet adds points from its mark (100 % = 10), a session one 5 % more, at most 80 a week
+  const wsPts = await run("worksheet points", () => {
+    const kid = "ex-kid1", s = schoolFor(kid), fid = Object.keys(s.subjects || {})[0];
+    if (!fid) return "no subject";
+    const L = s.learn[fid] || (s.learn[fid] = { level: 5, skills: {}, history: [] }), keep = L.history, d = todayYmd(), fk = `${d}|wsx|${kid}`;
+    L.history = [{ date: d, ws: "wss", pct: 100, level: 5 }, { date: d, ws: "wsx", pct: 80, level: 5 }];
+    data.points.free[fk] = { make: 0, up: 1, bonus: 0, at: "t", sub: "x" };
+    const a = scoreMarks(kid);
+    L.history = Array.from({ length: 12 }, (_, i) => ({ date: d, ws: "m" + i, pct: 100, level: 5 }));
+    const b = scoreMarks(kid);
+    L.history = keep; delete data.points.free[fk];
+    return a.sessPts === 10.5 && a.extraPts === 8 && a.pts === 18.5 && a.avg === 90 && b.pts === 80 ? "ok" : JSON.stringify({ a, b });
+  });
+  if (wsPts !== "ok") errors.push("[worksheet points] " + wsPts);
+
   // 📸 v197 the answer photos stay on the worksheet after ✅ Check (before, they turned into a plain list and looked gone)
   const thumbs = await run("answer photos after the check", ws => {
     const s = schoolFor("ex-kid1");
