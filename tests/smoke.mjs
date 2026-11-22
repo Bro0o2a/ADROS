@@ -232,13 +232,18 @@ try {
 
   // ⭐ v191 a Must-do activity: a missed past session lowers the ratio; switched off = no effect
   const mustAct = await run("must-do activity", () => {
-    const kid = scoredUsers()[0].id, past = (planDays() || []).find(d => d.date < todayYmd() && d.items.some(it => it.users.includes(kid) && !it.fixed));
+    const kid = scoredUsers()[0].id, past = (planDays() || []).find(d => d.date < todayYmd() && !mustOffDay(d.date) && d.items.some(it => it.users.includes(kid) && !it.fixed));
     if (!past) return "ok";   // (the example week starts today: nothing past to test)
     const it = past.items.find(x => x.users.includes(kid) && !x.fixed), a = data.flexible.find(x => x.id === baseActId(it.actId));
     const before = mustMissed(kid).due; a.must = data.points.week; const on = mustMissed(kid); delete a.must;
     return on.due > before && cleanData(JSON.parse(JSON.stringify({ ...data, flexible: [{ ...a, must: "2026-01-01" }] }))).flexible[0].must === "2026-01-01" ? "ok" : JSON.stringify(on);
   });
   if (mustAct !== "ok") errors.push("[must-do activity] " + mustAct);
+
+  // 🏖️ v209 must-dos don't count on Friday / Saturday
+  const offDay = await run("must-dos off on Friday and Saturday", () =>
+    mustOffDay("2026-11-20") && mustOffDay("2026-11-21") && !mustOffDay("2026-11-22") && !mustOffDay("2026-11-19") ? "ok" : "wrong days");
+  if (offDay !== "ok") errors.push("[must-dos off days] " + offDay);
 
   // 📖📋 v191 newsletter: the preview day is the Sunday before the week; the missing topics of a week are found
   const nlIdeas = await run("newsletter preview + missing topics", () => {
