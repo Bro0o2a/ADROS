@@ -3508,3 +3508,40 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .bed-secsum { grid-area: s; font-size: 14px; color: var(--muted, #8a7a70); }
 .bed-chev { grid-area: c; align-self: center; font-size: 20px; font-weight: 800; }
 .bed-secbody { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 14px; }
+/* 🗜️ v213 Smaller activity card for parents (quick edit) + pop-ups in the middle */
+.qe-on .kc2-top { padding: 12px 14px 10px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; }
+.qe-on .kc2-top .big { margin: 0; }
+.qe-on .k-card-top .big .k-bigic { width: 40px; height: 40px; }
+.qe-on .kc2-top .nm { font-size: 22px; margin: 0; }
+.qe-on .kc2-top .kc2-tags { width: 100%; margin: 0; }
+.qe-on .kc2-when { margin: 10px 14px 0; padding: 8px 12px; border-radius: 16px; }
+.qe-on .kc2-time { font-size: 20px; margin: 0; }
+.qe-on .kc2-len { display: none; }
+.qe-on .kc2-tiles { margin: 8px 14px 4px; gap: 6px; }
+.qe-on .kc2-tile { padding: 6px 10px; border-radius: 14px; }
+.qe-bar { margin: 8px 14px 4px; padding: 10px; }
+.qe-line { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 8px; margin: 0 0 6px; text-align: left; }
+.qe-step { padding: 4px; border-radius: 14px; }
+.qe-step .bed-pm { width: 40px; height: 40px; min-height: 40px; font-size: 22px; }
+.qe-step .bed-time { font-size: 18px; }
+.qe-save { width: 100%; margin: 2px 0 8px; }
+.qe-btns { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.qe-btns .pill { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
+.qe-more { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ecdccb; }
+.qe-pop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(40, 25, 20, .45); }
+.qe-popcard { width: min(360px, 100%); background: #fffaf6; border-radius: 22px; padding: 18px 16px; box-shadow: 0 18px 40px rgba(0, 0, 0, .25); text-align: center; }
+.qe-poptitle { display: block; font-size: 19px; margin-bottom: 6px; }
+.qe-popcard p { margin: 0 0 12px; color: var(--muted, #8a7a70); }
+.qe-popbtns { display: flex; flex-direction: column; gap: 8px; }
+.qe-popbtns .pill { width: 100%; min-height: 46px; white-space: normal; }
+/* 👤 v213 Activities page: a button per person */
+.add-who { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+.add-who .pill { flex: none; white-space: nowrap; }
+.add-who .pill.on { background: #ec8466; color: #fff; border-color: #ec8466; }
+.add-who-list h3 { margin: 0 0 8px; }
+/* 🤝 v213 "same time as": a closed button, tap to open the checklist */
+.pick-toggle { display: flex; width: 100%; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-start; text-align: left; padding: 10px 14px; min-height: 48px;
+  border-radius: 14px; background: #fbf3e9; border: 2px solid #ecdccb; color: inherit; box-shadow: none; font-weight: 700; }
+.pick-toggle .pick-count { color: #c0603f; }
+.pick-toggle .pick-chev { margin-left: auto; }
+.pick-toggle[aria-expanded="true"] + .pick-list { margin-top: 6px; }

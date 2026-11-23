@@ -107,8 +107,9 @@
         <small class="needs-help">That parent must be free at this time too.</small>
       </div>
       <div id="fxPickWrap">
-        <label class="small">Can be done at the same time as (optional)</label>
-        <div class="pick-list" id="fxOverlapList"></div>
+        <!-- 🤝 v213 (Broo2a): closed; tap to open the checklist (the button shows how many are ticked) -->
+        <button type="button" class="pick-toggle" data-picktoggle="fxOverlapList" aria-expanded="false" aria-controls="fxOverlapList">🤝 Can be done at the same time as <b class="pick-count">none</b> <span class="pick-chev">▾</span></button>
+        <div class="pick-list" id="fxOverlapList" hidden></div>
       </div>
       <div class="btnrow">
         <button class="primary" id="fxAdd">💾 Save</button>
@@ -152,8 +153,9 @@
         <small class="needs-help">That parent must be free at this time too.</small>
       </div>
       <div id="flPickWrap">
-        <label class="small">Can be done at the same time as (optional)</label>
-        <div class="pick-list" id="flOverlapList"></div>
+        <!-- 🤝 v213 (Broo2a): closed; tap to open the checklist (the button shows how many are ticked) -->
+        <button type="button" class="pick-toggle" data-picktoggle="flOverlapList" aria-expanded="false" aria-controls="flOverlapList">🤝 Can be done at the same time as <b class="pick-count">none</b> <span class="pick-chev">▾</span></button>
+        <div class="pick-list" id="flOverlapList" hidden></div>
       </div>
       <div class="btnrow">
         <button class="primary" id="flAdd">💾 Save</button>
