@@ -249,7 +249,7 @@ document.addEventListener("click", e => {
     if (d.weekend.length > 4) return toast("🎉 At most 4 weekend days.", 2500);
     if (d.school.on && toMin(d.school.end) <= toMin(d.school.start)) return toast("🏫 School must end after it starts.", 2500);
     saveCalBox(d);
-    bedDraft = null;
+    bedDraft = null; qePopClose();
     if (!saveChanges()) return;   // (the week is planned again with the new times)
     toast("📅 Saved. The week is planned again.", 3000, "#16a34a");
     return render();

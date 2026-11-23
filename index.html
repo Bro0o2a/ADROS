@@ -194,6 +194,9 @@
     </div>
     <ul class="list add-list" id="rtList"></ul>
   </div>
+  <!-- 🏷️ v213 Activity types: the built-in ones + the family's own (parents add: emoji, name, counts in the score?). Filled by drawTypes (activities.js) -->
+  <button class="add-sec" id="secTyBtn" data-addsec="ty" aria-expanded="false" aria-controls="tyCard"><span class="e">🏷️</span><b>Activity types</b><span class="add-count" id="tyCount"></span></button>
+  <div class="card add-panel" id="tyCard" hidden></div>
   </div>
   <!-- Save bar: changes on this page are a draft until you tap Save -->
   <div class="savebar">
@@ -348,12 +351,6 @@
       </div>
     </div>
     <div>
-      <!-- 👨‍👩‍👧 Family: the kids' codes, school and year; add a parent -->
-      <div class="card" style="margin-bottom:18px">
-        <h2>👨‍👩‍👧 Family</h2>
-        <p class="hint">Each kid's code (for their own phone), their school and year. Add a second parent.</p>
-        <button class="primary" data-go="family">👨‍👩‍👧 Open Family</button>
-      </div>
       <!-- People -->
       <div class="card">
         <h2>👨‍👩‍👧‍👦 People</h2>

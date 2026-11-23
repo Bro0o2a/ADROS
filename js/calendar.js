@@ -709,7 +709,7 @@ function quickEditHtml(b, actId, canEditAct, canMove) {
       <button type="button" class="pill small" data-kedit="${kind}|${safe(base)}">✏️ Edit all</button>
       <button type="button" class="pill small qe-del" data-qedel="1">🗑️ Delete</button></div>
     <div class="qe-more" hidden>
-      <div class="qe-row"><span class="qe-lab">🏷️ Type</span><div class="qe-chips">${ACT_TYPES.map(([k, e, w]) =>
+      <div class="qe-row"><span class="qe-lab">🏷️ Type</span><div class="qe-chips">${allActTypes().map(([k, e, w]) =>
         `<button type="button" class="pill small${k === type ? " on" : ""}" data-qetype="${k}">${e} ${w}</button>`).join("")}</div></div>
       ${act.users.some(u => !isParentId(u)) ? `<div class="qe-row"><span class="qe-lab">⭐ Must-do</span><div class="qe-chips">
         <button type="button" class="pill small${act.must ? "" : " on"}" data-qemust="0">Off</button><button type="button" class="pill small${act.must ? " on" : ""}" data-qemust="1">On: missing it lowers the score</button></div></div>` : ""}

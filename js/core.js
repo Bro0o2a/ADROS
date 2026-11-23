@@ -654,6 +654,10 @@ function cleanData(d) {
     return { type, helper, subjectId: subjectIds.find(x => x !== ALL_SUBJECTS) || "", subjectIds, studyMode };
   };
 
+  // 🏷️ v213 the family's own activity types (before the activities, so their types are kept)
+  clean.actTypes = (Array.isArray(d.actTypes) ? d.actTypes : []).filter(t => t && /^c-[a-z0-9]{1,20}$/.test(t.key) && typeof t.name === "string" && t.name.trim())
+    .slice(0, 20).map(t => ({ key: t.key, emoji: String(t.emoji || "🏷️").slice(0, 8), name: t.name.trim().slice(0, 24), scored: t.scored === true }));
+  customActTypes = clean.actTypes;
   if (Array.isArray(d.fixed)) clean.fixed = d.fixed
     .filter(f => f && f.name && Array.isArray(f.days) && isTime(f.start) && isTime(f.end))
     .map(f => {
@@ -1110,12 +1114,16 @@ const ACT_TYPES = [["study", "📚", "Study"], ["schoolapp", "💻", "School app
   ["family", "👨‍👩‍👧", "Family time"], ["free", "🎈", "Free time"], ["other", "🗂️", "Other"]];   // (🎈 v182 Broo2a: free time, the person picks what to do; not scored)
 // (💻 🏊 👨‍👩‍👧 v213 Broo2a: School app = online study in the school's app, ticked ✅ like Study; Sports ticked like Activity; Family time not scored)
 const UNSCORED_TYPES = ["family", "free", "other"];
+// 🏷️ v213 (Broo2a) the family's own types (data.actTypes, set while loading in cleanData): [{ key "c-…", emoji, name, scored }]
+let customActTypes = [];
+const allActTypes = () => [...ACT_TYPES, ...customActTypes.map(t => [t.key, t.emoji, t.name])];
+const isScoredType = k => ["study", "schoolapp", "activity", "sport", "habit"].includes(k) || customActTypes.some(t => t.key === k && t.scored);
 const ACT_TYPE_KEYS = ACT_TYPES.map(t => t[0]);
 // An activity saved before types existed gets one, once (then it's kept): a name with "school" → "other" (on the calendar, no score),
 // everything else → "activity". An unknown type → "activity". (Hoisted: cleanData uses it while loading.)
 function isMustDate(v) { return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v); }   // (⭐ v191 an activity's Must-do: the date it started)
 function defaultActType(a) {
-  if (a && ACT_TYPE_KEYS.includes(a.type)) return a.type;
+  if (a && (ACT_TYPE_KEYS.includes(a.type) || customActTypes.some(t => t.key === a.type))) return a.type;
   if (a && a.type != null) return "activity";
   return /school/i.test(String((a && a.name) || "")) ? "other" : "activity";
 }

@@ -21,7 +21,7 @@ function go(name, fromHistory) {
   if (name === "kidswork" && !isParentDevice()) name = "home";   // 👀 Your kids' work today: parents only
   if (name === "kid" && (!isParentDevice() || !exists(kidPage))) name = "home";   // 👧 the Kid page: parents only
   // ✏️ Add activities opens CLOSED and simple every time (no list or form open)
-  if (name === "add" && screen !== "add") { addOpen = { fx: false, fl: false, rt: false }; resetFixedForm(); resetFlexForm(); closeRoutineForm(); }
+  if (name === "add" && screen !== "add") { addOpen = { fx: false, fl: false, rt: false, ty: false }; resetFixedForm(); resetFlexForm(); closeRoutineForm(); }
   // 👤 This device is always the person signed in on it (no "Switch user" / "Who are you?"): see deviceMe
   if (!exists(me)) { const dm = deviceMe(); if (dm) me = dm; }
   if (name === "start" && exists(me)) name = "home";

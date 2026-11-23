@@ -3545,3 +3545,16 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .pick-toggle .pick-count { color: #c0603f; }
 .pick-toggle .pick-chev { margin-left: auto; }
 .pick-toggle[aria-expanded="true"] + .pick-list { margin-top: 6px; }
+/* 🗂️ v213 Home lines with their own options + Calendar settings pop-up + Activity types */
+.hub-row.hub-opts { display: flex; flex-direction: column; align-items: stretch; gap: 8px; cursor: default; }
+.hub-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.hub-chips .pill { flex: 0 1 auto; }
+.qe-popcard.cal-popcard { width: min(440px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; text-align: left; }
+.cal-popcard .qe-poptitle { text-align: center; }
+.cal-popcard .qe-popbtns { margin-top: 8px; }
+.ty-list { margin: 0 0 12px; }
+.ty-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px dashed #ecdccb; }
+.ty-e { font-size: 22px; width: 30px; text-align: center; }
+.ty-n { flex: 1; font-weight: 800; }
+.ty-s, .ty-built { font-size: 13px; color: var(--muted, #8a7a70); }
+.ty-new { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: #fbf3e9; }

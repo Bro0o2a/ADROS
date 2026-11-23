@@ -137,7 +137,40 @@ function drawAdd() {
 }
 // ---------- ✏️ ADD PAGE: closed and simple, three big buttons with counts, each opens its list (accordion) ----------
 // A list's "➕ New …" or a tap on a row opens the form (the forms are hidden otherwise). Opening the page: all closed.
-let addOpen = { fx: false, fl: false, rt: false };
+let addOpen = { fx: false, fl: false, rt: false, ty: false };
+// 🏷️ v213 (Broo2a) ACTIVITY TYPES: the built-in ones, and the family's own (data.actTypes: { key, emoji, name, scored }).
+// A parent adds one (emoji + name + ⭐ counts in the score?) or deletes their own (its activities become ⚽ Activity).
+function drawTypes() {
+  const own = data.actTypes || [];
+  $("tyCard").innerHTML = `<p class="hint">Every activity has a type. ⭐ = counts in the score when it's ticked.</p>
+    <ul class="list ty-list">${allActTypes().map(([k, e, w]) => { const mine = own.find(t => t.key === k);
+      return `<li class="ty-row"><span class="ty-e">${safe(e)}</span><span class="ty-n">${safe(w)}</span><span class="ty-s">${isScoredType(k) ? "⭐ scored" : "not scored"}</span>
+        ${mine ? `<button type="button" class="pill small danger-text" data-tydel="${safe(k)}" aria-label="Delete ${safe(w)}">🗑️</button>` : `<span class="ty-built">built-in</span>`}</li>`; }).join("")}</ul>
+    <div class="ty-new"><b>➕ New type</b>
+      <div class="row"><div style="flex:0 0 84px"><label class="small" for="tyEmoji">Emoji</label><input type="text" id="tyEmoji" maxlength="8" placeholder="🎹"></div>
+        <div><label class="small" for="tyName">Name</label><input type="text" id="tyName" maxlength="24" placeholder="Piano"></div></div>
+      <label class="checkline"><input type="checkbox" id="tyScored" checked> ⭐ Counts in the score when it's ticked</label>
+      <div class="btnrow"><button type="button" class="primary" data-tyadd>➕ Add this type</button></div></div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("#tyCard [data-tyadd], #tyCard [data-tydel]");
+  if (!b || !isParentId(me)) return;
+  if ("tyadd" in b.dataset) {
+    const name = $("tyName").value.trim().slice(0, 24), emoji = $("tyEmoji").value.trim().slice(0, 8) || "🏷️";
+    if (!name) return toast("Type a name for the new type.", 2500);
+    if (allActTypes().some(([, , w]) => w.toLowerCase() === name.toLowerCase())) return toast(`“${name}” is already a type.`, 2500);
+    data.actTypes = [...(data.actTypes || []), { key: "c-" + newId(), emoji, name, scored: $("tyScored").checked }].slice(0, 20);
+    customActTypes = data.actTypes;
+  } else {
+    const k = b.dataset.tydel, t = (data.actTypes || []).find(x => x.key === k); if (!t) return;
+    const used = allActs().filter(a => a.type === k);
+    if (!confirm(`Delete the type “${t.name}”?${used.length ? ` ${used.length} ${used.length === 1 ? "activity becomes" : "activities become"} ⚽ Activity.` : ""}`)) return;
+    used.forEach(a => a.type = "activity");
+    data.actTypes = data.actTypes.filter(x => x.key !== k); customActTypes = data.actTypes;
+  }
+  changed(); drawTypes(); drawAddSections();
+  ["fx", "fl"].forEach(p => { const sel = $(p + "Type"); if (sel) { const v = sel.value; fillTypeSelect(p); sel.value = v; } });
+});
 // 👤 v213 (Broo2a): a button per person on top; tap one = ALL their activities (📌 fixed and 🔄 flexible) in one list
 let addWho = null;   // null = All (the 3 sections as usual)
 function addWhoHtml() {
@@ -170,7 +203,11 @@ function drawAddSections() {
   $("rtCount").textContent = `(${data.routines.length})`;
   $("secRtBtn").hidden = !parent;
   if (!parent) addOpen.rt = false;
-  [["fx", "secFxBtn", "secFx"], ["fl", "secFlBtn", "secFl"], ["rt", "secRtBtn", "rtCard"]].forEach(([k, btn, panel]) => {
+  $("secTyBtn").hidden = !parent; if (!parent) addOpen.ty = false;
+  ["fx", "fl"].forEach(p => { const sel = $(p + "Type"), v = sel.value; if (sel.options.length !== allActTypes().length) { fillTypeSelect(p); sel.value = v; } });
+  $("tyCount").textContent = `(${allActTypes().length})`;
+  if (addOpen.ty) drawTypes();
+  [["fx", "secFxBtn", "secFx"], ["fl", "secFlBtn", "secFl"], ["rt", "secRtBtn", "rtCard"], ["ty", "secTyBtn", "tyCard"]].forEach(([k, btn, panel]) => {
     $(panel).hidden = !addOpen[k];
     $(btn).classList.toggle("on", addOpen[k]);
     $(btn).setAttribute("aria-expanded", String(addOpen[k]));
@@ -267,8 +304,11 @@ function fxWinNow() { fxWinPending = true; $("fxAdd").click(); }
 // ⭐ The Type picker (📚 Study · ⚽ Activity · 🌱 Habit · 🗂️ Other = non-scored). New: "Activity" ("Other" while the name has "school"),
 // until you pick one yourself; editing: its saved type.
 const typeTouched = { fx: false, fl: false };
+function fillTypeSelect(k) {   // (🏷️ v213 the family's own types too)
+  $(k + "Type").innerHTML = allActTypes().map(([key, e, w]) => `<option value="${safe(key)}">${safe(e)} ${safe(w)}${isScoredType(key) ? "" : " (non-scored)"}</option>`).join("");
+}
 ["fx", "fl"].forEach(k => {
-  $(k + "Type").innerHTML = ACT_TYPES.map(([key, e, w]) => `<option value="${key}">${e} ${w}${UNSCORED_TYPES.includes(key) ? " (non-scored)" : ""}</option>`).join("");
+  fillTypeSelect(k);
   $(k + "Type").value = "activity";
   $(k + "Type").addEventListener("change", () => { typeTouched[k] = true; });
   $(k + "Name").addEventListener("input", () => { if (!typeTouched[k]) $(k + "Type").value = defaultActType({ name: $(k + "Name").value }); });
