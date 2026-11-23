@@ -1,0 +1,9 @@
+{
+  "name": "adros-android",
+  "private": true,
+  "type": "module",
+  "description": "Makes the ADROS Android app (.aab for Google Play / Galaxy Store). See README.md.",
+  "dependencies": {
+    "@bubblewrap/core": "1.24.1"
+  }
+}
