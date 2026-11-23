@@ -1,0 +1,92 @@
+# 📱 Makes the ADROS Android app file for the stores.
+#   ADROS.aab → upload to Google Play / Galaxy Store
+#   ADROS.apk → install on your own phone to test
+# How to run it: GitHub → Actions → "Android app" → "Run workflow".
+# The signing key comes from 2 repository secrets (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   = the key file, as text
+#   ANDROID_KEYSTORE_PASSWORD = its password
+# Without the secrets (for example on a pull request) it still builds, to check nothing is broken,
+# but the files are not signed and can't go to a store.
+name: Android app
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Version code (a whole number, +1 for every store upload: 1, 2, 3 …)"
+        required: true
+        default: "1"
+      version_name:
+        description: "Version name people see (like 1.0.0)"
+        required: true
+        default: "1.0.0"
+  push:
+    tags: ["android-*"]
+  pull_request:
+    paths: ["android/**", ".github/workflows/android.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_CODE: ${{ inputs.version_code || '1' }}
+      VERSION_NAME: ${{ inputs.version_name || '1.0.0' }}
+      KEY_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEY_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: adros
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Make the Android project (from android/twa-manifest.json)
+        working-directory: android
+        run: |
+          npm ci
+          node make-project.mjs build
+      - name: Build the .aab and .apk
+        working-directory: android/build
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace
+      - name: Sign them with the ADROS key
+        working-directory: android/build
+        run: |
+          mkdir -p ../out
+          AAB=app/build/outputs/bundle/release/app-release.aab
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          if [ -z "$KEY_B64" ] || [ -z "$KEY_PW" ]; then
+            echo "::warning::No signing key secrets yet, so these files are NOT signed (only a build check)."
+            cp "$AAB" ../out/ADROS-unsigned.aab
+            cp "$APK" ../out/ADROS-unsigned.apk
+            exit 0
+          fi
+          echo "$KEY_B64" | base64 -d > adros.jks
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          cp "$AAB" ../out/ADROS.aab
+          jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore adros.jks \
+            -storepass "$KEY_PW" -keypass "$KEY_PW" ../out/ADROS.aab "$KEY_ALIAS"
+          "$BT"/zipalign -f -p 4 "$APK" aligned.apk
+          "$BT"/apksigner sign --ks adros.jks --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:KEY_PW --key-pass env:KEY_PW --out ../out/ADROS.apk aligned.apk
+          "$BT"/apksigner verify ../out/ADROS.apk
+          jarsigner -verify ../out/ADROS.aab | tail -1
+          rm -f adros.jks
+      - name: Keep the files (download them from this run's page)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADROS-android-v${{ env.VERSION_NAME }}-code${{ env.VERSION_CODE }}
+          path: android/out/
+      - name: Also put them on a draft release (only you can see drafts)
+        if: github.event_name != 'pull_request' && env.KEY_B64 != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="android-${VERSION_NAME}-code${VERSION_CODE}-run${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" android/out/ADROS.aab android/out/ADROS.apk \
+            --draft --target "$GITHUB_SHA" --title "ADROS Android ${VERSION_NAME} (code ${VERSION_CODE})" \
+            --notes "ADROS.aab → Google Play / Galaxy Store. ADROS.apk → test on your phone."
