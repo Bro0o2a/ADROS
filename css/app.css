@@ -3607,3 +3607,8 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
   .mine-top:has(.cal-big + .cal-big) { flex-direction: column-reverse; align-items: stretch; gap: 4px; }
   .mine-top:has(.cal-big + .cal-big) #mineActions .cal-main-btns { flex-direction: row; justify-content: center; }
 }
+/* 👨‍👩‍👧 v218: "Also for her brothers/sisters" under a school date */
+.checkline.aw-all { margin: 2px 0 4px 28px; color: var(--muted, #6b7280); }
+.checkline.aw-all small { font-size: .85em; }
+.list li:has(> .aw-all) { flex-wrap: wrap; }
+.checkline.aw-all { flex-basis: 100%; align-items: center; }

@@ -494,7 +494,8 @@ function cleanCurriculum(s, subs, r) {
         ...(!hit && topicOffCurr(s, sid, title) ? { off: true } : {}) });   // (⚠️ v205: not in the kid's official curriculum)   // (📄 v179: what the file teaches on it)
     });
   });
-  const events = aiObjs(r.events, 30).map(e => ({ date: isYmd(e.date) ? e.date : "", time: hmOf(e.time), title: aiTxt(e.title, 80), on: true })).filter(e => e.date && e.title);
+  const events = aiObjs(r.events, 30).map(e => ({ date: isYmd(e.date) ? e.date : "", time: hmOf(e.time), title: aiTxt(e.title, 80), on: true })).filter(e => e.date && e.title)
+    .map(e => ({ ...e, all: WHOLE_SCHOOL.test(e.title) }));
   return { groups: groups.filter(g => g.topics.length), events };
 }
 // One screen grouped by subject: ☑ each topic (greyed "Already in Math as …", unticked) · 📅 the school dates · ✅ Add
@@ -515,9 +516,12 @@ function curriculumReviewNodes(s) {
           h("span", null, h("b", null, t.title), old ? h("small", null, `✅ Already added${lowerT(old.title) === lowerT(t.title) ? "" : ` as “${old.title}”`}`)
             : t.off ? h("small", { class: "aw-off" }, `⚠️ Not in ${kidNameOf(aw.kid)}'s ${f.name} curriculum`) : t.note ? h("small", null, t.note) : null))); })));
   });
+  const sibs = eventSiblings(aw.kid), sibNames = sibs.map(kidNameOf).join(" & ");
   if (res.events.length) out.push(h("h3", { class: "ph-group" }, "📅 Add to calendar"),
     h("ul", { class: "list" }, res.events.map((e, i) => h("li", null, h("label", { class: "checkline" }, h("input", { type: "checkbox", checked: e.on, data: { awe: i } }),
-      h("span", null, h("b", null, `📌 ${shortDate(e.date)}${e.time ? " · " + clock(toMin(e.time), true) : ""}`), " " + e.title))))));
+      h("span", null, h("b", null, `📌 ${shortDate(e.date)}${e.time ? " · " + clock(toMin(e.time), true) : ""}`), " " + e.title)),
+      sibs.length ? h("label", { class: "checkline aw-all" }, h("input", { type: "checkbox", checked: !!e.all, data: { awall: i } }),
+        h("small", null, `👨‍👩‍👧 Also for ${sibNames}`)) : null))));
   out.push(h("div", { class: "err" }, aw.err),
     h("div", { class: "btnrow" }, res.groups.length || res.events.length ? h("button", { type: "button", class: "primary", data: { awadd: "" } }, "✅ Add") : null,
       h("button", { type: "button", data: { awclose: "" } }, "Close")));
@@ -543,11 +547,8 @@ function addCurriculum() {
       else { s.curr[id] = { sub: g.sid, title: t.title, note: t.note, added: today, files: files.slice(0, 30), by: me, ord: i, ...(t.sum ? { sum: t.sum } : {}) }; added++; }
     } else if (t.same && s.curr[t.same]) { touch(s.curr[t.same], t); linked++; }
   }));
-  box.result.events.filter(e => e.on).forEach(e => {
-    if (Object.values(s.events).some(x => x.date === e.date && lowerT(x.title) === lowerT(e.title))) return;
-    s.events[newId()] = { date: e.date, time: e.time, title: e.title, note: "", by: me };
-    dates++;
-  });
+  const sibs = eventSiblings(box.kid);
+  box.result.events.filter(e => e.on).forEach(e => { if (putSchoolDate([box.kid, ...(e.all ? sibs : [])], e)) dates++; });
   writeData();
   closeWork();
   render();
@@ -757,7 +758,26 @@ $("aiWorkModal").addEventListener("change", e => {
   if (!aw || !aw.result) return;
   if (ds.awt) { const [g, t] = ds.awt.split("|").map(Number); aw.result.groups[g].topics[t].on = e.target.checked; }
   if (ds.awe) aw.result.events[Number(ds.awe)].on = e.target.checked;
+  if (ds.awall) aw.result.events[Number(ds.awall)].all = e.target.checked;
 });
+// 👨‍👩‍👧 The kid's brothers and sisters at the same school (or with no school set yet): a school date can go on their calendars too
+function eventSiblings(kid) {
+  const mine = (userById(kid) || {}).school || "";
+  return kidsList().filter(k => k.id !== kid && (!mine || !k.school || k.school === mine)).map(k => k.id);
+}
+// 📌 Put one school date on these kids' calendars (no doubles: the same date, time and title alike is skipped). True = put somewhere
+function putSchoolDate(kids, e) {
+  let put = false;
+  kids.forEach(k => {
+    const ev = schoolFor(k).events;
+    if (Object.values(ev).some(x => x.date === e.date && (x.time || "") === (e.time || "") && sameEventTitle(x.title, e.title))) return;
+    ev[newId()] = { date: e.date, time: e.time, title: e.title, note: e.note || "", by: me };
+    put = true;
+  });
+  return put;
+}
+// A date for the whole school (a holiday, Eid, National Day, parents' evening …): ticked "Also for …" from the start
+const WHOLE_SCHOOL = /\b(eid|holiday|break|closed|closure|national|union|flag|celebrat|conference|parents?|open day|sports? day|day off|no school|half term|term (starts|ends|begins)|school (starts|ends|closes|day)|ramadan|diwali|christmas|survey|uniform|photo)/i;
 
 // ---------- 🌍 The official curriculum (parents only, never mixed with the school topics): the 🤖 /topics list for the kid's school
 // system and year, 📊 Benchmark (🤖 /benchmark: covered · not yet · ahead), 🌍 extra practice (its results: the 🧠 profile only) ----------
@@ -958,14 +978,16 @@ function openNewsletter() {
 function closeNewsletter() { $("nlModal").hidden = true; nl = null; }
 function drawNewsletter() {
   if (!nl) return;
-  const res = nl.result, kids = isParentId(me) ? kidsList() : [];
+  const res = nl.result, kids = isParentId(me) ? kidsList() : [], nlSibs = res ? eventSiblings(nl.kid) : [];
   const body = res
     // The review: week label, each school date with a tick (ticked), what's in This week, the reminders
     ? [h("p", { class: "print-hint" }, `For ${kidNameOf(nl.kid)}${res.week_label ? " · " + res.week_label : ""}. Untick what you don't want.`),
        res.events.length ? h("ul", { class: "list nl-events" }, res.events.map((e, i) => h("li", null,
          h("label", { class: "checkline" }, h("input", { type: "checkbox", checked: true, data: { nlev: i } }),
            h("span", null, h("b", null, `📌 ${shortDate(e.date)}${e.time ? " · " + clock(toMin(e.time), true) : ""}`), " " + e.title,
-             e.note ? h("small", null, e.note) : null)))))
+             e.note ? h("small", null, e.note) : null)),
+         nlSibs.length ? h("label", { class: "checkline aw-all" }, h("input", { type: "checkbox", checked: WHOLE_SCHOOL.test(e.title), data: { nlall: i } }),
+           h("small", null, `👨‍👩‍👧 Also for ${nlSibs.map(kidNameOf).join(" & ")}`)) : null)))
          : h("p", { class: "sc-empty" }, "No school dates in this newsletter."),
        ...newsletterTopicsNodes(nl),
        res.subjects.length ? h("p", { class: "hint" }, "📰 On Friday after school, a week review worksheet is made for each subject on these topics.") : null,
@@ -1108,12 +1130,9 @@ async function addNewsletter() {
   if (!box || !box.result) return;
   const kid = box.kid, s = schoolFor(kid), res = box.result, same = x => x.trim().toLowerCase();
   const picked = [...$("nlBody").querySelectorAll("input[data-nlev]:checked")].map(x => res.events[Number(x.dataset.nlev)]).filter(Boolean);
+  const alsoAll = new Set([...$("nlBody").querySelectorAll("input[data-nlall]:checked")].map(x => res.events[Number(x.dataset.nlall)]));
   let added = 0;
-  picked.forEach(e => {
-    if (Object.values(s.events).some(x => x.date === e.date && same(x.title) === same(e.title))) return;   // already there
-    s.events[newId()] = { date: e.date, time: e.time, title: e.title, note: e.note, by: me };
-    added++;
-  });
+  picked.forEach(e => { if (putSchoolDate([kid, ...(alsoAll.has(e) ? eventSiblings(kid) : [])], e)) added++; });   // (no doubles)
   // This week = the week of today (on Friday / Saturday / Sunday: the coming week, that starts on Monday)
   const now = new Date();
   if ((now.getDay() + 6) % 7 >= 4) now.setDate(now.getDate() + 7);
