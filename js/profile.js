@@ -8,7 +8,7 @@ let meWho = null, meEdit = false;
 function openProfile(id) {
   id = id || me;
   if (!exists(id)) return;
-  if (id !== me && !isParentViewer()) return lockedToast(id);
+  // (👥 v213 Broo2a: everyone may LOOK at everyone's profile; only the owner or a parent can change it, see canEditProfile)
   meWho = id; meEdit = false;
   homeMore = false;
   go("me");
@@ -30,11 +30,13 @@ function weekStats(id) {
   return { pct: planned ? Math.min(100, Math.round(done / planned * 100)) : null, done, planned, ticks, moods };
 }
 function drawMe() {
-  if (!exists(meWho) || (meWho !== me && !isParentViewer())) meWho = me;
+  if (!exists(meWho)) meWho = me;
   const u = userById(meWho), c = colorsOf(u), mine = u.id === me, kid = !isParentId(u.id), parent = isParentViewer();
   const p = lifetimePoints(u.id), L = levelOf(p), pct = levelPct(p), k = weekKinds(u.id), st = weekStats(u.id), bd = birthdayInfo(u.birthday);
-  const chips = parent ? `<div class="chips me-chips">${familyOrder(data.users).map(x => { const xc = colorsOf(x); return `<button class="chip ${x.id === u.id ? "on" : ""}" data-mewho="${safe(x.id)}"
-    style="--soft:${xc.soft};--ink:${xc.ink}"><span class="e">${faceHtml(x)}</span>${x.id === me ? "Me" : safe(x.name)}</button>`; }).join("")}</div>` : "";
+  // 👥 v213 (Broo2a) FAMILY PROFILES: a card per person on top (picture, name, age, Spark level), for everyone
+  const chips = `<div class="me-people" role="list">${familyOrder(data.users).map(x => { const xc = colorsOf(x), xb = birthdayInfo(x.birthday), xL = hasSpark(x.id) ? levelOf(lifetimePoints(x.id)) : null;
+    return `<button class="me-person ${x.id === u.id ? "on" : ""}" role="listitem" data-mewho="${safe(x.id)}" aria-pressed="${x.id === u.id}" style="--soft:${xc.soft};--ink:${xc.ink}">
+      <span class="me-pface">${faceHtml(x)}</span><b>${x.id === me ? "Me" : safe(x.name)}</b><small>${[xb && xb.age != null ? `${xb.age} yrs` : "", xL ? `Lv ${xL}` : ""].filter(Boolean).join(" · ") || (isParentId(x.id) ? "Parent" : "")}</small></button>`; }).join("")}</div>`;
   const loves = LOVES.map(([key, e, label]) => { const v = (u.loves || {})[key]; return v ? `<li><span>${e} ${label}</span><b>${safe(v)}</b></li>` : ""; }).join("");
   // ⚙️ My settings: each person changes ALL their own things (kids too, from their own account); a parent also every kid's
   const canEdit = canEditProfile(u.id), canBirthday = canEdit, s = kid ? schoolOf(u.id) : null, my = mine ? "My" : `${safe(u.name)}'s`;
@@ -84,11 +86,12 @@ function drawMe() {
     <div class="card me-top" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
       <div class="me-face">${faceHtml(u)}</div>
       <div class="me-name"><h1>${safe(u.name)}</h1><small>${mine ? "👤 My profile" : "👤 Profile"}</small></div>
-      ${hasSpark(u.id) ? `<button class="me-spark" data-mespark aria-label="${sparkName(u, true)}: level ${L}, ${pct}% to level ${L + 1}">
+      ${hasSpark(u.id) ? `<button class="me-spark" ${canEdit ? "data-mespark" : "disabled"} aria-label="${sparkName(u, true)}: level ${L}, ${pct}% to level ${L + 1}">
         <span class="bu-ring bu-big" aria-hidden="true">${buddyRingSvg(pct)}<span class="bu-in"><span class="e">${buddyFace(u.id, L)}</span><b>Lv ${L}</b></span></span>
         <span class="bu-text"><b>${pct}% to Lv ${L + 1}</b><small>${u.buddy ? `✨ ${safe(sparkName(u, true))}` : "✨ Pick your Spark"}${kid ? ` · ⭐ ${p} points in all` : ""}</small></span></button>` : ""}
       ${kid ? `<p class="me-kinds">This week: ${kindsText(k)}</p>` : ""}
     </div>
+    ${canEdit ? "" : `<p class="me-lock">🔒 ${isParentId(u.id) ? `Only ${safe(u.name)} can change this profile.` : `Only ${safe(u.name)} or a parent can change this profile.`}</p>`}
     ${form}
     <div class="card me-card"><h2>🎂 Birthday${canBirthday && !meEdit ? ` <button class="pill small me-cardedit" data-meedit="birthday">✏️ ${bd ? "Edit" : "Add"}</button>` : ""}</h2>${bd ? `<p class="me-big">${bd.days === 0 ? "🎉 Happy birthday!" : `🎂 ${bd.days} ${bd.days === 1 ? "day" : "days"} to go!`}</p>
       <p class="hint">${bd.label}${bd.age != null ? ` · ${bd.age} years old` : ""}</p>` : `<p class="sc-empty">${canBirthday ? "Tap ✏️ Add to put it in." : "Not added yet."}</p>`}</div>

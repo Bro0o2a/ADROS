@@ -3558,3 +3558,13 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .ty-n { flex: 1; font-weight: 800; }
 .ty-s, .ty-built { font-size: 13px; color: var(--muted, #8a7a70); }
 .ty-new { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: #fbf3e9; }
+/* 👥 v213 Family profiles: a card per person on top of the profile page; 🔒 view-only line */
+.me-people { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+.me-person { flex: 1 0 64px; max-width: 110px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 6px; border-radius: 18px;
+  background: var(--soft, #fbf3e9); border: 2px solid transparent; color: var(--ink, #4a3426); box-shadow: none; min-height: 0; }
+.me-person.on { border-color: var(--ink, #ec8466); }
+.me-person .me-pface { font-size: 30px; line-height: 1; }
+.me-person .me-pface img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.me-person b { font-size: 14px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-person small { font-size: 12px; opacity: .8; }
+.me-lock { margin: 8px 4px; padding: 8px 12px; border-radius: 12px; background: #fbf3e9; color: var(--muted, #8a7a70); font-weight: 700; text-align: center; }

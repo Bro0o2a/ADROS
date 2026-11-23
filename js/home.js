@@ -242,7 +242,8 @@ function familyRowHtml() {
       { attr: 'data-go="points"', label: "Points and leaderboard", sub: "This week's scores" },
       { attr: 'data-fsweek="this"', label: "Family summary: this week", sub: "A PDF to read or print" },
       { attr: 'data-fsweek="last"', label: "Family summary: last week", sub: "A PDF to read or print" }]],
-    ["Family", [...(dad ? [{ go: "family", label: "👨‍👩‍👧 Family members", sub: "Add a kid or a parent · names · sign-in codes" }] : []), ...(feat("meeting") ? [{ extra: "meeting", label: "Our Community", sub: "Family notes and requests", badge: n ? `${n} new` : "" }] : []),
+    ["Family", [...(dad ? [{ go: "family", label: "👨‍👩‍👧 Family members", sub: "Add a kid or a parent · names · sign-in codes" }] : []),
+      { profile: true, label: "👥 Family profiles", sub: "Everyone's picture, birthday, Spark and week" }, ...(feat("meeting") ? [{ extra: "meeting", label: "Our Community", sub: "Family notes and requests", badge: n ? `${n} new` : "" }] : []),
       ...(feat("chores") ? [{ extra: "chores", label: "Home duties", sub: "Jobs at home" }] : []),
       ...(feat("diary") ? [{ attr: 'data-dyopen=""', label: "My day", sub: "How do you feel today?" }] : [])]],
     ["Settings", [{ profile: true, label: "My profile", sub: "My name, picture and settings" },
@@ -539,7 +540,8 @@ document.addEventListener("click", e => {
 // ☰ More: simple, the same for everyone: 👤 My profile (big: each person's ⚙️ settings, and a parent's 👨‍👩‍👧 Family settings,
 // 🚪 Sign out at its bottom) · 🔒 Your privacy · 👋 Show the tour. (✏️ Add activities and 🖨️ Print are on 📅 Calendar.)
 function moreTilesHtml() {
-  return [{ ...PROFILE_TILE, cls: "primary more-profile", sub: hasSpark(me) ? "My settings, my Spark, my school" : "My settings, my picture" }, PRIVACY_TILE, TOUR_TILE].map(tileHtml).join("");
+  return [{ ...PROFILE_TILE, cls: "primary more-profile", sub: hasSpark(me) ? "My settings, my Spark, my school" : "My settings, my picture" },
+    { profile: true, emoji: "👥", label: "Family profiles", sub: "Everyone's picture, birthday and Spark" }, PRIVACY_TILE, TOUR_TILE].map(tileHtml).join("");
 }
 // 📋 Today: my next activities (not done yet, up to 5) with big ✅ ticks; "See all" opens 📅 Calendar
 function todayItems(who) {
