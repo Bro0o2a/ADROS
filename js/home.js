@@ -246,13 +246,15 @@ function familyRowHtml() {
       { profile: true, label: "👥 Family profiles", sub: "Everyone's picture, birthday, Spark and week" }, ...(feat("meeting") ? [{ extra: "meeting", label: "Our Community", sub: "Family notes and requests", badge: n ? `${n} new` : "" }] : []),
       ...(feat("chores") ? [{ extra: "chores", label: "Home duties", sub: "Jobs at home" }] : []),
       ...(feat("diary") ? [{ attr: 'data-dyopen=""', label: "My day", sub: "How do you feel today?" }] : [])]],
-    ["Settings", [{ profile: true, label: "My profile", sub: "My name, picture and settings" },
-      ...(dad ? [{ attr: "data-backup", label: "Backup", sub: "Keep a safe copy of the family's data" }] : []),
+    // (👤 v213 Broo2a: My profile is in Family → 👥 Family profiles now)
+    ["Settings", [...(dad ? [{ attr: "data-backup", label: "Backup", sub: "Keep a safe copy of the family's data" }] : []),
       { attr: "data-setupopen", label: "Edit my home", sub: "Turn features on or off" },
-      { ...PRIVACY_TILE, sub: "Who can see your data" }, { ...TOUR_TILE, sub: "How the app works" }]]];
+      { ...PRIVACY_TILE, sub: "Who can see your data" }, { ...TOUR_TILE, sub: "How the app works" },
+      { attr: "data-askus", label: "💬 Ask us", sub: "A question or an idea? Send us an email" },
+      { attr: "data-signout", label: "🚪 Sign out", sub: "Leave the app on this device" }]]];
   // v159 (Broo2a): each group = ONE big button; tap it and its rows open under it (only one open at a time)
   const look = { "Plan the week": [ico3d("calendar"), "sage", "Calendar, activities, plan"], "The kids": [ico3d("excellent"), "peach", "Reports, scores, work today"],
-    "Family": [ico3d("heart"), "butter", "Members, community, home duties"], "Settings": [ico3d("paper"), "dusty", "Profile, backup, privacy, help"] };
+    "Family": [ico3d("heart"), "butter", "Members, community, home duties"], "Settings": [ico3d("paper"), "dusty", "Backup, privacy, help, sign out"] };
   return `<div class="hub-groups">` + groups.filter(g => g[1].length).map(([title, rows]) => {
     const [icon, tone, sub] = look[title] || ["•", "sage", ""], badge = rows.some(r => r.badge);
     return `<details class="hub-group hub-${tone}" name="hubg" data-hubg="${title}"${hubOpen === title ? " open" : ""}>
@@ -277,6 +279,11 @@ document.addEventListener("click", e => {
   const k = b.dataset.addopen;
   go("add"); addOpen = { fx: false, fl: false, rt: false, ty: false, [k]: true }; addWho = null; drawAddSections();
   const btn = $({ fx: "secFxBtn", fl: "secFlBtn", rt: "secRtBtn", ty: "secTyBtn" }[k]); if (btn) setTimeout(() => btn.scrollIntoView({ block: "start" }), 50);
+});
+// 💬 v213 Ask us: an email to the app's support address (the phone's email app opens)
+document.addEventListener("click", e => {
+  if (!(e.target.closest && e.target.closest("[data-askus]"))) return;
+  location.href = `mailto:${CONTACT}?subject=${encodeURIComponent(`${APP_NAME}: a question`)}`;
 });
 let hubOpen = "";   // which big button is open (kept when the home redraws)
 document.addEventListener("toggle", e => { const d = e.target; if (d && d.dataset && d.dataset.hubg) { if (d.open) hubOpen = d.dataset.hubg; else if (hubOpen === d.dataset.hubg) hubOpen = ""; } }, true);
