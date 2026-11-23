@@ -142,7 +142,7 @@ function needsItems() {
   const noSchool = kidsList().filter(k => !k.school);
   if (noSchool.length) out.push({ key: "noschool", text: `🏫 Add ${noSchool.map(k => k.name).join(", ")}'s school`,
     html: `<div class="card"><p class="hint">${safe(noSchool.map(k => k.name).join(" and "))} ${noSchool.length === 1 ? "has" : "have"} no school set yet. Add it, so school dates from a newsletter go on the right kids' calendars.</p>
-      <div class="btnrow"><button class="primary" data-schoolset>🏫 School settings</button></div></div>` });
+      <div class="btnrow"><button class="primary" data-schoolset="${safe(noSchool[0].id)}">🏫 Add ${safe(noSchool[0].name)}'s school</button></div></div>` });
   const nl = newsletterDue();
   if (nl.length) out.push({ key: "nl", text: `📰 Newsletter for ${nl.map(k => k.name).join(", ")}`, html: newsletterNudgeHtml() });
   return out;

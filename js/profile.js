@@ -61,8 +61,8 @@ function drawMe() {
         <div class="btnrow"><button type="button" class="pill" data-mespark>✨ ${u.buddy ? "Change the Spark" : "Pick a Spark"}</button></div>
         <p class="hint">Change it any time: the level and points stay.</p>
         ${u.buddy ? `<label class="small" for="meSpark">✨ Spark's name</label><input type="text" id="meSpark" maxlength="12" value="${safe(u.sparkName || "")}" placeholder="Zozo">` : ""}`) : ""}
-      ${kid ? grp("peach", "school", "School", "School, curriculum, year", schoolFieldsHtml("me", u)) : ""}
-      ${kid ? grp("dusty", "read", `${my} subjects`, "Show, hide, rename or add", `<p class="hint">The same subjects as in 🎒 School. Untick "Show" to hide one (its work is kept).</p>
+      ${kid && isParentDevice() ? grp("peach", "school", "School", "School, curriculum, year", schoolFieldsHtml("me", u)) : ""}
+      ${kid && isParentDevice() ? grp("dusty", "read", `${my} subjects`, "Show, hide, rename or add", `<p class="hint">The same subjects as in 🎒 School. Untick "Show" to hide one (its work is kept).</p>
         ${subjectList(s, true).map(f => `<div class="me-subrow"><span class="e">${safe(f.emoji)}</span>
           <input type="text" id="mesub-${safe(f.id)}" maxlength="30" value="${safe(f.name)}" aria-label="Subject name">
           <label class="checkline"><input type="checkbox" id="meshow-${safe(f.id)}" ${f.hidden ? "" : "checked"}> 👁️ Show</label></div>`).join("")}
@@ -95,7 +95,7 @@ function drawMe() {
     ${form}
     <div class="card me-card"><h2>🎂 Birthday${canBirthday && !meEdit ? ` <button class="pill small me-cardedit" data-meedit="birthday">✏️ ${bd ? "Edit" : "Add"}</button>` : ""}</h2>${bd ? `<p class="me-big">${bd.days === 0 ? "🎉 Happy birthday!" : `🎂 ${bd.days} ${bd.days === 1 ? "day" : "days"} to go!`}</p>
       <p class="hint">${bd.label}${bd.age != null ? ` · ${bd.age} years old` : ""}</p>` : `<p class="sc-empty">${canBirthday ? "Tap ✏️ Add to put it in." : "Not added yet."}</p>`}</div>
-    ${kid ? schoolBasicsHtml(u.id, canEdit) : ""}
+    ${kid ? schoolBasicsHtml(u.id, isParentDevice()) : ""}
     <div class="card me-card"><h2>❤️ Things I love${canEdit && !meEdit ? ` <button class="pill small me-cardedit" data-meedit="loves">✏️ ${loves ? "Edit" : "Add"}</button>` : ""}</h2>${loves ? `<ul class="me-list">${loves}</ul>` : `<p class="sc-empty">${canEdit ? "Tap ✏️ Add to fill them in." : "Nothing yet."}</p>`}</div>
     ${kid ? `<div class="card me-card"><h2>📅 This week</h2>${scoreBlockHtml(scoreOf(u.id))}<ul class="me-list">
       ${st.pct != null ? `<li><span>✅ Tasks done</span><b>${st.pct}% <small>(${st.done} of ${st.planned})</small></b></li>` : ""}
