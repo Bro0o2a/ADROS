@@ -865,7 +865,7 @@ function subjectSecLine(id, s, f, all, todo) {
   if (id === "study") return "Planned and done hours";
   if (id === "profile") { const L = learnRead(schoolKid, f.name); return L ? `Level ${L.level}/10` : "Starts with the first check"; }
   if (id === "curr") { const m = s.map[f.id]; if (!m || !m.list.length) return "Get the official list";
-    const rows = topicRows(schoolKid, s, f).filter(r => r.info.results.length), n = m.list.filter(t => rows.some(r => curSame(r.title, t.title))).length;
+    const rows = topicRows(schoolKid, s, f).filter(r => r.info.results.length), n = m.list.filter(t => rows.some(r => curBestOf(r.title, m.list) === t)).length;
     return `${n} of ${m.list.length} practised · next lesson`; }
   if (id === "files") return `${filesOf(s, f.name).length} files`;
   return "Marks, homework, reviews, reports";
@@ -1574,12 +1574,24 @@ function eventsOn(date, who) {
   if (date < todayYmd()) return [];
   return Object.entries(data.school).filter(([kid]) => exists(kid) && (!who || who === kid || isParentId(who)))
     .flatMap(([kid, s]) => Object.entries(s.events || {}).filter(([, e]) => e.date === date).map(([id, e]) => ({ id, kid, ...e })))
-    .sort((a, b) => a.time.localeCompare(b.time) || a.title.localeCompare(b.title));
+    .sort((a, b) => a.time.localeCompare(b.time) || b.title.length - a.title.length || a.title.localeCompare(b.title))
+    .reduce((out, e) => {   // the same school date twice (2 newsletters or 2 kids) = ONE card
+      const twin = out.find(o => o.time === e.time && sameEventTitle(o.title, e.title));
+      if (!twin) out.push({ ...e, copies: [[e.kid, e.id]] });
+      else twin.copies.push([e.kid, e.id]);
+      return out;
+    }, []);
+}
+// "Parent-Teacher Conferences" = "Parent Teacher Conferences"; "GFS Eid Al Etihad" = "GFS Eid Al Etihad - Union Day Celebrations"
+function sameEventTitle(a, b) {
+  const n = t => String(t || "").toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]+/g, " ").trim();
+  const [x, y] = [n(a), n(b)].sort((p, q) => p.length - q.length);
+  return !!x && (x === y || (x.split(" ").length >= 2 && y.startsWith(x + " ")));
 }
 function eventHtml(e, who) {
-  const u = userById(e.kid), when = e.time ? clock(toMin(e.time), true) : "All day";
-  return `<button class="k-event" data-kevent="${safe(e.kid)}|${safe(e.id)}" title="${safe(`📌 ${e.title} · ${when} (${u.name})`)}">
-    📌 ${who === e.kid ? "" : safe(u.emoji) + " "}${e.time ? `<b>${clock(toMin(e.time))}</b> ` : ""}${safe(e.title)}${e.note ? `<small class="k-event-note">👉 ${safe(e.note)}</small>` : ""}</button>`;
+  const kids = [...new Set((e.copies || [[e.kid]]).map(([k]) => k))].map(userById), when = e.time ? clock(toMin(e.time), true) : "All day";
+  return `<button class="k-event" data-kevent="${safe(e.kid)}|${safe(e.id)}" title="${safe(`📌 ${e.title} · ${when} (${kids.map(u => u.name).join(", ")})`)}">
+    📌 ${who === e.kid ? "" : safe(kids.map(u => u.emoji).join("")) + " "}${e.time ? `<b>${clock(toMin(e.time))}</b> ` : ""}${safe(e.title)}${e.note ? `<small class="k-event-note">👉 ${safe(e.note)}</small>` : ""}</button>`;
 }
 // Tap one: its details (Bro2a can delete it from there)
 function showEvent(kid, id) {
@@ -1588,6 +1600,9 @@ function showEvent(kid, id) {
   const text = `📌 ${e.title}\n${shortDate(e.date)} · ${e.time ? clock(toMin(e.time), true) : "All day"} · ${userById(kid).name}${e.note ? "\n" + e.note : ""}`;
   if (!isParentId(me)) return toast(text.replace(/\n/g, " · "), 5000);
   if (!confirm(`${text}\n\nDelete this school date?`)) return;
+  Object.values(data.school).forEach(o => Object.entries(o.events || {}).forEach(([i, x]) => {   // and its twins (same date on a brother/sister)
+    if (x.date === e.date && x.time === e.time && sameEventTitle(x.title, e.title)) delete o.events[i];
+  }));
   delete s.events[id];
   writeData();
   render();
