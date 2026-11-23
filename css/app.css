@@ -2364,7 +2364,7 @@
      PHONES
      ============================================================= */
   @media (max-width: 800px) {
-    .two-col { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: minmax(0, 1fr); }
   }
   @media (max-width: 699px) {
     .screen { padding: 12px 16px 32px; }
@@ -3621,3 +3621,12 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 /* 📊 v221 the level by itself: from worksheets and school scores */
 .sc-basics .sb-lv b { text-align: right; }
 .sc-basics .sb-lv b small { display: block; font-weight: 600; opacity: .75; font-size: 12px; }
+/* 📱 v224: Settings fitted the phone (it was 458px wide on a 390px phone): the day-hours rows and the preview time shrink */
+.day-hrow { grid-template-columns: minmax(72px, auto) minmax(0, 1fr) minmax(0, 1fr); }
+.day-hrow input, #previewClock, #previewDay { min-width: 0; max-width: 100%; }
+/* 📱 v224: a kid's calendar top row on a phone: the ✨ Spark badge (it's on the home) made 🚪 Sign out fall off the screen */
+@media (max-width: 480px) { #scr-mine .bar .bu-badge { display: none; } }
+@media (max-width: 400px) {
+  #scr-mine .bar [data-printcal] { display: none; }   /* (📱 small phones: 🖨️ Print is in ☰ / on a computer; 🚪 Sign out stays on the screen) */
+  #scr-settings .setting .row { flex-wrap: wrap; }
+}
