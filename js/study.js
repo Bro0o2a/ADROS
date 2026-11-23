@@ -2437,7 +2437,6 @@ async function checkWorksheetNow(wsId) {
   c.aiScore = c.score;
   const now = aiDocs.worksheets[wsId] || w;
   aiSave("worksheets", wsId, { ...now, answers: answerIdsOf(now, wsId, s), check: c, status: "Checked ✓" });   // (with its subject and part, and 💪 🎯 🦉)
-  const ptsBefore = scoreMarks(now.kid).pts;   // ⭐ (v222: the message shows the points this check really added)
   sessionFromWs(now, wsId, c);
   learnAfterCheck(now, c, wsId);   // 🧠 skills, level and history (saved with the mark just below)
   const first = saveWsMark(now.kid, wsId, now, c);
@@ -2449,9 +2448,8 @@ async function checkWorksheetNow(wsId) {
   const color = colorsOf(userById(now.kid)).color;
   if (first) {
     celebrate(innerWidth / 2, innerHeight / 3, color, true);
-    const pts = Math.max(0, Math.round((scoreMarks(now.kid).pts - ptsBefore) * 10) / 10);   // ⭐ v208: the points follow the mark (12/15 → +8), not always +10
-    if (!isParentPhone() && pts) pointPop(pts, color);   // (👨‍👩‍👧 a parent's device only watches)
-    toast(`🎉 ${num(c.score)}/${num(c.max_score)}! Worksheet done${pts ? ` +${num(pts)} ⭐` : ""}`, 3500, color);
+    if (!isParentPhone()) pointPop(POINTS_EACH, color);   // ✏️ +10 ⭐ points (homeworkPoints: every checked worksheet; the weekly 🎯 score follows the mark)
+    toast(`🎉 ${num(c.score)}/${num(c.max_score)}! Worksheet done +${POINTS_EACH} ⭐`, 3500, color);
   } else toast(`✅ Checked again: ${num(c.score)}/${num(c.max_score)}`, 3000);
 }
 // 🔔 "🦉 Mody · Math: 5/6" + the coach's tip, in the family's What's new (it pops up on the parents' devices)
