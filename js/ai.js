@@ -702,7 +702,9 @@ function profileText(kid, subject) {
 // suggested_level but moves at most ±1 a worksheet (2 in a row ≥ 85 % → +1, 2 in a row < 50 % → −1). Parents can set it by hand (− / +).
 // Every new worksheet sends level, skills and focus = the 3 weakest skills (mastery < 60, most tries first).
 const LEARN_START = { 1: 3, 2: 5, 3: 7 };
-const learnStart = (s, fid) => { const x = s.profile.subjects[fid]; return (x && LEARN_START[x.level]) || 5; };
+// (📊 v221: no level from the parents → the school's own scores (quizzes, tests, homework) in that subject, else 5 = the school year)
+const learnStart = (s, fid) => { const x = s.profile.subjects[fid], sc = s.subjects[fid] && schoolMarkAvg(s, s.subjects[fid].name);
+  return (x && LEARN_START[x.level]) || (sc ? PLACE_LEVEL(sc.avg) : 5); };
 // Read only (a default one when there's none yet), or null when the subject has no folder
 function learnRead(kid, subject) {
   const s = schoolOf(kid), f = folderOf(s, subject);
