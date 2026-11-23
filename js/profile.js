@@ -728,11 +728,11 @@ function hallSave(week, id, gift) {
   data.points.hall[week] = { ...hallEntry(userById(id)), gift: gift !== undefined ? gift : (old && old.id === id ? old.gift : ""), by: old && old.by === "parent" ? "parent" : "auto" };
 }
 function hallWeeks() {
-  // 🗓️ v223: the weeks that HAVE a star (saved, announced, in the history, the first known ones) + this week, and the weeks in
+  // 🗓️ v223: the weeks that HAVE a star (saved, announced, in the history) + this week, and the weeks in
   //    between when they're a whole number of weeks apart. (Before: every 7 days from the first saved week only, so after the week
   //    start moved from Monday to Saturday the Saturday weeks never matched and their stars showed "⭐ ?".)
   const have = [...Object.keys(data.points.hall || {}), ...Object.entries(data.points.prizeMsg || {}).filter(([, r]) => r && r.star).map(([w]) => w),
-    ...data.points.history.filter(x => x.fair != null && x.winners && x.winners.length).map(x => x.week), ...HALL_KNOWN.map(([w]) => w)]
+    ...data.points.history.filter(x => x.fair != null && x.winners && x.winners.length).map(x => x.week)]
     .filter(w => isYmd(w) && w <= data.points.week);
   if (!have.length && isYmd(data.points.since)) have.push(pointsWeekOf(fromYmd(data.points.since)));
   const list = [...new Set([...have, data.points.week])].sort(), out = [];
