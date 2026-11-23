@@ -3473,3 +3473,13 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .needs-row { display: flex; align-items: stretch; gap: 6px; }
 .needs-row > button:first-child { flex: 1; min-width: 0; }
 .needs-row .needs-x { flex: none; min-width: 44px; min-height: 44px; padding: 0 10px; border-radius: 12px; font-weight: 800; }
+
+/* 🌙 v213 bedtime table (design A) */
+.bed-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+.bed-table th { font-size: 13px; color: var(--muted); font-weight: 700; text-align: center; line-height: 1.2; }
+.bed-table td { text-align: center; }
+.bed-table td.bed-k { text-align: left; font-weight: 800; white-space: nowrap; }
+.bed-t { position: relative; display: inline-block; min-width: 92px; padding: 8px 10px; border-radius: 12px; background: #f3ecff;
+  border: 2px solid #d9c9ff; font-weight: 800; cursor: pointer; }
+.bed-t.empty { background: #fff; border: 2px dashed #e5c9a8; color: #b59a83; }
+.bed-t input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }

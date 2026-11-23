@@ -141,13 +141,18 @@ function sleepActs() {
 }
 // One row per kid: 🌙 the time planning stops on school nights and on weekend nights (⚙️ Settings, and 🔔 Needs you when one is missing)
 function bedRowsHtml(kids) {
-  const hm = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
-  const sel = (id, which, now) => { const o = [`<option value="">${now ? "None" : "Pick…"}</option>`];
-    for (let m = 17 * 60; m < 24 * 60; m += 15) o.push(`<option value="${hm(m)}" ${now === hm(m) ? "selected" : ""}>${clock(m, true)}</option>`);
-    return `<select data-bedusual="${safe(id)}|${which}" aria-label="${which === "wd" ? "School nights" : "Weekend nights"}">${o.join("")}</select>`; };
-  return kids.map(k => `<div class="bed-row"><span class="bed-nm">${faceHtml(k)} ${safe(k.name)}</span>
-      <label>Sun–Thu ${sel(k.id, "wd", k.bed ? k.bed.wd : "")}</label><label>Fri, Sat ${sel(k.id, "we", k.bed ? k.bed.we : "")}</label></div>`).join("");
+  // 🌙 v213 (Broo2a, design A): a table, one row per kid, two time boxes (📚 school nights · 🎉 weekend). Tap a box → the phone's time picker.
+  const cell = (k, which) => { const t = k.bed ? k.bed[which] : "";
+    return `<td><label class="bed-t ${t ? "" : "empty"}"><span>${t ? clock(toMin(t), true) : "+ Set"}</span>
+      <input type="time" step="900" value="${t}" data-bedusual="${safe(k.id)}|${which}" aria-label="${safe(k.name)}: ${which === "wd" ? "school nights" : "weekend nights"}"></label></td>`; };
+  return `<table class="bed-table"><tr><th></th><th>📚 School nights<br><small>Sun–Thu</small></th><th>🎉 Weekend<br><small>Fri, Sat</small></th></tr>
+    ${kids.map(k => `<tr><td class="bed-k">${faceHtml(k)} ${safe(k.name)}</td>${cell(k, "wd")}${cell(k, "we")}</tr>`).join("")}</table>`;
 }
+// (tap a time box → open the picker straight away where the browser can)
+document.addEventListener("click", e => {
+  const l = e.target.closest && e.target.closest(".bed-t"); if (!l) return;
+  const i = l.querySelector("input"); try { if (i && i.showPicker) { e.preventDefault(); i.showPicker(); } } catch (err) {}
+});
 function drawBedtimes() {
   const old = sleepActs();
   $("bedSet").innerHTML = bedRowsHtml(kidsList())
