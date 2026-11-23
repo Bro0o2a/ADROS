@@ -944,6 +944,17 @@ const wsHeaderNode = (w, first) => h("div", { class: "ws-namerow ws-head", dir: 
   first ? h("span", null, first + " ·") : null,
   h("span", null, "Name: ", h("b", null, kidNameOf(w.kid)), " ·"), h("span", null, "Subject: ", h("b", null, w.subject || "–"), " ·"),
   h("span", null, "Date: ", h("b", null, wsDateText(w.date))));
+// 📝 A kid's extra worksheets today: true (and a kind message) when today's number for this subject is used up. Parents: never.
+// (v222: also the 📝 Worksheet button on a 📥 School work card, which skipped it before)
+function wsLimitHit(kid, subject) {
+  if (isParentId(me)) return false;
+  const lim = wsDayLimit(kid, subject), today = todayYmd();
+  const made = Object.values(aiDocs.worksheets).filter(x => x && x.kid === kid && !x.session && x.date === today && (!lim.fid || wsSubjectId(kid, x.subject) === lim.fid)).length;
+  if (made < lim.n) return false;
+  toast(lim.n ? `🌟 You've made today's ${lim.n} extra ${lim.name ? lim.name + " " : ""}${lim.n === 1 ? "worksheet" : "worksheets"}. Great work! More tomorrow 📚`
+              : `📝 No extra ${lim.name || ""} worksheets today: ask Mum or Dad in 🏫 School settings.`, 5000);
+  return true;
+}
 // A new worksheet from the AI, saved (and opened when open = true). extra = { part, work?, title? }. → its id, or null.
 async function newWorksheet(kid, subject, topics, count, mode, key, extra, open = true) {
   // (📚 a study session's worksheet: extra.minutes = the session's minutes → the AI fills them; sections = its parts in order;
@@ -952,12 +963,7 @@ async function newWorksheet(kid, subject, topics, count, mode, key, extra, open 
   const { files, instant, sections, avoid, focus, hint, ...keep } = extra || {};
   count = keep.session ? SESSION_COUNT : WS_COUNT;   // 🔢 v179: always 15, a study session 20
   // 🤖 A kid's EXTRA worksheets (not in a planned study session): at most data.extraLimit a day (⚙️ Settings: 3–5, the AI costs money)
-  if (!keep.session && !isParentId(me) && !["level_check", "placement"].includes(mode)) {
-    const lim = wsDayLimit(kid, subject), today = todayYmd();
-    const made = Object.values(aiDocs.worksheets).filter(x => x && x.kid === kid && !x.session && x.date === today && (!lim.fid || wsSubjectId(kid, x.subject) === lim.fid)).length;
-    if (made >= lim.n) { toast(lim.n ? `🌟 You've made today's ${lim.n} extra ${lim.name ? lim.name + " " : ""}${lim.n === 1 ? "worksheet" : "worksheets"}. Great work! More tomorrow 📚`
-                                     : `📝 No extra ${lim.name || ""} worksheets today: ask Mum or Dad in 🏫 School settings.`, 5000); return null; }
-  }
+  if (!keep.session && !["level_check", "placement"].includes(mode) && wsLimitHit(kid, subject)) return null;
   // (⏱️ v179: the session's minutes are kept on the worksheet but not sent: the AI would then pick the number of questions itself)
   const sumNote = wsSummaryNote(kid, subject, [...topics, ...(sections || []).map(x => x.topic)]);
   const r = await callAi("worksheet", { ...kidInfo(kid), subject, topics, count, notes: (MODE_NOTES[mode] ? MODE_NOTES[mode] + "." : "") + ` Exactly ${count} questions.`
