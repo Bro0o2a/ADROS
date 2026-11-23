@@ -862,6 +862,19 @@ function cleanData(d) {
   const max = Math.round(Number(d.maxTogether));
   if (max >= 1 && max <= 5) clean.maxTogether = max;  // otherwise keep the default (2)
   if ([3, 4, 5].includes(Number(d.extraLimit))) clean.extraLimit = Number(d.extraLimit);
+  // 📝 v214 worksheets a day PER KID: { kidId: { n: 1–5 } (total, any subject) or { per: { folderId: 0–5 } } (per subject, 5 in all at most) }
+  if (d.wsDay && typeof d.wsDay === "object") {
+    const w = {};
+    Object.entries(d.wsDay).forEach(([k, v]) => {
+      if (!v || typeof v !== "object" || !/^[\w-]{1,40}$/.test(k)) return;
+      if (v.per && typeof v.per === "object") {
+        const per = {}; let sum = 0;
+        Object.entries(v.per).forEach(([f, n]) => { n = Math.round(Number(n)); if (/^[\w-]{1,40}$/.test(f) && n >= 0 && n <= 5 && sum + n <= 5) { per[f] = n; sum += n; } });
+        w[k] = { per };
+      } else if (Number.isInteger(v.n) && v.n >= 1 && v.n <= 5) w[k] = { n: v.n };
+    });
+    if (Object.keys(w).length) clean.wsDay = w;
+  }
   if (d.bedAll && BED_TIME.test(d.bedAll.wd || "") && BED_TIME.test(d.bedAll.we || "")) clean.bedAll = { wd: d.bedAll.wd, we: d.bedAll.we };   // 🌙 v213 one time for all kids
   if (Array.isArray(d.weekendDays) && d.weekendDays.length <= 4 && d.weekendDays.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendDays = [...new Set(d.weekendDays)].sort();   // 🎉 v213
   if (d.calSetup === true) clean.calSetup = true;   // (📅 v213 the Calendar setup box was saved once)
