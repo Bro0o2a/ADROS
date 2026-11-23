@@ -3590,3 +3590,20 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .ss-step b { min-width: 1.2em; text-align: center; }
 .ss-box .chips.ss-cmp { margin-top: 6px; }
 .ss-box > .btnrow { justify-content: center; }
+
+/* 📱 v216 (Broo2a: "a lot of spaces"): calendar top on a phone = the people and the buttons on ONE row, smaller title */
+.mine-top { display: block; }
+@media (max-width: 600px) {
+  .mine-top { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .mine-top #minePeople { flex: 1 1 auto; min-width: 0; gap: 6px; padding: 2px 0 4px; }
+  .mine-top #minePeople .chip { min-width: 50px; }
+  .mine-top #minePeople .chip .e { width: 42px; height: 42px; font-size: 22px; }
+  .mine-top #mineActions { flex: none; }
+  .mine-top #mineActions .cal-main-btns { flex-direction: column; align-items: stretch; gap: 6px; }
+  .mine-top #mineActions .cal-big { padding: 6px 12px; font-size: 13px; justify-content: center; }
+  #scr-mine #mineTitle.puff-banner, #scr-mine .puff-banner#mineTitle { margin: 6px 2px 10px; padding: 12px 24px 10px !important; }
+  #scr-mine #mineTitle .bub { font-size: 30px !important; }
+  /* (a parent has 3 buttons: they stay one row ABOVE the people, so every face fits) */
+  .mine-top:has(.cal-big + .cal-big) { flex-direction: column-reverse; align-items: stretch; gap: 4px; }
+  .mine-top:has(.cal-big + .cal-big) #mineActions .cal-main-btns { flex-direction: row; justify-content: center; }
+}
