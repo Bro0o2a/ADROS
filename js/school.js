@@ -2132,7 +2132,11 @@ document.addEventListener("click", e => {
     if (!f) return;
     qePopClose(); schoolKid = kid; go("school"); goSchool("subject", ds.sscmp);
     stSub = ds.sscmp; stSec = "topics"; stPick = []; stFilter = "all"; stOpen = null; stWs = false; stFiles = false; stMapPick = []; stCmp = true; stCmpPick = [];
-    return render();
+    render();
+    // 📊 v220 (Broo2a): go straight to the Compare table (it was far down, under the subject's header: it looked like the study page)
+    const box = document.querySelector("#scr-school .st-cmp, #scr-school .st-cmp-row");
+    if (box) setTimeout(() => box.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
+    return;
   }
   if (!isParentDevice()) return;
   const d = schSetDraft;
