@@ -2037,3 +2037,96 @@ document.addEventListener("keydown", e => {
   if (!$("fileModal").hidden) closeFile();
   if (!$("promptModal").hidden) closePrompt();
 });
+
+// ---------- 🏫 v214 (Broo2a) SCHOOL SETTINGS: one pop-up from the home (parents change, kids only look).
+// Per kid: 🏫 school · 📚 curriculum · 🎓 year · 📝 extra worksheets a day (Total = one number for any subject, or
+// Per subject = − / + each, 5 a day at most in all) · 📊 compare a subject's topics with the official curriculum.
+const WS_DAY_MAX = 5;
+let schSetKid = null, schSetDraft = null;   // (the kid showing · their 📝 worksheets a day being changed)
+// The folder id of a subject name for this kid (null: no folder)
+const wsSubjectId = (kid, name) => { const f = name ? folderOf(schoolOf(kid), name) : null; return f ? f.id : null; };
+// 📝 Today's extra worksheets this kid may make for this subject → { n, fid (only those count), name }
+function wsDayLimit(kid, subject) {
+  const w = (data.wsDay || {})[kid];
+  if (!w) return { n: data.extraLimit || 3, fid: null, name: "" };
+  if (!w.per) return { n: w.n, fid: null, name: "" };
+  const fid = wsSubjectId(kid, subject);
+  if (!fid) return { n: Object.values(w.per).reduce((a, b) => a + b, 0), fid: null, name: "" };   // (a subject with no folder: the day's total)
+  return { n: w.per[fid] || 0, fid, name: schoolOf(kid).subjects[fid].name };
+}
+// The draft of a kid's 📝 setting: { per: false, n } or { per: true, list: { folderId: n } }
+function wsDayDraftOf(kid) {
+  const w = (data.wsDay || {})[kid], subs = subjectList(schoolOf(kid));
+  if (w && w.per) return { per: true, n: Math.min(WS_DAY_MAX, Object.values(w.per).reduce((a, b) => a + b, 0)) || 3, list: { ...w.per } };
+  const n = w ? w.n : (data.extraLimit || 3), list = {};
+  let left = n; subs.forEach(f => { list[f.id] = left > 0 ? 1 : 0; left--; });   // (Per subject starts as 1 each, until the total is used)
+  return { per: false, n, list };
+}
+const wsDaySum = d => Object.values(d.list).reduce((a, b) => a + b, 0);
+function schSetHtml() {
+  const edit = isParentDevice(), kids = edit ? kidsList() : kidsList().filter(k => k.id === me);
+  if (!kids.length) return `<p class="hint">Add a kid first in 👨‍👩‍👧 Family members.</p>`;
+  if (!kids.some(k => k.id === schSetKid)) schSetKid = kids[0].id;
+  const kid = schSetKid, u = userById(kid), subs = subjectList(schoolOf(kid));
+  if (!schSetDraft || schSetDraft.kid !== kid) schSetDraft = { kid, ...wsDayDraftOf(kid) };
+  const d = schSetDraft, sum = wsDaySum(d);
+  const chips = edit && kids.length > 1 ? `<div class="chips ss-kids">${kids.map(k => `<button type="button" class="chip ${k.id === kid ? "on" : ""}" data-sskid="${safe(k.id)}" aria-pressed="${k.id === kid}">${safe(k.name)}</button>`).join("")}</div>` : "";
+  const ro = (label, v) => `<li><span>${label}</span><b>${v ? safe(v) : `<i class="sc-empty">–</i>`}</b></li>`;
+  const step = (key, n, minus, plus) => `<span class="ss-step"><button type="button" class="pill small" data-ssstep="${key}|-1" ${minus ? "" : "disabled"} aria-label="One less">−</button><b>${n}</b><button type="button" class="pill small" data-ssstep="${key}|1" ${plus ? "" : "disabled"} aria-label="One more">+</button></span>`;
+  const school = edit ? schoolFieldsHtml("ss", u)
+    : `<ul class="me-list">${ro("School name", schoolNameOf(kid))}${ro("Curriculum", u.curriculum)}${ro("Year / grade", gradeOf(kid))}</ul>`;
+  let ws;
+  if (edit) {
+    ws = `<div class="ss-tog" role="group" aria-label="How to count"><button type="button" class="${d.per ? "" : "on"}" data-ssper="0" aria-pressed="${!d.per}">Total</button><button type="button" class="${d.per ? "on" : ""}" data-ssper="1" aria-pressed="${d.per}" ${subs.length ? "" : "disabled"}>Per subject</button></div>`
+      + (d.per ? `<ul class="ss-rows">${subs.map(f => `<li><span>${safe(f.emoji)} ${safe(f.name)}</span>${step(f.id, d.list[f.id] || 0, (d.list[f.id] || 0) > 0, sum < WS_DAY_MAX)}</li>`).join("")}</ul>
+          <p class="hint">Total: ${sum} a day (${WS_DAY_MAX} at most).</p>`
+        : `<ul class="ss-rows"><li><span>📝 Any subject</span>${step("all", d.n, d.n > 1, d.n < WS_DAY_MAX)}</li></ul>`);
+  } else ws = d.per ? `<ul class="me-list">${subs.filter(f => d.list[f.id]).map(f => ro(`${f.emoji} ${f.name}`, String(d.list[f.id]))).join("") || `<li>None</li>`}</ul>`
+    : `<ul class="me-list">${ro("📝 Any subject", String(d.n))}</ul>`;
+  const cmp = subs.length ? `<div class="chips ss-cmp">${subs.map(f => `<button type="button" class="chip" data-sscmp="${safe(f.id)}">${safe(f.emoji)} ${safe(f.name)}</button>`).join("")}</div>`
+    : `<p class="hint">No subjects yet: they come with the first school upload.</p>`;
+  return `<div class="ss-box">${chips}${edit ? "" : `<p class="me-lock">🔒 Only Mum or Dad can change these.</p>`}
+    <section class="ss-sec"><h3>🎒 About school</h3>${school}</section>
+    <section class="ss-sec"><h3>📝 Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
+    <section class="ss-sec"><h3>📊 Compare my topics with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
+    ${edit ? `<div class="btnrow"><button type="button" class="primary" data-sssave>💾 Save</button></div>` : ""}</div>`;
+}
+function openSchoolSet() {
+  schSetDraft = null;
+  qePop(isParentDevice() ? "🏫 School settings" : "🏫 My school", "", [["Close", null]]);
+  const card = document.querySelector(".qe-pop .qe-popcard"); card.classList.add("cal-popcard", "ss-popcard");
+  card.querySelector(".qe-popbtns").insertAdjacentHTML("beforebegin", `<div id="ssBody">${schSetHtml()}</div>`);
+}
+const redrawSchoolSet = () => { const b = $("ssBody"); if (b) b.innerHTML = schSetHtml(); };
+function saveSchoolSet() {
+  const kid = schSetKid, u = data.users.find(x => x.id === kid), d = schSetDraft;
+  if (!u || !isParentDevice() || !d) return;
+  const about = schoolFieldsValue("ss");
+  Object.assign(u, about); Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; });
+  data.wsDay = { ...(data.wsDay || {}), [kid]: d.per ? { per: { ...d.list } } : { n: d.n } };
+  qePopClose(); keepNow(); toast(`🏫 Saved for ${u.name}.`, 2500);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp]");
+  if (!b) return;
+  const ds = b.dataset;
+  if ("schoolset" in ds) return openSchoolSet();
+  if (ds.sscmp) {   // 📊 that subject's page → 📚 Topics → Compare
+    const kid = schSetKid, f = schoolOf(kid).subjects[ds.sscmp];
+    if (!f) return;
+    qePopClose(); schoolKid = kid; go("school"); goSchool("subject", ds.sscmp);
+    stSub = ds.sscmp; stSec = "topics"; stPick = []; stFilter = "all"; stOpen = null; stWs = false; stFiles = false; stMapPick = []; stCmp = true; stCmpPick = [];
+    return render();
+  }
+  if (!isParentDevice()) return;
+  const d = schSetDraft;
+  if (ds.sskid) { if (ds.sskid !== schSetKid) { schSetKid = ds.sskid; schSetDraft = null; } return redrawSchoolSet(); }
+  if (ds.ssper) { d.per = ds.ssper === "1"; return redrawSchoolSet(); }
+  if (ds.ssstep) {
+    const [k, by] = ds.ssstep.split("|"), add = Number(by);
+    if (k === "all") d.n = Math.min(WS_DAY_MAX, Math.max(1, d.n + add));
+    else if (add < 0 || wsDaySum(d) < WS_DAY_MAX) d.list[k] = Math.max(0, (d.list[k] || 0) + add);
+    return redrawSchoolSet();
+  }
+  if ("sssave" in ds) return saveSchoolSet();
+});

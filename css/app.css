@@ -3568,3 +3568,20 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .me-person b { font-size: 14px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-person small { font-size: 12px; opacity: .8; }
 .me-lock { margin: 8px 4px; padding: 8px 12px; border-radius: 12px; background: #fbf3e9; color: var(--muted, #8a7a70); font-weight: 700; text-align: center; }
+/* 🏫 v214 School settings pop-up */
+.ss-box { margin-top: 10px; }
+.ss-box .chips.ss-kids { justify-content: center; margin-bottom: 8px; }
+.ss-sec { background: #fff; border-radius: 16px; padding: 10px 12px; margin: 8px 0; box-shadow: 0 2px 6px rgba(0, 0, 0, .05); }
+.ss-sec h3 { margin: 0 0 6px; font-size: 1rem; }
+.ss-sec .hint { margin: 6px 0 0; }
+.ss-tog { display: flex; background: #f1e9df; border-radius: 12px; padding: 3px; margin-bottom: 6px; }
+.ss-tog button { flex: 1; border: 0; background: none; border-radius: 9px; padding: 7px; font: inherit; color: inherit; cursor: pointer; }
+.ss-tog button.on { background: #fff; font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .08); }
+.ss-tog button:disabled { opacity: .45; cursor: default; }
+.ss-rows { list-style: none; margin: 0; padding: 0; }
+.ss-rows li { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f3ece3; }
+.ss-rows li:last-child { border-bottom: 0; }
+.ss-step { display: inline-flex; align-items: center; gap: 8px; }
+.ss-step b { min-width: 1.2em; text-align: center; }
+.ss-box .chips.ss-cmp { margin-top: 6px; }
+.ss-box > .btnrow { justify-content: center; }

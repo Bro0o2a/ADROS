@@ -237,7 +237,7 @@ function familyRowHtml() {
         ...(dad ? [['data-addopen="rt"', "🧺 Routines"], ['data-addopen="ty"', "🏷️ Types"]] : [])] },
       ...(dad ? [{ plan: true, label: "Plan my week", sub: "Fit all the activities together" }] : []),
       { attr: "data-onedaynew", label: "One-day event", sub: "Something on one date only" }]],   // (🔄 Make a new plan: on top of the calendar)
-    ["The kids", [{ attr: "data-report", label: "How are my kids doing?", sub: "Scores, study and habits" },
+    ["The kids", [...(dad ? [{ attr: "data-schoolset", label: "🏫 School settings", sub: "School, curriculum, year, worksheets a day" }] : []), { attr: "data-report", label: "How are my kids doing?", sub: "Scores, study and habits" },
       { attr: 'data-go="kidswork"', label: "Kids' work today", sub: "Live, as they do it" },
       { attr: 'data-go="points"', label: "Points and leaderboard", sub: "This week's scores" },
       { attr: 'data-fsweek="this"', label: "Family summary: this week", sub: "A PDF to read or print" },
@@ -548,7 +548,8 @@ document.addEventListener("click", e => {
 // 🚪 Sign out at its bottom) · 🔒 Your privacy · 👋 Show the tour. (✏️ Add activities and 🖨️ Print are on 📅 Calendar.)
 function moreTilesHtml() {
   return [{ ...PROFILE_TILE, cls: "primary more-profile", sub: hasSpark(me) ? "My settings, my Spark, my school" : "My settings, my picture" },
-    { profile: true, emoji: "👥", label: "Family profiles", sub: "Everyone's picture, birthday and Spark" }, PRIVACY_TILE, TOUR_TILE].map(tileHtml).join("");
+    { profile: true, emoji: "👥", label: "Family profiles", sub: "Everyone's picture, birthday and Spark" },
+    ...(isParentId(me) ? [] : [{ attr: "data-schoolset", emoji: "🏫", label: "My school", sub: "School, year, worksheets a day" }]), PRIVACY_TILE, TOUR_TILE].map(tileHtml).join("");
 }
 // 📋 Today: my next activities (not done yet, up to 5) with big ✅ ticks; "See all" opens 📅 Calendar
 function todayItems(who) {
