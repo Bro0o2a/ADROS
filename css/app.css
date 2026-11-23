@@ -3493,3 +3493,9 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .bed-own { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px 12px; border-left: 3px solid #f8cfb6; margin-left: 4px; }
 .bed-own .pill { align-self: flex-start; }
 .bed-save { margin-top: 6px; width: 100%; font-size: 18px; min-height: 52px; background: #ec8466; color: #fff; border-color: #ec8466; }
+/* 📅 v213 Calendar setup box: section heads + school tick */
+.bed-h { margin: 14px 0 0; padding-top: 12px; border-top: 2px solid #f1e4d6; font-size: 18px; }
+.bed-box > .bed-h:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.bed-tick { display: flex; align-items: center; gap: 10px; font-weight: 800; padding: 10px 12px; border-radius: 14px; background: #fbf3e9; border: 2px solid #ecdccb; cursor: pointer; }
+.bed-tick input { width: 24px; height: 24px; flex: none; margin: 0; accent-color: #ec8466; }
+.bed-tick small { font-weight: 600; color: var(--muted, #8a7a70); }

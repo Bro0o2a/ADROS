@@ -77,9 +77,10 @@ function familyOrder(list) {
 // 🌙 v180 Bedtime per kid (Broo2a): one time for school nights, one for weekend nights (Friday and Saturday nights),
 //  and a parent can change it for one night (data.bedOn). Nothing is planned for that kid after it. null = no bedtime set.
 const BED_TIME = /^(1[89]|2[0-3]):[0-5]\d$/;   // 6 PM … 11:45 PM
-// 🎉 v213 (Broo2a): which nights are weekend nights is the family's choice (⚙️ / 🌙 box; default Friday and Saturday, 0 = Monday)
-const weekendNightsOf = () => (data && Array.isArray(data.weekendNights) ? data.weekendNights : [4, 5]);
-const isWeekendNight = wd => weekendNightsOf().includes(wd);
+// 🎉 v213 (Broo2a): the weekend DAYS (days off school) are the family's choice (📅 Calendar setup; default Saturday and Sunday, 0 = Monday).
+// A weekend NIGHT = the night before a day off (default Friday and Saturday nights).
+const weekendDaysOf = () => (data && Array.isArray(data.weekendDays) ? data.weekendDays : [5, 6]);
+const isWeekendNight = wd => weekendDaysOf().includes((wd + 1) % 7);
 // 🌙 v193: a "Bedtime routine" (or any routine named bed / sleep) counts as bedtime too: nothing for that person after it ends
 const isBedRoutine = r => /\b(bed|sleep)/i.test(String(r && r.name || ""));
 function routineBed(person, wd) {
@@ -858,7 +859,8 @@ function cleanData(d) {
   if (max >= 1 && max <= 5) clean.maxTogether = max;  // otherwise keep the default (2)
   if ([3, 4, 5].includes(Number(d.extraLimit))) clean.extraLimit = Number(d.extraLimit);
   if (d.bedAll && BED_TIME.test(d.bedAll.wd || "") && BED_TIME.test(d.bedAll.we || "")) clean.bedAll = { wd: d.bedAll.wd, we: d.bedAll.we };   // 🌙 v213 one time for all kids
-  if (Array.isArray(d.weekendNights) && d.weekendNights.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendNights = [...new Set(d.weekendNights)].sort();   // 🎉 v213
+  if (Array.isArray(d.weekendDays) && d.weekendDays.length <= 4 && d.weekendDays.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendDays = [...new Set(d.weekendDays)].sort();   // 🎉 v213
+  if (d.calSetup === true) clean.calSetup = true;   // (📅 v213 the Calendar setup box was saved once)
   if (Number.isInteger(d.calWeekStart) && d.calWeekStart >= 0 && d.calWeekStart <= 6) clean.calWeekStart = d.calWeekStart;
   if (d.fixedOn && typeof d.fixedOn === "object" && !Array.isArray(d.fixedOn))   // 🏫 v180 (only the newest 100)
     clean.fixedOn = Object.fromEntries(Object.entries(d.fixedOn).filter(([k, v]) => /^\d{4}-\d{2}-\d{2}\|.+/.test(k) && v && (v.off === true
