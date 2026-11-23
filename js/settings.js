@@ -140,18 +140,64 @@ function sleepActs() {
     .filter(([, a]) => SLEEP_WORDS.test(a.name) && !/routine|story|chat/i.test(a.name));
 }
 // One row per kid: 🌙 the time planning stops on school nights and on weekend nights (⚙️ Settings, and 🔔 Needs you when one is missing)
-function bedRowsHtml(kids) {
-  // 🌙 v213 (Broo2a, design A): a table, one row per kid, two time boxes (📚 school nights · 🎉 weekend). Tap a box → the phone's time picker.
-  const cell = (k, which) => { const t = k.bed ? k.bed[which] : "";
-    return `<td><label class="bed-t ${t ? "" : "empty"}"><span>${t ? clock(toMin(t), true) : "+ Set"}</span>
-      <input type="time" step="900" value="${t}" data-bedusual="${safe(k.id)}|${which}" aria-label="${safe(k.name)}: ${which === "wd" ? "school nights" : "weekend nights"}"></label></td>`; };
-  return `<table class="bed-table"><tr><th></th><th>📚 School nights<br><small>Sun–Thu</small></th><th>🎉 Weekend<br><small>Fri, Sat</small></th></tr>
-    ${kids.map(k => `<tr><td class="bed-k">${faceHtml(k)} ${safe(k.name)}</td>${cell(k, "wd")}${cell(k, "we")}</tr>`).join("")}</table>`;
+// 🌙 v213 (Broo2a, design C): ONE bedtime for all kids (📚 school nights · 🎉 weekend nights, − / + = 15 minutes),
+// 🎉 which nights are the weekend, and a kid can have their own times ("same as all ›" → their own − / +).
+// Nothing is saved until 💾 Save and plan again. Used in ⚙️ Settings and in 🔔 Needs you.
+let bedDraft = null;   // { all: { wd, we }, weekend: [weekdays], kids: { id: { wd, we } | null }, open: kidId | null }
+function bedDraftNow() {
+  if (!bedDraft) {
+    const kids = kidsList(), first = kids.find(k => k.bed);
+    bedDraft = { all: { ...(data.bedAll || (first && first.bed) || { wd: "20:30", we: "21:30" }) }, weekend: [...weekendNightsOf()], open: null,
+                 kids: {} };
+    kids.forEach(k => { bedDraft.kids[k.id] = k.bed && (k.bed.wd !== bedDraft.all.wd || k.bed.we !== bedDraft.all.we) ? { ...k.bed } : null; });
+  }
+  return bedDraft;
 }
-// (tap a time box → open the picker straight away where the browser can)
+function bedBoxHtml() {
+  const d = bedDraftNow(), hm = t => clock(toMin(t), true);
+  const step = (who, which, t) => `<div class="bed-step"><button type="button" class="bed-pm" data-bedstep="${who}|${which}|-15" aria-label="15 minutes earlier">−</button>
+    <span class="bed-time">${hm(t)}</span><button type="button" class="bed-pm" data-bedstep="${who}|${which}|15" aria-label="15 minutes later">+</button></div>`;
+  const st = Number.isInteger(data.calWeekStart) ? data.calWeekStart : 6, order = DAYS.map((_, i) => (st + i) % 7);   // (days in the calendar's order, Sunday first by default)
+  const wdNames = order.filter(i => !d.weekend.includes(i)).map(i => SHORT[i]), weNames = order.filter(i => d.weekend.includes(i)).map(i => SHORT[i]);
+  return `<div class="bed-box"><p class="hint">The same for every kid. Change one kid only if needed.</p>
+    <div class="bed-lab">📚 School nights <small>(${wdNames.join(", ") || "none"})</small></div>${step("all", "wd", d.all.wd)}
+    <div class="bed-lab">🎉 Weekend nights <small>(${weNames.join(", ") || "none"})</small></div>${step("all", "we", d.all.we)}
+    <div class="bed-lab">🎉 Which nights are the weekend? <small>(the nights before a day off)</small></div>
+    <div class="bed-days">${order.map(i => `<button type="button" class="bed-day ${d.weekend.includes(i) ? "on" : ""}" data-bedwe="${i}" aria-pressed="${d.weekend.includes(i)}">${SHORT[i]}</button>`).join("")}</div>
+    ${kidsList().map(k => { const own = d.kids[k.id], open = d.open === k.id;
+      return `<div class="bed-kid"><button type="button" class="bed-kidrow" data-bedkid="${safe(k.id)}" aria-expanded="${open}"><span>${faceHtml(k)} ${safe(k.name)}</span>
+        <span class="bed-same">${own ? `own: ${hm(own.wd)} · ${hm(own.we)}` : "same as all"} ${open ? "▾" : "›"}</span></button>
+        ${open ? `<div class="bed-own">${own ? `<div class="bed-lab">📚 School nights</div>${step(k.id, "wd", own.wd)}<div class="bed-lab">🎉 Weekend</div>${step(k.id, "we", own.we)}
+          <button type="button" class="pill small" data-bedsame="${safe(k.id)}">↩️ Same as all</button>`
+          : `<button type="button" class="pill small" data-bedown="${safe(k.id)}">✏️ Give ${safe(k.name)} own times</button>`}</div>` : ""}</div>`; }).join("")}
+    <button type="button" class="save-btn bed-save" data-bedsave>💾 Save and plan again</button>
+    <p class="hint" style="text-align:center">(− / + moves 15 minutes)</p></div>`;
+}
+const bedRowsHtml = () => bedBoxHtml();   // (older name)
+function redrawBedBox() { document.querySelectorAll(".bed-box").forEach(b => b.outerHTML = bedBoxHtml()); }
 document.addEventListener("click", e => {
-  const l = e.target.closest && e.target.closest(".bed-t"); if (!l) return;
-  const i = l.querySelector("input"); try { if (i && i.showPicker) { e.preventDefault(); i.showPicker(); } } catch (err) {}
+  const b = e.target.closest && e.target.closest("[data-bedstep], [data-bedwe], [data-bedkid], [data-bedown], [data-bedsame], [data-bedsave]");
+  if (!b || !b.closest(".bed-box") || !isParentId(me)) return;
+  const d = bedDraftNow(), ds = b.dataset;
+  if (ds.bedstep) {
+    const [who, which, n] = ds.bedstep.split("|"), o = who === "all" ? d.all : d.kids[who]; if (!o) return;
+    const m = Math.max(18 * 60, Math.min(23 * 60 + 45, toMin(o[which]) + Number(n)));   // (6:00 pm … 11:45 pm)
+    o[which] = clock24(m);
+  }
+  if (ds.bedwe) { const i = Number(ds.bedwe); d.weekend = d.weekend.includes(i) ? d.weekend.filter(x => x !== i) : [...d.weekend, i].sort(); }
+  if (ds.bedkid) d.open = d.open === ds.bedkid ? null : ds.bedkid;
+  if (ds.bedown) d.kids[ds.bedown] = { ...d.all };
+  if (ds.bedsame) d.kids[ds.bedsame] = null;
+  if ("bedsave" in ds) {
+    data.bedAll = { ...d.all };
+    data.weekendNights = [...d.weekend];
+    kidsList().forEach(k => { const u = data.users.find(x => x.id === k.id); if (!u) return; if (d.kids[k.id]) u.bed = { ...d.kids[k.id] }; else delete u.bed; });
+    bedDraft = null;
+    if (!saveChanges()) return;   // (the week is planned again with the new times)
+    toast("🌙 Saved. Nothing is planned after bedtime.", 3000, "#16a34a");
+    return render();
+  }
+  redrawBedBox();
 });
 function drawBedtimes() {
   const old = sleepActs();

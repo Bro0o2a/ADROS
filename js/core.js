@@ -77,7 +77,9 @@ function familyOrder(list) {
 // 🌙 v180 Bedtime per kid (Broo2a): one time for school nights, one for weekend nights (Friday and Saturday nights),
 //  and a parent can change it for one night (data.bedOn). Nothing is planned for that kid after it. null = no bedtime set.
 const BED_TIME = /^(1[89]|2[0-3]):[0-5]\d$/;   // 6 PM … 11:45 PM
-const isWeekendNight = wd => wd === 4 || wd === 5;   // (0 = Monday: Friday and Saturday nights)
+// 🎉 v213 (Broo2a): which nights are weekend nights is the family's choice (⚙️ / 🌙 box; default Friday and Saturday, 0 = Monday)
+const weekendNightsOf = () => (data && Array.isArray(data.weekendNights) ? data.weekendNights : [4, 5]);
+const isWeekendNight = wd => weekendNightsOf().includes(wd);
 // 🌙 v193: a "Bedtime routine" (or any routine named bed / sleep) counts as bedtime too: nothing for that person after it ends
 const isBedRoutine = r => /\b(bed|sleep)/i.test(String(r && r.name || ""));
 function routineBed(person, wd) {
@@ -88,7 +90,9 @@ function routineBed(person, wd) {
 }
 function bedUsual(person, wd) {
   const u = data && Array.isArray(data.users) && data.users.find(x => x.id === person);
-  const own = u && u.bed ? toMin(isWeekendNight(wd) ? u.bed.we : u.bed.wd) : null, rt = routineBed(person, wd);
+  // (🌙 v213: a kid's own time, else the family's one time for all kids, else the "Bedtime routine" guess)
+  const b = u && u.bed ? u.bed : data && data.bedAll && u && !isParentId(person) ? data.bedAll : null;
+  const own = b ? toMin(isWeekendNight(wd) ? b.we : b.wd) : null, rt = routineBed(person, wd);
   // (🌙 v212 Broo2a: the time a parent set wins; a "Bedtime routine" is only a guess when nothing is set, and the app asks for it)
   return own != null ? own : rt;
 }
@@ -853,6 +857,8 @@ function cleanData(d) {
   const max = Math.round(Number(d.maxTogether));
   if (max >= 1 && max <= 5) clean.maxTogether = max;  // otherwise keep the default (2)
   if ([3, 4, 5].includes(Number(d.extraLimit))) clean.extraLimit = Number(d.extraLimit);
+  if (d.bedAll && BED_TIME.test(d.bedAll.wd || "") && BED_TIME.test(d.bedAll.we || "")) clean.bedAll = { wd: d.bedAll.wd, we: d.bedAll.we };   // 🌙 v213 one time for all kids
+  if (Array.isArray(d.weekendNights) && d.weekendNights.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendNights = [...new Set(d.weekendNights)].sort();   // 🎉 v213
   if (Number.isInteger(d.calWeekStart) && d.calWeekStart >= 0 && d.calWeekStart <= 6) clean.calWeekStart = d.calWeekStart;
   if (d.fixedOn && typeof d.fixedOn === "object" && !Array.isArray(d.fixedOn))   // 🏫 v180 (only the newest 100)
     clean.fixedOn = Object.fromEntries(Object.entries(d.fixedOn).filter(([k, v]) => /^\d{4}-\d{2}-\d{2}\|.+/.test(k) && v && (v.off === true

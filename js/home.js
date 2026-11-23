@@ -135,9 +135,9 @@ function needsItems() {
   if (cu.length) out.push({ key: "coming", text: `📌 Coming up: ${cu.slice(0, 2).map(e => `${whenWord(e.days).toLowerCase()} ${e.title} (${kidNameOf(e.kid)})`).join(", ")}${cu.length > 2 ? ` +${cu.length - 2}` : ""}`,
     html: comingCardHtml(cu, true) });
   // 🌙 v212 (Broo2a): a kid with no bedtime: ask for the time planning stops (nothing is planned or moved after it)
-  const noBed = isParentId(me) ? kidsList().filter(k => !k.bed) : [];
+  const noBed = isParentId(me) && !data.bedAll ? kidsList().filter(k => !k.bed) : [];   // (🌙 v213: one time for all kids counts)
   if (noBed.length) out.push({ key: "bed", text: `🌙 Set when planning stops for ${noBed.map(k => k.name).join(", ")}`,
-    html: `<div class="card bed-set"><p><b>🌙 Bedtime: planning stops at</b></p><p class="hint">Nothing is planned for a kid after this time. Tap a box to pick the time.</p>${bedRowsHtml(kidsList())}</div>` });
+    html: `<div class="card bed-set"><p><b>🌙 Bedtime: planning stops at</b></p><p class="hint">Nothing is planned for a kid after this time.</p>${bedRowsHtml(kidsList())}</div>` });
   const nl = newsletterDue();
   if (nl.length) out.push({ key: "nl", text: `📰 Newsletter for ${nl.map(k => k.name).join(", ")}`, html: newsletterNudgeHtml() });
   return out;
