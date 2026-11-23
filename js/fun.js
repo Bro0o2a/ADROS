@@ -442,6 +442,9 @@ function drawDiary() {
     ? DIARY_LINES.filter(([k]) => e[k]).map(([k, emoji, label]) => `<p><b>${emoji} ${label}</b><br>${safe(e[k])}</p>`).join("") || `<p class="sc-empty">Only the mood today.</p>`
     : `<p class="sc-empty">🔒 Just for ${safe(u.name)}.</p>`}</div>`;
   $("diaryBody").innerHTML = `${chips}<div class="card dy-strip-card"><h2>📅 ${mine ? "My days" : `${safe(u.name)}'s days`}</h2><div class="dy-strip">${strip}</div></div>${body}`;
+  // 📅 v223: the strip opens on the day shown (today), not on the oldest day 2 weeks ago
+  const st = $("diaryBody").querySelector(".dy-strip"), onDay = st && st.querySelector(".dy-day.on");
+  if (onDay) st.scrollLeft = Math.max(0, onDay.offsetLeft - st.offsetLeft - (st.clientWidth - onDay.offsetWidth) / 2);
 }
 // 📝 What's typed in 📔 My day is kept as it's typed (this device), so a tap by mistake or a screen refresh never loses it.
 // (cleared when it's saved; only today's, only this person's)
