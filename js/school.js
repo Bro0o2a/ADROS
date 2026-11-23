@@ -414,13 +414,31 @@ function testStatusText(x) {
 }
 // 🏫 The kid's school basics in one card (👤 My profile, and look-only in School): school, curriculum, year, syllabus, subjects + levels.
 // canEdit (a parent's device): ✏️ Edit · ✏️ Edit subjects. Kids only look.
+// 📊 v221 (Broo2a): the level comes by itself: from ADROS's checked worksheets (🧠 the learning level 1–10, moved by every check),
+// else from the school's own scores in that subject (quizzes, tests, homework), else nothing yet
+function schoolMarkAvg(s, name) {
+  const m = marksOf(s, name).filter(g => g.type !== "worksheet").slice(-6);
+  return m.length ? { n: m.length, avg: Math.round(m.reduce((n, g) => n + Math.min(100, g.score / g.max * 100), 0) / m.length) } : null;
+}
+function subjectLevelOf(kid, f) {
+  const s = schoolOf(kid), L = (s.learn || {})[f.id], checked = wsOf(kid, f.name).filter(w => w.check && w.check.max_score > 0);
+  const ws = checked.length ? { n: checked.length, avg: Math.round(checked.slice(0, 5).reduce((n, w) => n + wsPct(w), 0) / Math.min(5, checked.length)) } : null;
+  const sc = schoolMarkAvg(s, f.name), from = L && L.history.some(h => !h.hand) ? "ws" : sc ? "school" : L && L.history.some(h => h.hand) ? "set" : "";   // (set = a parent moved the 🎚️ level)
+  const lv = from === "ws" || from === "set" ? levelNow(L) : from === "school" ? PLACE_LEVEL(sc.avg) : null;
+  return { lv, ws, sc, from };
+}
 function schoolBasicsHtml(kid, canEdit) {
   const u = userById(kid), s = schoolOf(kid), syl = s.syllabus, none = `<i class="sc-empty">${canEdit ? "Not added yet" : "–"}</i>`;
   const row = (label, v) => `<li><span>${label}</span><b>${v ? safe(v) : none}</b></li>`;
   const subjects = subjectList(s).map(f => {
-    const x = s.profile.subjects[f.id] || {}, lv = x.level, t = testOf(x);
+    const x = s.profile.subjects[f.id] || {}, lv = x.level, t = testOf(x), a = subjectLevelOf(kid, f);
+    if (a.lv) {   // 📊 v221: the level by itself (3 stars = 1–3 · 4–6 · 7–10) + where it comes from
+      const st = a.lv <= 3 ? 1 : a.lv >= 7 ? 3 : 2;
+      const src = [a.ws ? `📝 ${a.ws.avg}% in ${a.ws.n} ${a.ws.n === 1 ? "worksheet" : "worksheets"}` : "", a.sc ? `🏫 school ${a.sc.avg}%` : ""].filter(Boolean).join(" · ");
+      return `<li class="sb-lv"><span>${safe(f.emoji)} ${safe(f.name)}</span><b><span aria-label="Level ${a.lv} of 10">${"★".repeat(st)}${"☆".repeat(3 - st)} ${a.lv}/10</span>${src ? `<small>${src}</small>` : ""}</b></li>`;
+    }
     return `<li><span>${safe(f.emoji)} ${safe(f.name)}</span><b>${lv ? `<span aria-label="Level ${lv} of 3: ${LEVEL_WORDS[lv]}">${"★".repeat(lv)}${"☆".repeat(3 - lv)}</span>`
-      : x.unsure ? `<small>🧪 ${t ? "test pending" : "test to make"}</small>` : `<small>🧭 from the first level check</small>`}</b></li>`;
+      : x.unsure ? `<small>🧪 ${t ? "test pending" : "test to make"}</small>` : `<small>🧭 after the first checked worksheet</small>`}</b></li>`;
   }).join("");
   return `<div class="card me-card sc-basics"><h2>🏫 School</h2><ul class="me-list">
       ${row("🏫 School", schoolNameOf(kid))}${row("📚 Curriculum", u.curriculum)}${row("🎓 Year / Grade", gradeOf(kid))}

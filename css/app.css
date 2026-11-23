@@ -3618,3 +3618,6 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .ss-common .chip { font-size: 14px; }
 .ss-addrow { display: flex; gap: 8px; align-items: center; }
 .ss-addrow input { flex: 1; min-width: 0; }
+/* 📊 v221 the level by itself: from worksheets and school scores */
+.sc-basics .sb-lv b { text-align: right; }
+.sc-basics .sb-lv b small { display: block; font-weight: 600; opacity: .75; font-size: 12px; }
