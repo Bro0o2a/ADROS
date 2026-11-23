@@ -148,6 +148,8 @@ function planDay(ds) {
 }
 // This points week, Monday … Sunday (scores, reports, print, free time). null = no plan yet.
 function planDays() { return hasPlan() ? weekDates().map(planDay) : null; }
+// 🖨️ v216: paper shows the 7 days ahead (today … today + 6), the days the plan has: never past days, never a missing day
+function printDays() { return hasPlan() ? aheadDates().map(planDay) : null; }
 // The calendar's 12 dates: 5 days back, today, 6 days ahead (with no plan: just the routines)
 const calDays = () => calDates().map(planDay);
 
@@ -1536,7 +1538,7 @@ function summaryPage() {
   return `<section class="p-page" style="--soft:#ede9fe;--ink:#4c1d95">
     <div><div class="p-title">👨‍👩‍👧‍👦 Everyone's Week ⭐ ${weekRange()}</div>
       <div class="p-sub">Each color is one person. ✓ = done.</div></div>
-    ${weekSummaryHtml(planDays(), true)}</section>`;
+    ${weekSummaryHtml(printDays(), true)}</section>`;
 }
 
 
@@ -1547,9 +1549,10 @@ function summaryPage() {
 // =====================================================================
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function dayDate(d) { const dt = fromYmd(data.points.week); dt.setDate(dt.getDate() + d); return dt; }
+const printDate = d => fromYmd(aheadDates()[d]);   // 🖨️ v216 the printed days: today … today + 6 (see printDays)
 // "5–11 Oct", or "28 Sep – 4 Oct" when the week goes into the next month
 function weekRange() {
-  const a = dayDate(0), b = dayDate(6);
+  const a = printDate(0), b = printDate(6);
   return a.getMonth() === b.getMonth() ? `${a.getDate()}–${b.getDate()} ${MONTHS[b.getMonth()]}`
     : `${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}`;
 }
@@ -1557,7 +1560,7 @@ function weekRange() {
 // "Who should I print?" (Dad only)
 function openPrintMenu() {
   if (!isParentId(me)) return;
-  if (!planDays()) return toast("Press ✨ Plan my week first, then you can print it.", 3500);
+  if (!printDays()) return toast("Press ✨ Plan my week first, then you can print it.", 3500);
   const btn = (id, emoji, name, c) => `<button class="who-btn" data-print="${safe(id)}" style="--soft:${c.soft};--ink:${c.ink}">
       <span class="face">${safe(emoji)}</span><span class="nm">${safe(name)}</span></button>`;
   $("printWho").innerHTML = familyOrder(data.users).map(u => btn(u.id, u.emoji, u.name, colorsOf(u))).join("")
@@ -1589,7 +1592,7 @@ function paperItem(it, pageFor, same) {
 function paperTable(pageFor, item, strip) {
   item = item || ((it, same) => paperItem(it, pageFor, same));
   strip = strip || (r => `<div class="p-routine">${clock(r.start)} ${safe(r.emoji)} ${safe(r.name)}</div>`);
-  const week = planDays();   // (📅 paper: this Monday … Sunday)
+  const week = printDays();   // (📅 paper: today … today + 6, like the plan)
   const cols = week.map(day => {
     let items = pageFor === "all" ? day.items : day.items.filter(it => it.people.includes(pageFor));
     if (pageFor === "all") {  // the same fixed activity for several people (like School) is one line
@@ -1673,14 +1676,14 @@ function printFor(who) {
 // "5 – 11 October 2026", or "28 September – 4 October 2026" across two months
 function monthName(dt) { return dt.toLocaleDateString("en-GB", { month: "long" }); }
 function weekRangeLong() {
-  const a = dayDate(0), b = dayDate(6);
+  const a = printDate(0), b = printDate(6);
   if (a.getFullYear() !== b.getFullYear()) return `${a.getDate()} ${monthName(a)} ${a.getFullYear()} - ${b.getDate()} ${monthName(b)} ${b.getFullYear()}`;
   return a.getMonth() === b.getMonth() ? `${a.getDate()} - ${b.getDate()} ${monthName(b)} ${b.getFullYear()}`
     : `${a.getDate()} ${monthName(a)} - ${b.getDate()} ${monthName(b)} ${b.getFullYear()}`;
 }
 function listPage(who) {
   const u = userById(who), c = colorsOf(u);
-  const groups = planDays().map(day => {
+  const groups = printDays().map(day => {
     const items = day.items.filter(it => it.people.includes(who));
     return `<div class="pl-day"><div class="p-head">${dayHead(day.date)}</div>
       ${items.length ? items.map(it => paperItem(it, who)).join("") : `<div class="p-free">Free day! 🎉</div>`}</div>`;
@@ -1693,7 +1696,7 @@ function listPage(who) {
 }
 function printList() {
   if (hasDraft()) return toast("💾 Save your changes first, then print.", 3500);
-  if (!planDays()) return toast("There's no plan yet, so there's nothing to print.", 3500);
+  if (!printDays()) return toast("There's no plan yet, so there's nothing to print.", 3500);
   buildPages([listPage(me)]);
   window.print();
 }
@@ -1738,7 +1741,7 @@ function habitsTableHtml(who) {
 
 // The calendar that's showing: one person's, or everyone's (📅 Calendar → Everyone)
 function printCalendar() {
-  if (!planDays()) return toast("There's no plan yet, so there's nothing to print.", 3500);
+  if (!printDays()) return toast("There's no plan yet, so there's nothing to print.", 3500);
   // Everyone: the Week summary table on one landscape page
   buildPages([calWho === "all" ? summaryPage() : gridPage(calWho || me)]);
   window.print();
@@ -1762,14 +1765,14 @@ function familyPage() {
       <span style="--c:${GREY.color}"><i></i>Fixed or shared (school, work …)</span></div>
   </section>`;
 }function printFamilyWeek() {
-  if (!planDays()) return toast("There's no plan yet, so there's nothing to print.", 3500);
+  if (!printDays()) return toast("There's no plan yet, so there's nothing to print.", 3500);
   buildPages([familyPage()]);
   window.print();
 }
 
 // If someone prints from the browser's own menu instead, print their own week.
 window.addEventListener("beforeprint", () => {
-  if (!$("printArea").innerHTML.trim() && exists(me) && planDays()) buildPrint(me);
+  if (!$("printArea").innerHTML.trim() && exists(me) && printDays()) buildPrint(me);
 });
 
 // 🕗 v203 (Broo2a): the day's own time under each day's name ("🕗 8 AM – 11 PM"). A parent taps it to change it for every
