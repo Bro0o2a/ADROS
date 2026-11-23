@@ -250,7 +250,7 @@ const ACT_ICONS = [[/break|get ready|lunch|dinner|breakfast|meal|bed|sleep|showe
   [/football|sport|gym|swim|karate|run|exercise|club|basket|tennis/i, "basketball"],
   [/study|revision|revise|practi[cs]e|lesson|tutor/i, "study"], [/pray|salah/i, "consistency"]];
 function actIcon3d(name, type, cls = "k-ic") {
-  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" ? "study" : type === "routine" ? "time" : type === "free" ? "rainbow" : "goal";
+  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" || type === "schoolapp" ? "study" : type === "sport" ? "basketball" : type === "routine" ? "time" : type === "free" || type === "family" ? "rainbow" : "goal";
   return ico3d(n, cls);
 }
 // What a block shows: big title, colors, and a smaller line underneath.

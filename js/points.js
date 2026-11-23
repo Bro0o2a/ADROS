@@ -441,7 +441,7 @@ function studyTableHtml(kid, only) {
     <tbody>${names.map(n => `<tr><th>${safe(n)}</th>${weeks.map(w => cell(w, n)).join("")}</tr>`).join("")}${!only && names.length > 1 ? `<tr><th>All subjects</th>${weeks.map(w => cell(w, null)).join("")}</tr>` : ""}</tbody></table></div>`;
 }
 // ⚽ ACTIVITY sub-score (0–100). FOR NOW: % of this week's planned activity items (so far) that are ticked. (These rules will change later.)
-function activityScore(id) { return tallyPct(typeTally(id, "activity")); }
+function activityScore(id) { const a = typeTally(id, "activity"), b = typeTally(id, "sport"); return tallyPct({ planned: a.planned + b.planned, done: a.done + b.done }); }   // (🏊 v213 Sports count as activity)
 // 🌱 HABIT sub-score (0–100). FOR NOW: % of this week's planned habit items (so far) that are ticked. (These rules will change later.)
 function habitScore(id) { return tallyPct(typeTally(id, "habit")); }
 // Everything for one person: the 3 sub-scores, which types they have items of, the OVERALL and their MAX
@@ -488,7 +488,7 @@ function ticksTally(id) {
     day.items.forEach(it => {
       if (!it.users.includes(id)) return;
       const a = acts.find(x => x.id === baseActId(it.actId));
-      if (!a || !["study", "activity", "habit"].includes(actTypeOf(a))) return;
+      if (!a || !["study", "schoolapp", "activity", "sport", "habit"].includes(actTypeOf(a))) return;
       const ok = isDone(day.date, it.actId, id);
       if (day.date === today && !ok) return;
       planned++; if (ok) done++;

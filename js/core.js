@@ -1104,7 +1104,10 @@ const DEFAULT_SUBJECTS = {
 // 🏫 📚 🎓 The school basics saved on the kid (in 👤 the profile), in the order a missing one is asked
 const BASIC_KEYS = ["school", "curriculum", "year"];
 // ⭐ An activity's TYPE for the score (see SCORE): [key, emoji, word]. "other" is never scored.
-const ACT_TYPES = [["study", "📚", "Study"], ["activity", "⚽", "Activity"], ["free", "🎈", "Free time"], ["other", "🗂️", "Other"]];   // (🎈 v182 Broo2a: free time, the person picks what to do; not scored)
+const ACT_TYPES = [["study", "📚", "Study"], ["schoolapp", "💻", "School app (online)"], ["activity", "⚽", "Activity"], ["sport", "🏊", "Sports"],
+  ["family", "👨‍👩‍👧", "Family time"], ["free", "🎈", "Free time"], ["other", "🗂️", "Other"]];   // (🎈 v182 Broo2a: free time, the person picks what to do; not scored)
+// (💻 🏊 👨‍👩‍👧 v213 Broo2a: School app = online study in the school's app, ticked ✅ like Study; Sports ticked like Activity; Family time not scored)
+const UNSCORED_TYPES = ["family", "free", "other"];
 const ACT_TYPE_KEYS = ACT_TYPES.map(t => t[0]);
 // An activity saved before types existed gets one, once (then it's kept): a name with "school" → "other" (on the calendar, no score),
 // everything else → "activity". An unknown type → "activity". (Hoisted: cleanData uses it while loading.)

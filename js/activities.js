@@ -230,7 +230,7 @@ function fxWinNow() { fxWinPending = true; $("fxAdd").click(); }
 // until you pick one yourself; editing: its saved type.
 const typeTouched = { fx: false, fl: false };
 ["fx", "fl"].forEach(k => {
-  $(k + "Type").innerHTML = ACT_TYPES.map(([key, e, w]) => `<option value="${key}">${e} ${w}${key === "other" || key === "free" ? " (non-scored)" : ""}</option>`).join("");
+  $(k + "Type").innerHTML = ACT_TYPES.map(([key, e, w]) => `<option value="${key}">${e} ${w}${UNSCORED_TYPES.includes(key) ? " (non-scored)" : ""}</option>`).join("");
   $(k + "Type").value = "activity";
   $(k + "Type").addEventListener("change", () => { typeTouched[k] = true; });
   $(k + "Name").addEventListener("input", () => { if (!typeTouched[k]) $(k + "Type").value = defaultActType({ name: $(k + "Name").value }); });
