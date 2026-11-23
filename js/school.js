@@ -437,8 +437,9 @@ function schoolBasicsHtml(kid, canEdit) {
       const src = [a.ws ? `📝 ${a.ws.avg}% in ${a.ws.n} ${a.ws.n === 1 ? "worksheet" : "worksheets"}` : "", a.sc ? `🏫 school ${a.sc.avg}%` : ""].filter(Boolean).join(" · ");
       return `<li class="sb-lv"><span>${safe(f.emoji)} ${safe(f.name)}</span><b><span aria-label="Level ${a.lv} of 10">${"★".repeat(st)}${"☆".repeat(3 - st)} ${a.lv}/10</span>${src ? `<small>${src}</small>` : ""}</b></li>`;
     }
-    return `<li><span>${safe(f.emoji)} ${safe(f.name)}</span><b>${lv ? `<span aria-label="Level ${lv} of 3: ${LEVEL_WORDS[lv]}">${"★".repeat(lv)}${"☆".repeat(3 - lv)}</span>`
-      : x.unsure ? `<small>🧪 ${t ? "test pending" : "test to make"}</small>` : `<small>🧭 after the first checked worksheet</small>`}</b></li>`;
+    return `<li class="sb-lv"><span>${safe(f.emoji)} ${safe(f.name)}</span><b>${lv ? `<span aria-label="Level ${lv} of 3: ${LEVEL_WORDS[lv]}">${"★".repeat(lv)}${"☆".repeat(3 - lv)}</span>`
+      : x.unsure ? `<small>🧪 ${t ? "test pending" : "test to make"}</small>`
+      : `<span aria-label="Level 5 of 10">★★☆ 5/10</span><small>🌱 starting level: no results yet</small>`}</b></li>`;
   }).join("");
   return `<div class="card me-card sc-basics"><h2>🏫 School</h2><ul class="me-list">
       ${row("🏫 School", schoolNameOf(kid))}${row("📚 Curriculum", u.curriculum)}${row("🎓 Year / Grade", gradeOf(kid))}
