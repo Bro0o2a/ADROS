@@ -889,6 +889,8 @@ function makePlan(mode = "replan") {
       if (it.fixed && !once && (!act.days.includes(weekdayOf(day.date)) || it.start !== toMin(act.start) || it.end !== toMin(act.end))) return;
       // flexible: new length, and it hasn't started → placed again
       if (!it.fixed && it.start > now && it.end - it.start !== act.duration && !it.longer && !it.ownLen) return;   // (⏱️ v213 ownLen: its own length that day stays)
+      // 🌙 v215: a session that hasn't started and now ends after someone's bedtime (bedtime changed) → placed again
+      if (!it.fixed && it.start > now && peopleOf(act).some(p => { const b = bedMin(p, day.date); return b != null && it.end > b; })) return;
     }
     // a deleted activity that was ticked stays (history)
     if (!act && day.date > today) return;
@@ -1102,6 +1104,9 @@ function planKey() {
     max: data.maxTogether,
     // (only when there are routines, so a plan made before routines existed still counts as up to date)
     ...(data.users.some(u => u.bed) ? { bed: data.users.filter(u => u.bed).map(u => [u.id, u.bed.wd, u.bed.we]) } : {}),   // 🌙
+    // (🌙 v215: the bedtime for all kids and the weekend days too, so changing them in 📅 Calendar setup plans the week again)
+    ...(data.bedAll ? { bedAll: [data.bedAll.wd, data.bedAll.we] } : {}),
+    ...(Array.isArray(data.weekendDays) ? { we: data.weekendDays } : {}),
     ...(data.routines.length ? { rt: data.routines.map(r => [r.id, r.days, r.start, r.duration, r.users]) } : {})
   });
 }
