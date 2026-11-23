@@ -138,6 +138,11 @@ function needsItems() {
   const noBed = isParentId(me) && !data.calSetup && kidsList().length ? kidsList() : [];   // (📅 v213 until the Calendar setup box is saved once)
   if (noBed.length) out.push({ key: "calsetup", text: "📅 Set up the calendar: weekend, day start and end, school",
     html: `<div class="card bed-set"><p><b>📅 Calendar setup</b></p><p class="hint">Fill this once. The planner uses it for every week. You can change it later in ⚙️ Settings.</p>${calBoxHtml()}</div>` });
+  // 🏫 v218 (Broo2a): a kid with no school set: school dates from a brother's or sister's newsletter may land on the wrong calendars
+  const noSchool = kidsList().filter(k => !k.school);
+  if (noSchool.length) out.push({ key: "noschool", text: `🏫 Add ${noSchool.map(k => k.name).join(", ")}'s school`,
+    html: `<div class="card"><p class="hint">${safe(noSchool.map(k => k.name).join(" and "))} ${noSchool.length === 1 ? "has" : "have"} no school set yet. Add it, so school dates from a newsletter go on the right kids' calendars.</p>
+      <div class="btnrow"><button class="primary" data-schoolset>🏫 School settings</button></div></div>` });
   const nl = newsletterDue();
   if (nl.length) out.push({ key: "nl", text: `📰 Newsletter for ${nl.map(k => k.name).join(", ")}`, html: newsletterNudgeHtml() });
   return out;

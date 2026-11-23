@@ -517,6 +517,7 @@ function curriculumReviewNodes(s) {
             : t.off ? h("small", { class: "aw-off" }, `⚠️ Not in ${kidNameOf(aw.kid)}'s ${f.name} curriculum`) : t.note ? h("small", null, t.note) : null))); })));
   });
   const sibs = eventSiblings(aw.kid), sibNames = sibs.map(kidNameOf).join(" & ");
+  if (res.events.length && sibs.length) out.push(noSchoolNote());
   if (res.events.length) out.push(h("h3", { class: "ph-group" }, "📅 Add to calendar"),
     h("ul", { class: "list" }, res.events.map((e, i) => h("li", null, h("label", { class: "checkline" }, h("input", { type: "checkbox", checked: e.on, data: { awe: i } }),
       h("span", null, h("b", null, `📌 ${shortDate(e.date)}${e.time ? " · " + clock(toMin(e.time), true) : ""}`), " " + e.title)),
@@ -765,6 +766,11 @@ function eventSiblings(kid) {
   const mine = (userById(kid) || {}).school || "";
   return kidsList().filter(k => k.id !== kid && (!mine || !k.school || k.school === mine)).map(k => k.id);
 }
+// ⚠️ v218: kids with no school set are counted as the same school: say so, so the parent can fix it in 🏫 School settings
+function noSchoolNote() {
+  const none = kidsList().filter(k => !k.school);
+  return none.length ? h("p", { class: "aw-off-box", role: "note" }, `⚠️ ${none.map(k => k.name).join(" and ")} ${none.length === 1 ? "has" : "have"} no school set. Add it in 🏫 School settings, so "Also for" only shows kids at the same school.`) : null;
+}
 // 📌 Put one school date on these kids' calendars (no doubles: the same date, time and title alike is skipped). True = put somewhere
 function putSchoolDate(kids, e) {
   let put = false;
@@ -989,6 +995,7 @@ function drawNewsletter() {
          nlSibs.length ? h("label", { class: "checkline aw-all" }, h("input", { type: "checkbox", checked: WHOLE_SCHOOL.test(e.title), data: { nlall: i } }),
            h("small", null, `👨‍👩‍👧 Also for ${nlSibs.map(kidNameOf).join(" & ")}`)) : null)))
          : h("p", { class: "sc-empty" }, "No school dates in this newsletter."),
+       nlSibs.length && res.events.length ? noSchoolNote() : null,
        ...newsletterTopicsNodes(nl),
        res.subjects.length ? h("p", { class: "hint" }, "📰 On Friday after school, a week review worksheet is made for each subject on these topics.") : null,
        res.reminders.length ? h("p", { class: "hint" }, "🔔 Reminders: " + res.reminders.join(" · ")) : null,
