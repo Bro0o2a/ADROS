@@ -2083,7 +2083,8 @@ function schSetHtml() {
   if (!kids.length) return `<p class="hint">Add a kid first in 👨‍👩‍👧 Family members.</p>`;
   if (!kids.some(k => k.id === schSetKid)) schSetKid = kids[0].id;
   const kid = schSetKid, u = userById(kid), subs = subjectList(schoolOf(kid));
-  if (!schSetDraft || schSetDraft.kid !== kid) schSetDraft = { kid, ...wsDayDraftOf(kid) };
+  if (!schSetDraft || schSetDraft.kid !== kid) schSetDraft = { kid, ...wsDayDraftOf(kid),
+    show: Object.fromEntries(subjectList(schoolOf(kid), true).map(f => [f.id, !f.hidden])), add: [] };
   const d = schSetDraft, sum = wsDaySum(d);
   const chips = edit && kids.length > 1 ? `<div class="chips ss-kids">${kids.map(k => `<button type="button" class="chip ${k.id === kid ? "on" : ""}" data-sskid="${safe(k.id)}" aria-pressed="${k.id === kid}">${safe(k.name)}</button>`).join("")}</div>` : "";
   const ro = (label, v) => `<li><span>${label}</span><b>${v ? safe(v) : `<i class="sc-empty">–</i>`}</b></li>`;
@@ -2100,8 +2101,21 @@ function schSetHtml() {
     : `<ul class="me-list">${ro("📝 Any subject", String(d.n))}</ul>`;
   const cmp = subs.length ? `<div class="chips ss-cmp">${subs.map(f => `<button type="button" class="chip" data-sscmp="${safe(f.id)}">${safe(f.emoji)} ${safe(f.name)}</button>`).join("")}</div>`
     : `<p class="hint">No subjects yet: they come with the first school upload.</p>`;
+  // 📚 v220 (Broo2a): the subjects the kid studies. Parents: tap a subject to turn it on/off, ➕ add one (a common one or typed)
+  const all = subjectList(schoolOf(kid), true), onN = all.filter(f => d.show[f.id]).length + d.add.length;
+  const COMMON = ["Math", "English", "Science", "Arabic", "Islamic", "French", "Social Studies", "Humanities", "Computing", "Spelling", "Reading", "History", "Geography"];
+  const have = n => all.some(f => sameSubject(f.name, n)) || d.add.some(x => sameSubject(x, n));
+  const studyHtml = edit
+    ? `<div class="chips ss-subs">${all.map(f => `<button type="button" class="chip ${d.show[f.id] ? "on" : ""}" data-sssub="${safe(f.id)}" aria-pressed="${!!d.show[f.id]}">${d.show[f.id] ? "✅" : "⬜"} ${safe(f.emoji)} ${safe(f.name)}</button>`).join("")}${
+        d.add.map((n, i) => `<button type="button" class="chip on" data-ssunadd="${i}" aria-pressed="true">✅ 🆕 ${safe(n)}</button>`).join("")}</div>
+       <p class="hint">${onN} ${onN === 1 ? "subject" : "subjects"} on. Tap one to turn it on or off (its work is kept).</p>
+       <label class="small" for="ssNewSub">➕ Add a subject</label>
+       <div class="chips ss-common">${COMMON.filter(n => !have(n)).map(n => `<button type="button" class="chip" data-ssnew="${safe(n)}">➕ ${safe(n)}</button>`).join("")}</div>
+       <div class="ss-addrow"><input type="text" id="ssNewSub" maxlength="30" placeholder="Or type one: Music, Drama…"><button type="button" class="pill" data-ssaddtyped>➕ Add</button></div>`
+    : `<ul class="me-list">${all.filter(f => !f.hidden).map(f => `<li><span>${safe(f.emoji)} ${safe(f.name)}</span></li>`).join("") || `<li>None yet</li>`}</ul>`;
   return `<div class="ss-box">${chips}${edit ? "" : `<p class="me-lock">🔒 Only Mum or Dad can change these.</p>`}
     <section class="ss-sec"><h3>🎒 About school</h3>${school}</section>
+    <section class="ss-sec"><h3>📚 Subjects to study</h3>${studyHtml}</section>
     <section class="ss-sec"><h3>📝 Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
     <section class="ss-sec"><h3>📊 Compare my topics with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
     ${edit ? `<div class="btnrow"><button type="button" class="primary" data-sssave>💾 Save</button></div>` : ""}</div>`;
@@ -2120,10 +2134,14 @@ function saveSchoolSet() {
   const about = schoolFieldsValue("ss");
   Object.assign(u, about); Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; });
   data.wsDay = { ...(data.wsDay || {}), [kid]: d.per ? { per: { ...d.list } } : { n: d.n } };
+  // 📚 v220 the subjects to study: off = hidden (its work is kept), new ones get a folder
+  const s = schoolFor(kid);
+  Object.entries(d.show || {}).forEach(([id, on]) => { const f = s.subjects[id]; if (!f) return; if (on) delete f.hidden; else f.hidden = true; });
+  (d.add || []).forEach(n => ensureFolder(s, n));
   qePopClose(); keepNow(); toast(`🏫 Saved for ${u.name}.`, 2500);
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp]");
+  const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp], [data-sssub], [data-ssunadd], [data-ssnew], [data-ssaddtyped]");
   if (!b) return;
   const ds = b.dataset;
   if ("schoolset" in ds) return openSchoolSet(ds.schoolset);
@@ -2146,6 +2164,15 @@ document.addEventListener("click", e => {
     const [k, by] = ds.ssstep.split("|"), add = Number(by);
     if (k === "all") d.n = Math.min(WS_DAY_MAX, Math.max(1, d.n + add));
     else if (add < 0 || wsDaySum(d) < WS_DAY_MAX) d.list[k] = Math.max(0, (d.list[k] || 0) + add);
+    return redrawSchoolSet();
+  }
+  if (ds.sssub) { d.show[ds.sssub] = !d.show[ds.sssub]; return redrawSchoolSet(); }
+  if (ds.ssunadd) { d.add.splice(Number(ds.ssunadd), 1); return redrawSchoolSet(); }
+  if (ds.ssnew || "ssaddtyped" in ds) {
+    const n = (ds.ssnew || ($("ssNewSub") ? $("ssNewSub").value : "")).trim().slice(0, 30);
+    if (!n) return;
+    const old = subjectList(schoolOf(schSetKid), true).find(f => sameSubject(f.name, n));
+    if (old) d.show[old.id] = true; else if (!d.add.some(x => sameSubject(x, n))) d.add.push(n);
     return redrawSchoolSet();
   }
   if ("sssave" in ds) return saveSchoolSet();

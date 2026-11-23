@@ -3612,3 +3612,9 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .checkline.aw-all small { font-size: .85em; }
 .list li:has(> .aw-all) { flex-wrap: wrap; }
 .checkline.aw-all { flex-basis: 100%; align-items: center; }
+/* 📚 v220 School settings: subjects to study */
+.ss-subs .chip:not(.on) { opacity: .6; }
+.ss-common { margin: 4px 0 8px; }
+.ss-common .chip { font-size: 14px; }
+.ss-addrow { display: flex; gap: 8px; align-items: center; }
+.ss-addrow input { flex: 1; min-width: 0; }
