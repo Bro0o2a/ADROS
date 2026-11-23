@@ -426,8 +426,8 @@ function schoolBasicsHtml(kid, canEdit) {
       ${row("🏫 School", schoolNameOf(kid))}${row("📚 Curriculum", u.curriculum)}${row("🎓 Year / Grade", gradeOf(kid))}
       ${row("📄 Syllabus", syl ? syl.name : "")}</ul>
     ${subjects ? `<h3 class="ph-group">📚 Subjects and levels</h3><ul class="me-list">${subjects}</ul>` : ""}
-    ${canEdit ? `<div class="btnrow"><button class="pill" data-meedit>⚙️ Change school & subjects</button></div>`
-      : `<p class="hint">✏️ Change these in 👤 My profile → ⚙️ My settings.</p>`}</div>`;
+    ${canEdit ? `<div class="btnrow"><button class="pill" data-schoolset="${safe(kid)}">✏️ Edit school info</button></div>`
+      : `<p class="hint">🔒 Only a parent can change these.</p>`}</div>`;
 }
 // ❓ Only a basic that's missing is asked (on a parent's device), one at a time, once: answered → saved on the kid; "Not now" → never again
 function missingBasic(kid) {
@@ -2106,8 +2106,9 @@ function schSetHtml() {
     <section class="ss-sec"><h3>📊 Compare my topics with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
     ${edit ? `<div class="btnrow"><button type="button" class="primary" data-sssave>💾 Save</button></div>` : ""}</div>`;
 }
-function openSchoolSet() {
+function openSchoolSet(kid) {
   schSetDraft = null;
+  if (kid && exists(kid)) schSetKid = kid;   // (🏫 v219: the kid it was opened for, e.g. "Add Jawad's school")
   qePop(isParentDevice() ? "🏫 School settings" : "🏫 My school", "", [["Close", null]]);
   const card = document.querySelector(".qe-pop .qe-popcard"); card.classList.add("cal-popcard", "ss-popcard");
   card.querySelector(".qe-popbtns").insertAdjacentHTML("beforebegin", `<div id="ssBody">${schSetHtml()}</div>`);
@@ -2125,7 +2126,7 @@ document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp]");
   if (!b) return;
   const ds = b.dataset;
-  if ("schoolset" in ds) return openSchoolSet();
+  if ("schoolset" in ds) return openSchoolSet(ds.schoolset);
   if (ds.sscmp) {   // 📊 that subject's page → 📚 Topics → Compare
     const kid = schSetKid, f = schoolOf(kid).subjects[ds.sscmp];
     if (!f) return;
