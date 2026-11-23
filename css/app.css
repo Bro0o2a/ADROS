@@ -3267,6 +3267,11 @@ button.ip-item:hover { background: rgba(255, 255, 255, .7); }
 .k-navrow .k-subj { min-width: 92px; }
 .k-navrow .k-mode button { padding-left: 10px; padding-right: 10px; }
 @media (max-width: 400px) { .k-navrow { gap: 5px; } .k-planbtn { padding: 6px 9px; } }
+/* 📱 v216: on a phone the 🔍 Subject picker gets its own full line (it was cut to "Sub") */
+@media (max-width: 480px) { .k-navrow { flex-wrap: wrap; } .k-navrow .k-subj { flex: 1 1 100%; max-width: none; margin-right: 0; } }
+/* 📱 v216: "✨ Spark Lv 10" may go on 2 lines under the ring instead of running off the screen */
+.bu-badge { max-width: 64px; }
+.bu-badge-lv { white-space: normal; text-align: center; }
 .who-names { font-size: .85em; font-weight: 700; opacity: .85; white-space: nowrap; }
 .k-card-top .big .k-bigic { width: 64px; height: 64px; }
 .k-card-top .big:has(.k-bigic) { display: flex; justify-content: center; }

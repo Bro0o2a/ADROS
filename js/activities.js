@@ -1168,7 +1168,8 @@ function missedSessions() {
   if (!hasPlan()) return [];
   const dates = aheadDates();
   return data.flexible.map(act => {
-    const placed = dates.reduce((n, ds) => n + planItemsOn(ds).filter(it => !it.fixed && baseActId(it.actId) === act.id).length, 0);
+    // (a session the planner made LONGER counts as 2: it holds 2 sessions in one block)
+    const placed = dates.reduce((n, ds) => n + planItemsOn(ds).filter(it => !it.fixed && baseActId(it.actId) === act.id).reduce((m, it) => m + (it.longer ? 2 : 1), 0), 0);
     return { act, missing: Math.min(act.times, dates.length * (act.twiceDay ? 2 : 1)) - placed };
   }).filter(x => x.missing > 0);
 }
