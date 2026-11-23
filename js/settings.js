@@ -152,7 +152,7 @@ function calDraftNow() {
     const kids = kidsList(), first = kids.find(k => k.bed), off = weekendDaysOf();
     const work = DAYS.map((_, i) => i).find(i => !off.includes(i)), rest = off[0];
     const w = i => (i == null ? null : dayWindow(i)), sc = schoolActs();
-    bedDraft = { all: { ...(data.bedAll || (first && first.bed) || { wd: "20:30", we: "21:30" }) }, weekend: [...off], open: null, kids: {},
+    bedDraft = { sec: null, all: { ...(data.bedAll || (first && first.bed) || { wd: "20:30", we: "21:30" }) }, weekend: [...off], open: null, kids: {},
       weekStart: calWeekStartOf(),
       start: { wd: clock24(w(work) ? w(work)[0] : 8 * 60), we: clock24(w(rest) ? w(rest)[0] : 8 * 60) },
       school: { on: !!sc.main, start: sc.main ? sc.main.start : "07:30", end: sc.main ? sc.main.end : "14:30",
@@ -169,30 +169,35 @@ function calBoxHtml() {
   const dayBtns = (attr, on, list = order) => `<div class="bed-days">${list.map(i => `<button type="button" class="bed-day ${on(i) ? "on" : ""}" ${attr}="${i}" aria-pressed="${on(i)}">${SHORT[i]}</button>`).join("")}</div>`;
   const schoolDays = order.filter(i => !d.weekend.includes(i)), names = l => l.map(i => SHORT[i]).join(", ") || "none";
   const nightsOf = we => order.filter(i => d.weekend.includes((i + 1) % 7) === we);   // (a night before a day off = a weekend night)
-  return `<div class="bed-box">
-    <h3 class="bed-h">📅 Week</h3>
-    <div class="bed-lab">Week starts on</div>${dayBtns("data-calweek", i => i === d.weekStart)}
-    <div class="bed-lab">🎉 Weekend days <small>(days off school)</small></div>${dayBtns("data-bedwe", i => d.weekend.includes(i))}
-    <h3 class="bed-h">☀️ Day starts at</h3>
-    <div class="bed-lab">📚 School days <small>(${names(schoolDays)})</small></div>${step("start|wd", d.start.wd)}
-    <div class="bed-lab">🎉 Weekend days <small>(${names(order.filter(i => d.weekend.includes(i)))})</small></div>${step("start|we", d.start.we)}
-    <h3 class="bed-h">🌙 Day ends at</h3>
-    <p class="hint">Nothing is planned for the kids after this time. The same for every kid; change one kid only if needed.</p>
-    <div class="bed-lab">📚 School nights <small>(${names(nightsOf(false))})</small></div>${step("all|wd", d.all.wd)}
-    <div class="bed-lab">🎉 Weekend nights <small>(${names(nightsOf(true))})</small></div>${step("all|we", d.all.we)}
-    ${kidsList().map(k => { const own = d.kids[k.id], open = d.open === k.id;
+  // (🗂️ v213 Broo2a: each part is a title line with its answer; tap it to open, one part open at a time)
+  const sec = (key, title, sum, body) => `<div class="bed-sec ${d.sec === key ? "open" : ""}"><button type="button" class="bed-sechead" data-calsec="${key}" aria-expanded="${d.sec === key}">
+      <span class="bed-sect">${title}</span><span class="bed-secsum">${sum}</span><span class="bed-chev">${d.sec === key ? "▾" : "›"}</span></button>
+      ${d.sec === key ? `<div class="bed-secbody">${body}</div>` : ""}</div>`;
+  const owners = kidsList().filter(k => d.kids[k.id]).map(k => k.name);
+  const kidRows = kidsList().map(k => { const own = d.kids[k.id], open = d.open === k.id;
       return `<div class="bed-kid"><button type="button" class="bed-kidrow" data-bedkid="${safe(k.id)}" aria-expanded="${open}"><span>${faceHtml(k)} ${safe(k.name)}</span>
         <span class="bed-same">${own ? `own: ${hm(own.wd)} · ${hm(own.we)}` : "same as all"} ${open ? "▾" : "›"}</span></button>
         ${open ? `<div class="bed-own">${own ? `<div class="bed-lab">📚 School nights</div>${step(k.id + "|wd", own.wd)}<div class="bed-lab">🎉 Weekend</div>${step(k.id + "|we", own.we)}
           <button type="button" class="pill small" data-bedsame="${safe(k.id)}">↩️ Same as all</button>`
-          : `<button type="button" class="pill small" data-bedown="${safe(k.id)}">✏️ Give ${safe(k.name)} own times</button>`}</div>` : ""}</div>`; }).join("")}
-    <h3 class="bed-h">🏫 School</h3>
-    <label class="bed-tick"><input type="checkbox" data-calschool ${d.school.on ? "checked" : ""}><span>Show school on the calendar<br><small>Nothing is planned in school time.</small></span></label>
-    ${d.school.on ? `<div class="bed-lab">Starts at</div>${step("school|start", d.school.start)}<div class="bed-lab">Ends at</div>${step("school|end", d.school.end)}
-      <div class="bed-lab">A shorter day? <small>(tap it; tap again for none)</small></div>${dayBtns("data-calshort", i => i === d.school.short, schoolDays)}
-      ${d.school.short != null ? `<div class="bed-lab">${DAYS[d.school.short]} ends at</div>${step("school|shortEnd", d.school.shortEnd)}` : ""}` : ""}
-    <button type="button" class="save-btn bed-save" data-bedsave>💾 Save and plan again</button>
-    <p class="hint" style="text-align:center">(− / + moves 15 minutes)</p></div>`;
+          : `<button type="button" class="pill small" data-bedown="${safe(k.id)}">✏️ Give ${safe(k.name)} own times</button>`}</div>` : ""}</div>`; }).join("");
+  const sc = d.school;
+  return `<div class="bed-box"><p class="hint">Tap a line to change it.</p>
+    ${sec("week", "📅 Week", `starts ${SHORT[d.weekStart]} · weekend ${names(order.filter(i => d.weekend.includes(i)))}`,
+      `<div class="bed-lab">Week starts on</div>${dayBtns("data-calweek", i => i === d.weekStart)}
+       <div class="bed-lab">🎉 Weekend days <small>(days off school)</small></div>${dayBtns("data-bedwe", i => d.weekend.includes(i))}`)}
+    ${sec("start", "☀️ Day starts", `${hm(d.start.wd)} · weekend ${hm(d.start.we)}`,
+      `<div class="bed-lab">📚 School days <small>(${names(schoolDays)})</small></div>${step("start|wd", d.start.wd)}
+       <div class="bed-lab">🎉 Weekend days <small>(${names(order.filter(i => d.weekend.includes(i)))})</small></div>${step("start|we", d.start.we)}`)}
+    ${sec("end", "🌙 Day ends", `${hm(d.all.wd)} · weekend ${hm(d.all.we)}${owners.length ? ` · own: ${safe(owners.join(", "))}` : ""}`,
+      `<p class="hint">Nothing is planned for the kids after this time. The same for every kid; change one kid only if needed.</p>
+       <div class="bed-lab">📚 School nights <small>(${names(nightsOf(false))})</small></div>${step("all|wd", d.all.wd)}
+       <div class="bed-lab">🎉 Weekend nights <small>(${names(nightsOf(true))})</small></div>${step("all|we", d.all.we)}${kidRows}`)}
+    ${sec("school", "🏫 School", sc.on ? `${hm(sc.start)}–${hm(sc.end)}${sc.short != null ? ` · ${SHORT[sc.short]} ${hm(sc.shortEnd)}` : ""}` : "not shown",
+      `<label class="bed-tick"><input type="checkbox" data-calschool ${sc.on ? "checked" : ""}><span>Show school on the calendar<br><small>Nothing is planned in school time.</small></span></label>
+       ${sc.on ? `<div class="bed-lab">Starts at</div>${step("school|start", sc.start)}<div class="bed-lab">Ends at</div>${step("school|end", sc.end)}
+         <div class="bed-lab">A shorter day? <small>(tap it; tap again for none)</small></div>${dayBtns("data-calshort", i => i === sc.short, schoolDays)}
+         ${sc.short != null ? `<div class="bed-lab">${DAYS[sc.short]} ends at</div>${step("school|shortEnd", sc.shortEnd)}` : ""}` : ""}`)}
+    <button type="button" class="save-btn bed-save" data-bedsave>💾 Save and plan again</button></div>`;
 }
 const bedRowsHtml = () => calBoxHtml();   // (older name)
 function redrawBedBox() { document.querySelectorAll(".bed-box").forEach(b => b.outerHTML = calBoxHtml()); }
@@ -223,7 +228,7 @@ function saveCalBox(d) {
   data.calSetup = true;
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest && e.target.closest("[data-bedstep], [data-bedwe], [data-calweek], [data-calshort], [data-calschool], [data-bedkid], [data-bedown], [data-bedsame], [data-bedsave]");
+  const b = e.target.closest && e.target.closest("[data-calsec], [data-bedstep], [data-bedwe], [data-calweek], [data-calshort], [data-calschool], [data-bedkid], [data-bedown], [data-bedsame], [data-bedsave]");
   if (!b || !b.closest(".bed-box") || !isParentId(me)) return;
   const d = calDraftNow(), ds = b.dataset;
   if (ds.bedstep) {
@@ -236,6 +241,7 @@ document.addEventListener("click", e => {
   if (ds.calweek) d.weekStart = Number(ds.calweek);
   if (ds.calshort) d.school.short = d.school.short === Number(ds.calshort) ? null : Number(ds.calshort);
   if ("calschool" in ds) d.school.on = b.checked;
+  if (ds.calsec) d.sec = d.sec === ds.calsec ? null : ds.calsec;
   if (ds.bedkid) d.open = d.open === ds.bedkid ? null : ds.bedkid;
   if (ds.bedown) d.kids[ds.bedown] = { ...d.all };
   if (ds.bedsame) d.kids[ds.bedsame] = null;

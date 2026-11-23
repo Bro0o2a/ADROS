@@ -3499,3 +3499,12 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .bed-tick { display: flex; align-items: center; gap: 10px; font-weight: 800; padding: 10px 12px; border-radius: 14px; background: #fbf3e9; border: 2px solid #ecdccb; cursor: pointer; }
 .bed-tick input { width: 24px; height: 24px; flex: none; margin: 0; accent-color: #ec8466; }
 .bed-tick small { font-weight: 600; color: var(--muted, #8a7a70); }
+/* 🗂️ v213 Calendar setup: closed parts (title + answer), tap to open */
+.bed-sec { border: 2px solid #ecdccb; border-radius: 16px; background: #fffaf6; }
+.bed-sec.open { border-color: #ec8466; }
+.bed-sechead { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "t c" "s c"; width: 100%; gap: 2px 8px; padding: 12px 14px; min-height: 56px;
+  background: none; border: 0; box-shadow: none; color: inherit; text-align: left; }
+.bed-sect { grid-area: t; font-weight: 800; font-size: 17px; }
+.bed-secsum { grid-area: s; font-size: 14px; color: var(--muted, #8a7a70); }
+.bed-chev { grid-area: c; align-self: center; font-size: 20px; font-weight: 800; }
+.bed-secbody { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 14px; }
