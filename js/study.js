@@ -149,7 +149,8 @@ function topicsCardHtml(s, f, parent) {
 // ("Adding fractions" ≠ "Equivalent fractions" in the unit "Fractions": only "fractions" is shared)
 function partSame(a, b, unit) {
   if (sameTopicTitle(a, b)) return true;
-  const U = new Set(topicWords(unit || "").map(curStem)), w = t => [...new Set(topicWords(t).filter(x => x.length > 2).map(curStem))].filter(x => !U.has(x));
+  if (isPlacementTitle(a) || isPlacementTitle(b)) return false;
+  const U = new Set(topicWords(unit || "").map(curRoot).map(curStem)), w = t => [...new Set(topicWords(t).map(curRoot).filter(x => x.length > 2).map(curStem))].filter(x => !U.has(x));
   const A = w(a), B = new Set(w(b));
   if (!A.length || !B.size) return false;
   const both = A.filter(x => B.has(x)).length;
@@ -246,7 +247,7 @@ function topicHistoryHtml(t) {
 function topicOffCurr(s, sid, title) {
   const m = s.map && s.map[sid];
   if (!m || !m.list.length) return false;
-  return !m.list.some(u => curSame(title, u.title) || (u.parts || []).some(p => curSame(title, p) || partSame(title, p, u.title)));
+  return !m.list.some(u => curLoose(title, u.title) || (u.parts || []).some(p => curLoose(title, p) || partSame(title, p, u.title)));
 }
 // ⚠️ The parents' warning on 📚 Topics: the uploaded topics that are not in the curriculum (☑ Tick them → 🗑 Delete)
 function offCurrHtml(kid, s, f, all) {
@@ -816,25 +817,58 @@ function mapCardHtml(kid, f) {
 // Two titles match when they're the same topic (sameTopicTitle), or half of the shorter one's words are in the other
 // (words compared by their first 5 letters, so "digestion" = "digestive").
 const curStem = w => w.slice(0, 5);
-function curSame(a, b) {
+// 🔧 v217 (store review): smarter matching. The same root counts as one word (add / adding / addition), words every
+// topic has (writing, numbers, test, review …) don't make a match, a 🧪 placement test never matches,
+// and a school topic goes to the official topic it matches BEST (not the first one sharing a word).
+const CUR_ROOTS = [[/^(add|adding|added|addition)$/, "add"], [/^(subtract|subtracting|subtraction|takeaway)$/, "subtr"],
+  [/^(multiply|multiplying|multiplication|multiple|times)$/, "multi"], [/^(divide|dividing|division|divisible)$/, "divid"],
+  [/^(write|writing|written|writer)$/, "write"], [/^(read|reading|reader)$/, "read"]];
+const CUR_GENERIC = new Set(["number", "write", "read", "test", "check", "review", "revise", "revision", "unit", "end", "start", "starting",
+  "new", "topic", "our", "practice", "practise", "skill", "finish", "finishing", "complete", "lesson", "learning", "learn", "work", "week",
+  "part", "assessment", "understanding", "understand", "different", "kind", "type", "more", "what", "how", "about", "from", "into", "their", "your", "them", "they", "this", "that", "use"]);
+const curRoot = w => { const r = CUR_ROOTS.find(([re]) => re.test(w)); return r ? r[1] : w; };
+const isPlacementTitle = t => /placement|🧪/i.test(String(t || ""));
+// The words that say what a topic is about (roots, first 5 letters). loose = keep the subject words (writing, numbers …)
+function curWords(t, loose) {
+  return [...new Set(topicWords(t).map(curRoot).filter(w => w.length > 2 && (loose ? !/^(test|check|review|unit|end|start|starting|new|topic|our|assessment|finish|finishing|complete|lesson|week)$/.test(w) : !CUR_GENERIC.has(w))).map(curStem))];
+}
+// How well a school topic matches an official one: 0 = no match … 1 = the same
+function curScore(a, b) {
+  if (isPlacementTitle(a) || isPlacementTitle(b)) return 0;
+  if (sameTopicTitle(a, b)) return 1;
+  const A = curWords(a), B = new Set(curWords(b));
+  if (!A.length || !B.size) return 0;
+  const both = A.filter(w => B.has(w)).length, small = Math.min(A.length, B.size), share = both / small;
+  const ok = (both >= 2 && share >= 0.5) || (small === 1 && both === 1) || share >= 0.67;
+  return ok ? Math.min(0.99, share * 0.9 + both * 0.02) : 0;
+}
+function curSame(a, b) { return curScore(a, b) > 0; }
+// The official topic (from list) a school topic matches best, or null
+function curBestOf(title, list) {
+  let best = null, top = 0;
+  (list || []).forEach(t => { const sc = curScore(title, t.title); if (sc > top) { top = sc; best = t; } });
+  return best;
+}
+// (⚠️ "not in the curriculum" is a warning that invites deleting: it stays LOOSE, any real word in common = in the curriculum)
+function curLoose(a, b) {
+  if (isPlacementTitle(a)) return true;
   if (sameTopicTitle(a, b)) return true;
-  const A = [...new Set(topicWords(a).filter(w => w.length > 2).map(curStem))], B = new Set(topicWords(b).filter(w => w.length > 2).map(curStem));
-  if (!A.length || !B.size) return false;
-  const both = A.filter(w => B.has(w)).length, small = Math.min(A.length, B.size);
-  return both >= 1 && both / small >= 0.5;
+  const B = new Set(curWords(b, true));
+  return curWords(a, true).some(w => B.has(w));
 }
 // The official topic a school topic matches (or null); no official list yet → undefined
 function curMatchOf(kid, sid, title) {
   const m = schoolOf(kid).map[sid];
   if (!m || !m.list.length) return undefined;
-  return m.list.find(t => curSame(title, t.title)) || null;
+  return curBestOf(title, m.list);
 }
 // 🌍 The brief: ✅ done and matched · ⏭️ the next lesson · ⚠️ the risks (behind / weak) · 🔜 coming later · ➕ extra (not in the curriculum)
 function curBriefHtml(kid, f) {
   const s = schoolOf(kid), m = s.map[f.id];
   if (!m || !m.list.length) return "";
   const rows = topicRows(kid, s, f), done = r => r.info.results.length > 0;
-  const off = m.list.map((t, i) => { const mine = rows.filter(r => curSame(r.title, t.title)), tried = mine.filter(done);
+  const bestOf = new Map(rows.map(r => [r.id, curBestOf(r.title, m.list)]));   // (🔧 v217 each school topic counts for ONE official topic, its best match)
+  const off = m.list.map((t, i) => { const mine = rows.filter(r => bestOf.get(r.id) === t), tried = mine.filter(done);
     const pct = tried.length ? Math.round(tried.reduce((n, r) => n + meanPct(r.info.results.slice(-3).map(x => x.pct)), 0) / tried.length) : null;
     return { ...t, i, mine, practised: tried.length > 0, pct, weak: tried.some(r => r.st === "needs") || (pct != null && pct < 60) }; });
   // Where the class is: the official "now" topics (else: the last topic he has). Before it and not practised = ⚠️ behind; after it = 🔜 later.
@@ -845,7 +879,7 @@ function curBriefHtml(kid, f) {
   // 📍 now in class = the official "now" topics · ⏭️ the next lesson = the first topic after them that isn't practised yet
   const nowList = off.filter(t => t.now), nextUp = off.filter(t => t.i > lastNow && !t.practised).slice(0, 3);
   const next3 = nextUp.length ? nextUp : off.filter(t => !t.practised).slice(0, 3);
-  const extra = rows.filter(r => !m.list.some(t => curSame(r.title, t.title)));
+  const extra = rows.filter(r => !bestOf.get(r.id));
   const pctAll = Math.round(matched.length / off.length * 100);
   // (v162: one simple screen: the bar, where the class is, what's not done yet + ONE button; the rest folded)
   const notDone = [...behind, ...inSchool, ...nowList.filter(t => !t.practised && !behind.includes(t) && !inSchool.includes(t))];
