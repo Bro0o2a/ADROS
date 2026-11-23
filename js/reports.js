@@ -74,13 +74,12 @@ function drawReport() {
   if (!kids.some(k => k.id === rpKid)) rpKid = (kids[0] || {}).id || null;
   if (!rpKid) { $("reportBody").innerHTML = `<div class="card"><p class="sc-empty">No kids yet. Add one in ☰ More → 👨‍👩‍👧 Family.</p></div>`; return; }
   const b = schoolOf(rpKid).brief, briefNow = b && b.date >= data.points.week;
-  $("reportBody").innerHTML = `<div class="chips rp-kids">${kids.map(k => { const c = colorsOf(k); return `<button class="chip ${k.id === rpKid ? "on" : ""}" data-rpkid="${safe(k.id)}"
+  $("reportBody").innerHTML = `${fsButtonsHtml()}<div class="chips rp-kids">${kids.map(k => { const c = colorsOf(k); return `<button class="chip ${k.id === rpKid ? "on" : ""}" data-rpkid="${safe(k.id)}"
       style="--soft:${c.soft};--ink:${c.ink}"><span class="e">${safe(k.emoji)}</span>${safe(k.name)}</button>`; }).join("")}</div>
     <div class="seg rp-range" role="group" aria-label="Period"><button class="${rpRange === "week" ? "on" : ""}" data-rprange="week" aria-pressed="${rpRange === "week"}">This week</button>
       <button class="${rpRange === "month" ? "on" : ""}" data-rprange="month" aria-pressed="${rpRange === "month"}">This month</button></div>
     ${reportCardsHtml(rpKid, false)}
-    <div class="btnrow rp-btns">${briefNow ? "" : `<button data-rpbrief data-aiwait="brief">🤖 Coach summary</button>`}<button class="primary" data-rppdf>📄 PDF</button></div>
-    ${fsButtonsHtml()}`;
+    <div class="btnrow rp-btns">${briefNow ? "" : `<button data-rpbrief data-aiwait="brief">🤖 Coach summary</button>`}<button class="primary" data-rppdf>📄 PDF</button></div>`;   // (📄 Family summary: at the top since v223)
   showAiWait();
 }
 // =====================================================================

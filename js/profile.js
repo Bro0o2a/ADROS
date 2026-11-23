@@ -728,11 +728,21 @@ function hallSave(week, id, gift) {
   data.points.hall[week] = { ...hallEntry(userById(id)), gift: gift !== undefined ? gift : (old && old.id === id ? old.gift : ""), by: old && old.by === "parent" ? "parent" : "auto" };
 }
 function hallWeeks() {
-  const out = [];
-  // Week 1 = the family's first saved star week (our first family: HALL_START), or the week they started
-  const saved = Object.keys(data.points.hall || {}).filter(isYmd).sort();
-  const first = saved.length ? saved[0] : isYmd(data.points.since) ? pointsWeekOf(fromYmd(data.points.since)) : data.points.week;
-  for (let dt = fromYmd(first); ymd(dt) <= data.points.week; dt.setDate(dt.getDate() + 7)) out.push(ymd(dt));
+  // 🗓️ v223: the weeks that HAVE a star (saved, announced, in the history) + this week, and the weeks in
+  //    between when they're a whole number of weeks apart. (Before: every 7 days from the first saved week only, so after the week
+  //    start moved from Monday to Saturday the Saturday weeks never matched and their stars showed "⭐ ?".)
+  const have = [...Object.keys(data.points.hall || {}), ...Object.entries(data.points.prizeMsg || {}).filter(([, r]) => r && r.star).map(([w]) => w),
+    ...data.points.history.filter(x => x.fair != null && x.winners && x.winners.length).map(x => x.week)]
+    .filter(w => isYmd(w) && w <= data.points.week);
+  if (!have.length && isYmd(data.points.since)) have.push(pointsWeekOf(fromYmd(data.points.since)));
+  const list = [...new Set([...have, data.points.week])].sort(), out = [];
+  list.forEach((w, i) => {
+    out.push(w);
+    const next = list[i + 1];
+    if (!next) return;
+    const gap = Math.round((fromYmd(next) - fromYmd(w)) / 864e5);
+    if (gap % 7 === 0) for (let d = 7; d < gap; d += 7) out.push(addDaysYmd(w, d));   // (a week nobody won: "⭐ ?")
+  });
   return out;   // (oldest first: Week 1, Week 2 …)
 }
 // That week's star: { name, emoji, id?, gift? } or null ("⭐ ?"). (👨‍👩‍👧 an older parent star isn't shown: "⭐ ?")
@@ -790,7 +800,7 @@ function hallTap(ds) {
 // ---------- Points screen ----------
 function drawPoints() {
   const totals = pointsByUser(), acts = activityPointsByUser(), star = stars(), from = data.points.week, to = weekEnd();
-  $("ptsWeek").textContent = `${weekLabel(data.points.week)} · ✅ Tasks: activities, school work, duties · ⭐ Habits: good habits, prayers, My day · 🧩 Fun: wishes · only kids are scored · starts again every Monday`;
+  $("ptsWeek").textContent = `${weekLabel(data.points.week)} · ✅ Tasks: activities, school work, duties · ⭐ Habits: good habits, prayers, My day · 🧩 Fun: wishes · only kids are scored · starts again every ${DAYS[(starTime().day + 1) % 7]} (after the ⭐ on ${DAYS[starTime().day]})`;
   // ⭐ The order and the bar: the OVERALL score (see SCORE); the old points stay in ✅ · ⭐ · 🧩
   const fi = fairInfo(), fair = Object.fromEntries(Object.entries(fi).map(([id, x]) => [id, x.fair]));
   const sorted = fairOrder(fair);

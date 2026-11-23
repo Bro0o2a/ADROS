@@ -684,6 +684,10 @@ function newWeek() {
     if (list.length && !data.points.studyWeeks[`${data.points.week}|${u.id}`]) data.points.studyWeeks[`${data.points.week}|${u.id}`] = studyWeekOf(list); });
   // ⭐ The star(s) by the ⚖️ fair score; the history keeps their raw points (and the fair score)
   if (win.length && !data.points.hall[data.points.week]) hallSave(data.points.week, win[0]);   // 🏆
+  // 🌟 v223: nobody opened the app between the announcement (Friday) and the new week: announce it now, so the star still gets
+  //    the 🌟 badge, the pop-up on every device and the 🎁 gift question (before, only the history and the Hall had it)
+  if (win.length && !data.points.prizeMsg[data.points.week]) data.points.prizeMsg[data.points.week] = { star: win.join(",").slice(0, 200), text: "",
+    at: new Date().toISOString(), board: fairOrder(fair).map(u => ({ id: u.id, s: fair[u.id] })) };
   if (win.length) data.points.history.unshift({
     week: data.points.week, points: best, fair: fair[win[0]], max: scoreOf(win[0]).max,
     // (each winner's ✅ ⭐ 🧩 too; older history has only the total)
