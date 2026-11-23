@@ -176,7 +176,7 @@ const SCORE_WEIGHTS = { marks: 0.80, ticks: 0.20 };   // (v208: 📝 worksheets 
 const WS_POINTS = 10, WS_SESSION_PLUS = 1.05, WS_MAX = 80;
 // An activity's type: the one picked in ✏️ Add activities (older ones got theirs once, see defaultActType)
 const actTypeOf = a => defaultActType(a);
-const actTypeInfo = k => ACT_TYPES.find(t => t[0] === k) || ACT_TYPES.find(t => t[0] === "other");
+const actTypeInfo = k => allActTypes().find(t => t[0] === k) || ACT_TYPES.find(t => t[0] === "other");
 // The score's parts: the activity types + 🎓 Level (not an activity type)
 const scorePartInfo = k => k === "marks" ? ["marks", "📝", "Worksheets"] : k === "ticks" ? ["ticks", "✅", "Ticks"] : k === "level" ? ["level", "🎓", "Level"] : actTypeInfo(k);
 // One type, one person, this week SO FAR: the planned items (days up to today; today's only once they've started, Dubai time)
@@ -441,7 +441,7 @@ function studyTableHtml(kid, only) {
     <tbody>${names.map(n => `<tr><th>${safe(n)}</th>${weeks.map(w => cell(w, n)).join("")}</tr>`).join("")}${!only && names.length > 1 ? `<tr><th>All subjects</th>${weeks.map(w => cell(w, null)).join("")}</tr>` : ""}</tbody></table></div>`;
 }
 // ⚽ ACTIVITY sub-score (0–100). FOR NOW: % of this week's planned activity items (so far) that are ticked. (These rules will change later.)
-function activityScore(id) { return tallyPct(typeTally(id, "activity")); }
+function activityScore(id) { const a = typeTally(id, "activity"), b = typeTally(id, "sport"); return tallyPct({ planned: a.planned + b.planned, done: a.done + b.done }); }   // (🏊 v213 Sports count as activity)
 // 🌱 HABIT sub-score (0–100). FOR NOW: % of this week's planned habit items (so far) that are ticked. (These rules will change later.)
 function habitScore(id) { return tallyPct(typeTally(id, "habit")); }
 // Everything for one person: the 3 sub-scores, which types they have items of, the OVERALL and their MAX
@@ -488,7 +488,7 @@ function ticksTally(id) {
     day.items.forEach(it => {
       if (!it.users.includes(id)) return;
       const a = acts.find(x => x.id === baseActId(it.actId));
-      if (!a || !["study", "activity", "habit"].includes(actTypeOf(a))) return;
+      if (!a || !isScoredType(actTypeOf(a))) return;
       const ok = isDone(day.date, it.actId, id);
       if (day.date === today && !ok) return;
       planned++; if (ok) done++;

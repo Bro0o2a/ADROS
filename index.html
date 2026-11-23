@@ -20,7 +20,7 @@
      This section only controls colors, sizes and spacing.
      ============================================================ -->
 <!-- THE LOOK (all the CSS) is in css/app.css -->
-<link rel="stylesheet" href="css/app.css?v=212">
+<link rel="stylesheet" href="css/app.css?v=213">
 </head>
 <body>
 <!-- ============================================================
@@ -107,8 +107,9 @@
         <small class="needs-help">That parent must be free at this time too.</small>
       </div>
       <div id="fxPickWrap">
-        <label class="small">Can be done at the same time as (optional)</label>
-        <div class="pick-list" id="fxOverlapList"></div>
+        <!-- 🤝 v213 (Broo2a): closed; tap to open the checklist (the button shows how many are ticked) -->
+        <button type="button" class="pick-toggle" data-picktoggle="fxOverlapList" aria-expanded="false" aria-controls="fxOverlapList">🤝 Can be done at the same time as <b class="pick-count">none</b> <span class="pick-chev">▾</span></button>
+        <div class="pick-list" id="fxOverlapList" hidden></div>
       </div>
       <div class="btnrow">
         <button class="primary" id="fxAdd">💾 Save</button>
@@ -152,8 +153,9 @@
         <small class="needs-help">That parent must be free at this time too.</small>
       </div>
       <div id="flPickWrap">
-        <label class="small">Can be done at the same time as (optional)</label>
-        <div class="pick-list" id="flOverlapList"></div>
+        <!-- 🤝 v213 (Broo2a): closed; tap to open the checklist (the button shows how many are ticked) -->
+        <button type="button" class="pick-toggle" data-picktoggle="flOverlapList" aria-expanded="false" aria-controls="flOverlapList">🤝 Can be done at the same time as <b class="pick-count">none</b> <span class="pick-chev">▾</span></button>
+        <div class="pick-list" id="flOverlapList" hidden></div>
       </div>
       <div class="btnrow">
         <button class="primary" id="flAdd">💾 Save</button>
@@ -192,6 +194,9 @@
     </div>
     <ul class="list add-list" id="rtList"></ul>
   </div>
+  <!-- 🏷️ v213 Activity types: the built-in ones + the family's own (parents add: emoji, name, counts in the score?). Filled by drawTypes (activities.js) -->
+  <button class="add-sec" id="secTyBtn" data-addsec="ty" aria-expanded="false" aria-controls="tyCard"><span class="e">🏷️</span><b>Activity types</b><span class="add-count" id="tyCount"></span></button>
+  <div class="card add-panel" id="tyCard" hidden></div>
   </div>
   <!-- Save bar: changes on this page are a draft until you tap Save -->
   <div class="savebar">
@@ -268,8 +273,14 @@
   <div class="card feat-card" id="featCard"></div>
   <div class="two-col">
     <div>
+      <!-- 📅 v213 Calendar setup (week, weekend, day start / end, bedtimes, school): filled by drawBedtimes (settings.js) -->
+      <div class="card bed-set">
+        <h2>📅 Calendar setup</h2>
+        <p class="hint">The planner uses this for every week. To change one night only, tap the 🌙 line on the calendar.</p>
+        <div id="bedSet"></div>
+      </div>
       <!-- My day -->
-      <div class="card">
+      <div class="card" style="margin-top:18px">
         <h2>🕗 My day</h2>
         <p class="hint">When does each day start and end? Free time = the day minus fixed activities and routines.
           The planner never puts anything before the start or after the end, and the calendar shows only that time.</p>
@@ -299,10 +310,6 @@
           <div><label class="small" for="starClock">Time (Dubai)</label><input type="time" id="starClock" value="15:30"></div>
         </div>
         <div class="setting" style="margin-top:14px">
-          <label for="calWeekStart">📅 The week calendar starts on</label>
-          <select id="calWeekStart"></select>
-        </div>
-        <div class="setting" style="margin-top:14px">
           <label for="extraLimit">🤖 Extra worksheets per kid per day</label>
           <select id="extraLimit"><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
         </div>
@@ -318,10 +325,6 @@
             <div><label class="small" for="previewClock">Time (Dubai)</label><input type="time" id="previewClock" value="09:00"></div>
           </div>
         </div>
-        <!-- 🌙 v180 Bedtimes (one per kid): filled by drawBedtimes (settings.js) -->
-        <div class="setting bed-set" style="margin-top:14px"><b>🌙 Bedtime: planning stops at</b>
-          <p class="hint" style="margin:4px 0 6px">Nothing is planned for a kid after this time, and nothing can be moved after it. To change one night only, tap the 🌙 line on the calendar.</p>
-          <div id="bedSet"></div></div>
         <p class="hint" style="margin:8px 0 0">At this time everyone gets a pop-up with the results and the ⭐ Shining Star.
           The new week (scores back to zero) starts at midnight after it. Changing it starts the new count from today's week.</p>
       </div>
@@ -348,12 +351,6 @@
       </div>
     </div>
     <div>
-      <!-- 👨‍👩‍👧 Family: the kids' codes, school and year; add a parent -->
-      <div class="card" style="margin-bottom:18px">
-        <h2>👨‍👩‍👧 Family</h2>
-        <p class="hint">Each kid's code (for their own phone), their school and year. Add a second parent.</p>
-        <button class="primary" data-go="family">👨‍👩‍👧 Open Family</button>
-      </div>
       <!-- People -->
       <div class="card">
         <h2>👨‍👩‍👧‍👦 People</h2>
@@ -907,23 +904,23 @@
 <!-- 🕌 adhan: works out the prayer times on the device (sw.js keeps a copy, so it also works offline) -->
 <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js"></script>
 <!-- THE BRAIN: the app's JavaScript, split by feature in the js/ folder (they load in this order; see CLAUDE.md) -->
-<script src="js/core.js?v=212"></script>
-<script src="js/screens.js?v=212"></script>
-<script src="js/points.js?v=212"></script>
-<script src="js/fun.js?v=212"></script>
-<script src="js/reports.js?v=212"></script>
-<script src="js/profile.js?v=212"></script>
-<script src="js/home.js?v=212"></script>
-<script src="js/activities.js?v=212"></script>
-<script src="js/calendar.js?v=212"></script>
-<script src="js/school.js?v=212"></script>
-<script src="js/ai.js?v=212"></script>
-<script src="js/pictures.js?v=212"></script>
-<script src="js/study.js?v=212"></script>
-<script src="js/settings.js?v=212"></script>
-<script src="js/taps.js?v=212"></script>
-<script src="js/cloud.js?v=212"></script>
-<script src="js/news.js?v=212"></script>
-<script src="js/start.js?v=212"></script>
+<script src="js/core.js?v=213"></script>
+<script src="js/screens.js?v=213"></script>
+<script src="js/points.js?v=213"></script>
+<script src="js/fun.js?v=213"></script>
+<script src="js/reports.js?v=213"></script>
+<script src="js/profile.js?v=213"></script>
+<script src="js/home.js?v=213"></script>
+<script src="js/activities.js?v=213"></script>
+<script src="js/calendar.js?v=213"></script>
+<script src="js/school.js?v=213"></script>
+<script src="js/ai.js?v=213"></script>
+<script src="js/pictures.js?v=213"></script>
+<script src="js/study.js?v=213"></script>
+<script src="js/settings.js?v=213"></script>
+<script src="js/taps.js?v=213"></script>
+<script src="js/cloud.js?v=213"></script>
+<script src="js/news.js?v=213"></script>
+<script src="js/start.js?v=213"></script>
 </body>
 </html>

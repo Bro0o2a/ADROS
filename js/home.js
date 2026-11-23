@@ -135,9 +135,9 @@ function needsItems() {
   if (cu.length) out.push({ key: "coming", text: `📌 Coming up: ${cu.slice(0, 2).map(e => `${whenWord(e.days).toLowerCase()} ${e.title} (${kidNameOf(e.kid)})`).join(", ")}${cu.length > 2 ? ` +${cu.length - 2}` : ""}`,
     html: comingCardHtml(cu, true) });
   // 🌙 v212 (Broo2a): a kid with no bedtime: ask for the time planning stops (nothing is planned or moved after it)
-  const noBed = isParentId(me) ? kidsList().filter(k => !k.bed) : [];
-  if (noBed.length) out.push({ key: "bed", text: `🌙 Set when planning stops for ${noBed.map(k => k.name).join(", ")}`,
-    html: `<div class="card bed-set"><p><b>🌙 Bedtime: planning stops at</b></p><p class="hint">Nothing is planned for a kid after this time. Pick school nights and weekend nights.</p>${bedRowsHtml(noBed)}</div>` });
+  const noBed = isParentId(me) && !data.calSetup && kidsList().length ? kidsList() : [];   // (📅 v213 until the Calendar setup box is saved once)
+  if (noBed.length) out.push({ key: "calsetup", text: "📅 Set up the calendar: weekend, day start and end, school",
+    html: `<div class="card bed-set"><p><b>📅 Calendar setup</b></p><p class="hint">Fill this once. The planner uses it for every week. You can change it later in ⚙️ Settings.</p>${calBoxHtml()}</div>` });
   const nl = newsletterDue();
   if (nl.length) out.push({ key: "nl", text: `📰 Newsletter for ${nl.map(k => k.name).join(", ")}`, html: newsletterNudgeHtml() });
   return out;
@@ -222,39 +222,69 @@ function kidCardHtml(k) {
 //   Each row = a title + one short line + ›. No pictures (Broo2a: simpler and more professional).
 const hubAttr = t => t.attr ? t.attr : t.plan ? "data-plan" : t.extra ? `data-extra="${t.extra}"` : t.tour ? "data-tour"
   : t.privacy ? "data-privacy" : t.profile ? "data-profile" : `data-go="${t.go}"`;
-const hubRowHtml = t => `<button class="hub-row${t.cls ? " " + t.cls : ""}" ${hubAttr(t)}><span class="hub-t"><b>${t.label}${t.badge ? ` <i class="hub-new">${t.badge}</i>` : ""}</b>
+// (🗂️ v213 Broo2a: a line with its own options = small buttons under its name)
+const hubRowHtml = t => t.opts ? `<div class="hub-row hub-opts"><span class="hub-t"><b>${t.label}${t.badge ? ` <i class="hub-new">${t.badge}</i>` : ""}</b><small>${t.sub}</small></span>
+  <span class="hub-chips">${t.opts.map(([attr, l]) => `<button type="button" class="pill small" ${attr}>${l}</button>`).join("")}</span></div>` : `<button class="hub-row${t.cls ? " " + t.cls : ""}" ${hubAttr(t)}><span class="hub-t"><b>${t.label}${t.badge ? ` <i class="hub-new">${t.badge}</i>` : ""}</b>
   <small>${t.sub}</small></span><span class="hub-go" aria-hidden="true">›</span></button>`;
 function familyRowHtml() {
   const n = feat("meeting") ? cmNewCount() : 0, dad = isParentId(me);
   const groups = [
-    ["Plan the week", [{ attr: "data-calall", label: "Family calendar", sub: "Everyone's week in one place", cls: "hub-main" },
+    ["Plan the week", [{ label: "📅 Family calendar", sub: "Everyone's week in one place", cls: "hub-main", opts: [["data-calall", "👀 Show"], ...(hasPlan() ? [["data-printfamily", "🖨️ Print"]] : [])] },
+      ...(dad ? [{ attr: "data-calsetopen", label: "⚙️ Calendar settings", sub: safe(calSetupSummary()) }] : []),
       // 🔍 v180: the sessions the plan couldn't fit, with fixes to tap
       ...(dad && hasPlan() ? (m => [{ attr: "data-missed", label: "Missed sessions", sub: m ? "Didn't fit this week: see how to fit them" : "Everything fit this week 🎉", badge: m ? `${m} missing` : "" }])(missedSessions().reduce((n, x) => n + x.missing, 0)) : []),
-      { go: "add", label: "Add activities", sub: "School, clubs, work, sports" },
+      { label: "➕ Add activities", sub: "School, clubs, work, sports", opts: [['data-addopen="fx"', "📌 Fixed"], ['data-addopen="fl"', "🔄 Flexible"],
+        ...(dad ? [['data-addopen="rt"', "🧺 Routines"], ['data-addopen="ty"', "🏷️ Types"]] : [])] },
       ...(dad ? [{ plan: true, label: "Plan my week", sub: "Fit all the activities together" }] : []),
-      { attr: "data-onedaynew", label: "One-day event", sub: "Something on one date only" },
-      ...(hasPlan() ? [{ attr: "data-newplan", label: "Make a new plan", sub: "Start again from today (ticks stay)" }] : [])]],
+      { attr: "data-onedaynew", label: "One-day event", sub: "Something on one date only" }]],   // (🔄 Make a new plan: on top of the calendar)
     ["The kids", [{ attr: "data-report", label: "How are my kids doing?", sub: "Scores, study and habits" },
       { attr: 'data-go="kidswork"', label: "Kids' work today", sub: "Live, as they do it" },
       { attr: 'data-go="points"', label: "Points and leaderboard", sub: "This week's scores" },
       { attr: 'data-fsweek="this"', label: "Family summary: this week", sub: "A PDF to read or print" },
       { attr: 'data-fsweek="last"', label: "Family summary: last week", sub: "A PDF to read or print" }]],
-    ["Family", [...(feat("meeting") ? [{ extra: "meeting", label: "Our Community", sub: "Family notes and requests", badge: n ? `${n} new` : "" }] : []),
+    ["Family", [...(dad ? [{ go: "family", label: "👨‍👩‍👧 Family members", sub: "Add a kid or a parent · names · sign-in codes" }] : []),
+      { profile: true, label: "👥 Family profiles", sub: "Everyone's picture, birthday, Spark and week" }, ...(feat("meeting") ? [{ extra: "meeting", label: "Our Community", sub: "Family notes and requests", badge: n ? `${n} new` : "" }] : []),
       ...(feat("chores") ? [{ extra: "chores", label: "Home duties", sub: "Jobs at home" }] : []),
       ...(feat("diary") ? [{ attr: 'data-dyopen=""', label: "My day", sub: "How do you feel today?" }] : [])]],
-    ["Settings", [{ profile: true, label: "My profile", sub: "My name, picture and settings" },
-      ...(dad ? [{ attr: "data-backup", label: "Backup", sub: "Keep a safe copy of the family's data" }] : []),
+    // (👤 v213 Broo2a: My profile is in Family → 👥 Family profiles now)
+    ["Settings", [...(dad ? [{ attr: "data-backup", label: "Backup", sub: "Keep a safe copy of the family's data" }] : []),
       { attr: "data-setupopen", label: "Edit my home", sub: "Turn features on or off" },
-      { ...PRIVACY_TILE, sub: "Who can see your data" }, { ...TOUR_TILE, sub: "How the app works" }]]];
+      { ...PRIVACY_TILE, sub: "Who can see your data" }, { ...TOUR_TILE, sub: "How the app works" },
+      { attr: "data-askus", label: "💬 Ask us", sub: "A question or an idea? Send us an email" },
+      { attr: "data-signout", label: "🚪 Sign out", sub: "Leave the app on this device" }]]];
   // v159 (Broo2a): each group = ONE big button; tap it and its rows open under it (only one open at a time)
   const look = { "Plan the week": [ico3d("calendar"), "sage", "Calendar, activities, plan"], "The kids": [ico3d("excellent"), "peach", "Reports, scores, work today"],
-    "Family": [ico3d("heart"), "butter", "Community, home duties"], "Settings": [ico3d("paper"), "dusty", "Profile, backup, privacy, help"] };
+    "Family": [ico3d("heart"), "butter", "Members, community, home duties"], "Settings": [ico3d("paper"), "dusty", "Backup, privacy, help, sign out"] };
   return `<div class="hub-groups">` + groups.filter(g => g[1].length).map(([title, rows]) => {
     const [icon, tone, sub] = look[title] || ["•", "sage", ""], badge = rows.some(r => r.badge);
     return `<details class="hub-group hub-${tone}" name="hubg" data-hubg="${title}"${hubOpen === title ? " open" : ""}>
     <summary class="hub-big"><span class="hub-ic" aria-hidden="true">${icon}</span><span class="hub-t"><b>${title}${badge ? ` <i class="hub-new">new</i>` : ""}</b><small>${sub}</small></span><span class="hub-go" aria-hidden="true">›</span></summary>
     <div class="hub-list">${rows.map(hubRowHtml).join("")}</div></details>`; }).join("") + `</div>`;
 }
+// ⚙️ v213 Calendar settings on the home: its answers in one line, and the setup box in a pop-up
+function calSetupSummary() {
+  const work = DAYS.findIndex((_, i) => !weekendDaysOf().includes(i)), st = dayWindow(work < 0 ? 0 : work)[0];   // (a school day's start)
+  const sc = data.fixed.find(f => isSchoolName(f.name) && !f.id.endsWith("-short")), bed = data.bedAll;
+  return `Week starts ${SHORT[calWeekStartOf()]} · Day ${clock(st, true)}${bed ? `–${clock(toMin(bed.wd), true)}` : ""}${sc ? ` · School ${clock(toMin(sc.start), true)}–${clock(toMin(sc.end), true)}` : ""}`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-calsetopen], [data-addopen]"); if (!b || !isParentId(me)) return;
+  if ("calsetopen" in b.dataset) {
+    bedDraft = null;
+    qePop("⚙️ Calendar settings", "", [["Close", null]]);
+    const card = document.querySelector(".qe-pop .qe-popcard"); card.classList.add("cal-popcard");
+    card.querySelector(".qe-popbtns").insertAdjacentHTML("beforebegin", calBoxHtml());
+    return;
+  }
+  const k = b.dataset.addopen;
+  go("add"); addOpen = { fx: false, fl: false, rt: false, ty: false, [k]: true }; addWho = null; drawAddSections();
+  const btn = $({ fx: "secFxBtn", fl: "secFlBtn", rt: "secRtBtn", ty: "secTyBtn" }[k]); if (btn) setTimeout(() => btn.scrollIntoView({ block: "start" }), 50);
+});
+// 💬 v213 Ask us: an email to the app's support address (the phone's email app opens)
+document.addEventListener("click", e => {
+  if (!(e.target.closest && e.target.closest("[data-askus]"))) return;
+  location.href = `mailto:${CONTACT}?subject=${encodeURIComponent(`${APP_NAME}: a question`)}`;
+});
 let hubOpen = "";   // which big button is open (kept when the home redraws)
 document.addEventListener("toggle", e => { const d = e.target; if (d && d.dataset && d.dataset.hubg) { if (d.open) hubOpen = d.dataset.hubg; else if (hubOpen === d.dataset.hubg) hubOpen = ""; } }, true);
 document.addEventListener("click", e => {
@@ -517,7 +547,8 @@ document.addEventListener("click", e => {
 // ☰ More: simple, the same for everyone: 👤 My profile (big: each person's ⚙️ settings, and a parent's 👨‍👩‍👧 Family settings,
 // 🚪 Sign out at its bottom) · 🔒 Your privacy · 👋 Show the tour. (✏️ Add activities and 🖨️ Print are on 📅 Calendar.)
 function moreTilesHtml() {
-  return [{ ...PROFILE_TILE, cls: "primary more-profile", sub: hasSpark(me) ? "My settings, my Spark, my school" : "My settings, my picture" }, PRIVACY_TILE, TOUR_TILE].map(tileHtml).join("");
+  return [{ ...PROFILE_TILE, cls: "primary more-profile", sub: hasSpark(me) ? "My settings, my Spark, my school" : "My settings, my picture" },
+    { profile: true, emoji: "👥", label: "Family profiles", sub: "Everyone's picture, birthday and Spark" }, PRIVACY_TILE, TOUR_TILE].map(tileHtml).join("");
 }
 // 📋 Today: my next activities (not done yet, up to 5) with big ✅ ticks; "See all" opens 📅 Calendar
 function todayItems(who) {

@@ -137,15 +137,77 @@ function drawAdd() {
 }
 // ---------- ✏️ ADD PAGE: closed and simple, three big buttons with counts, each opens its list (accordion) ----------
 // A list's "➕ New …" or a tap on a row opens the form (the forms are hidden otherwise). Opening the page: all closed.
-let addOpen = { fx: false, fl: false, rt: false };
+let addOpen = { fx: false, fl: false, rt: false, ty: false };
+// 🏷️ v213 (Broo2a) ACTIVITY TYPES: the built-in ones, and the family's own (data.actTypes: { key, emoji, name, scored }).
+// A parent adds one (emoji + name + ⭐ counts in the score?) or deletes their own (its activities become ⚽ Activity).
+function drawTypes() {
+  const own = data.actTypes || [];
+  $("tyCard").innerHTML = `<p class="hint">Every activity has a type. ⭐ = counts in the score when it's ticked.</p>
+    <ul class="list ty-list">${allActTypes().map(([k, e, w]) => { const mine = own.find(t => t.key === k);
+      return `<li class="ty-row"><span class="ty-e">${safe(e)}</span><span class="ty-n">${safe(w)}</span><span class="ty-s">${isScoredType(k) ? "⭐ scored" : "not scored"}</span>
+        ${mine ? `<button type="button" class="pill small danger-text" data-tydel="${safe(k)}" aria-label="Delete ${safe(w)}">🗑️</button>` : `<span class="ty-built">built-in</span>`}</li>`; }).join("")}</ul>
+    <div class="ty-new"><b>➕ New type</b>
+      <div class="row"><div style="flex:0 0 84px"><label class="small" for="tyEmoji">Emoji</label><input type="text" id="tyEmoji" maxlength="8" placeholder="🎹"></div>
+        <div><label class="small" for="tyName">Name</label><input type="text" id="tyName" maxlength="24" placeholder="Piano"></div></div>
+      <label class="checkline"><input type="checkbox" id="tyScored" checked> ⭐ Counts in the score when it's ticked</label>
+      <div class="btnrow"><button type="button" class="primary" data-tyadd>➕ Add this type</button></div></div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("#tyCard [data-tyadd], #tyCard [data-tydel]");
+  if (!b || !isParentId(me)) return;
+  if ("tyadd" in b.dataset) {
+    const name = $("tyName").value.trim().slice(0, 24), emoji = $("tyEmoji").value.trim().slice(0, 8) || "🏷️";
+    if (!name) return toast("Type a name for the new type.", 2500);
+    if (allActTypes().some(([, , w]) => w.toLowerCase() === name.toLowerCase())) return toast(`“${name}” is already a type.`, 2500);
+    data.actTypes = [...(data.actTypes || []), { key: "c-" + newId(), emoji, name, scored: $("tyScored").checked }].slice(0, 20);
+    customActTypes = data.actTypes;
+  } else {
+    const k = b.dataset.tydel, t = (data.actTypes || []).find(x => x.key === k); if (!t) return;
+    const used = allActs().filter(a => a.type === k);
+    if (!confirm(`Delete the type “${t.name}”?${used.length ? ` ${used.length} ${used.length === 1 ? "activity becomes" : "activities become"} ⚽ Activity.` : ""}`)) return;
+    used.forEach(a => a.type = "activity");
+    data.actTypes = data.actTypes.filter(x => x.key !== k); customActTypes = data.actTypes;
+  }
+  changed(); drawTypes(); drawAddSections();
+  ["fx", "fl"].forEach(p => { const sel = $(p + "Type"); if (sel) { const v = sel.value; fillTypeSelect(p); sel.value = v; } });
+});
+// 👤 v213 (Broo2a): a button per person on top; tap one = ALL their activities (📌 fixed and 🔄 flexible) in one list
+let addWho = null;   // null = All (the 3 sections as usual)
+function addWhoHtml() {
+  const people = isParentId(me) ? data.users : data.users.filter(u => u.id === me);
+  if (people.length < 2) return "";
+  const btn = (id, label) => `<button type="button" class="pill small${addWho === id ? " on" : ""}" data-addwho="${id ? safe(id) : ""}" aria-pressed="${addWho === id}">${label}</button>`;
+  return `<div class="add-who">${btn(null, "👨‍👩‍👧 All")}${people.map(u => btn(u.id, `${faceHtml(u)} ${safe(u.name)}`)).join("")}</div>`;
+}
+function addWhoListHtml(id) {
+  const has = f => peopleOf(f).includes(id), u = userById(id);
+  const fixed = data.fixed.filter(has).sort((a, b) => (Math.min(...a.days) - Math.min(...b.days)) || toMin(a.start) - toMin(b.start));
+  const flex = data.flexible.filter(has).sort((a, b) => a.name.localeCompare(b.name));
+  const rows = [...fixed.map(f => addRowHtml(f, "fixed", false, `📌 fixed · ${f.days.map(d => SHORT[d]).join(", ")} · ${showTime(toMin(f.start))}–${showTime(toMin(f.end))}`)),
+                ...flex.map(f => addRowHtml(f, "flex", false, `🔄 flexible · ${f.duration} min × ${f.times} a week${f.between ? ` · 🕓 ${betweenText(f.between)}` : ""}`))];
+  return `<div class="card add-who-list"><h3>${faceHtml(u)} ${safe(u.name)}: ${rows.length} ${rows.length === 1 ? "activity" : "activities"}</h3>
+    <ul class="list add-list">${rows.join("") || `<li class="empty">Nothing here yet.</li>`}</ul></div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("#scr-add [data-addwho]"); if (!b) return;
+  addWho = b.dataset.addwho || null; drawAddSections();
+});
 function drawAddSections() {
   const parent = isParentId(me);
+  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="addWho"></div>`);
+  if (addWho && !data.users.some(u => u.id === addWho)) addWho = null;
+  $("addWho").innerHTML = addWhoHtml() + (addWho ? addWhoListHtml(addWho) : "");
+  $("scr-add").querySelector(".add-secs").hidden = !!addWho;
   $("fxCount").textContent = `(${listFor(data.fixed).length})`;
   $("flCount").textContent = `(${listFor(data.flexible).length})`;
   $("rtCount").textContent = `(${data.routines.length})`;
   $("secRtBtn").hidden = !parent;
   if (!parent) addOpen.rt = false;
-  [["fx", "secFxBtn", "secFx"], ["fl", "secFlBtn", "secFl"], ["rt", "secRtBtn", "rtCard"]].forEach(([k, btn, panel]) => {
+  $("secTyBtn").hidden = !parent; if (!parent) addOpen.ty = false;
+  ["fx", "fl"].forEach(p => { const sel = $(p + "Type"), v = sel.value; if (sel.options.length !== allActTypes().length) { fillTypeSelect(p); sel.value = v; } });
+  $("tyCount").textContent = `(${allActTypes().length})`;
+  if (addOpen.ty) drawTypes();
+  [["fx", "secFxBtn", "secFx"], ["fl", "secFlBtn", "secFl"], ["rt", "secRtBtn", "rtCard"], ["ty", "secTyBtn", "tyCard"]].forEach(([k, btn, panel]) => {
     $(panel).hidden = !addOpen[k];
     $(btn).classList.toggle("on", addOpen[k]);
     $(btn).setAttribute("aria-expanded", String(addOpen[k]));
@@ -173,6 +235,18 @@ function addRowHtml(f, kind, editing, what) {
     : `<div class="add-row look">${inner}<span class="tag">👀 shared</span></div>`}</li>`;
 }
 
+// 🤝 v213 the closed "same time as" button: how many are ticked (and their names, when few)
+function pickCount(listId) {
+  const t = document.querySelector(`[data-picktoggle="${listId}"]`); if (!t) return;
+  const on = [...$(listId).querySelectorAll("input:checked")].map(c => (allActs().find(a => a.id === c.value) || {}).name).filter(Boolean);
+  t.querySelector(".pick-count").textContent = !on.length ? "none" : on.length <= 2 ? on.join(", ") : `${on.length} picked`;
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest && e.target.closest("[data-picktoggle]"); if (!t) return;
+  const list = $(t.dataset.picktoggle); list.hidden = !list.hidden;
+  t.setAttribute("aria-expanded", String(!list.hidden)); t.querySelector(".pick-chev").textContent = list.hidden ? "▾" : "▴";
+});
+document.addEventListener("change", e => { const l = e.target.closest && e.target.closest(".pick-list"); if (l && l.id) pickCount(l.id); });
 // A checklist of the other activities (anyone's) that this one can share time with. Dad only.
 // "selected" = which boxes to tick. If not given, keep whatever is ticked right now.
 function drawPickList(listId, selfId, selected) {
@@ -184,6 +258,7 @@ function drawPickList(listId, selfId, selected) {
     ? others.map(a => `<label class="checkline"><input type="checkbox" value="${a.id}" ${selected.includes(a.id) ? "checked" : ""}>
         ${safe(emojisOf(a.users))} ${safe(a.name)}${isFixed(a) ? ` <span class="tag">fixed</span>` : ""}</label>`).join("")
     : `<div class="empty">Add another activity first, then you can pick it here.</div>`;
+  pickCount(listId);
 }
 // Keeps "together" lists two-way: activity "id" now goes with exactly the ones in "wanted",
 // so each of those gets "id" ticked, and every other activity gets it unticked.
@@ -229,8 +304,11 @@ function fxWinNow() { fxWinPending = true; $("fxAdd").click(); }
 // ⭐ The Type picker (📚 Study · ⚽ Activity · 🌱 Habit · 🗂️ Other = non-scored). New: "Activity" ("Other" while the name has "school"),
 // until you pick one yourself; editing: its saved type.
 const typeTouched = { fx: false, fl: false };
+function fillTypeSelect(k) {   // (🏷️ v213 the family's own types too)
+  $(k + "Type").innerHTML = allActTypes().map(([key, e, w]) => `<option value="${safe(key)}">${safe(e)} ${safe(w)}${isScoredType(key) ? "" : " (non-scored)"}</option>`).join("");
+}
 ["fx", "fl"].forEach(k => {
-  $(k + "Type").innerHTML = ACT_TYPES.map(([key, e, w]) => `<option value="${key}">${e} ${w}${key === "other" || key === "free" ? " (non-scored)" : ""}</option>`).join("");
+  fillTypeSelect(k);
   $(k + "Type").value = "activity";
   $(k + "Type").addEventListener("change", () => { typeTouched[k] = true; });
   $(k + "Name").addEventListener("input", () => { if (!typeTouched[k]) $(k + "Type").value = defaultActType({ name: $(k + "Name").value }); });
@@ -307,7 +385,7 @@ function startEditFixed(id) {
   $("fxFormTitle").textContent = `✏️ Edit: ${f.name}`;
   $("fxDel").hidden = false; $("fxDel").dataset.delFixed = id;   // (🗑️ goes through the usual delete: same rules as before)
   $("fxErr").textContent = "";
-  addOpen.fx = true; drawAddSections();
+  addOpen.fx = true; addWho = null; drawAddSections();
   $("fxForm").hidden = false;
   drawFixedList();
   drawPickList("fxOverlapList", editingFixed, f.overlapWith);
@@ -408,7 +486,7 @@ function startEditFlex(id) {
   $("flFormTitle").textContent = `✏️ Edit: ${f.name}`;
   $("flDel").hidden = false; $("flDel").dataset.delFlex = id;   // (🗑️ goes through the usual delete: same rules as before)
   $("flErr").textContent = "";
-  addOpen.fl = true; drawAddSections();
+  addOpen.fl = true; addWho = null; drawAddSections();
   $("flForm").hidden = false;
   drawFlexibleList();
   drawPickList("flOverlapList", editingFlex, f.overlapWith);
@@ -810,7 +888,7 @@ function makePlan(mode = "replan") {
       if (once && (once.off || it.start !== toMin(once.start) || it.end !== toMin(once.end))) return;
       if (it.fixed && !once && (!act.days.includes(weekdayOf(day.date)) || it.start !== toMin(act.start) || it.end !== toMin(act.end))) return;
       // flexible: new length, and it hasn't started → placed again
-      if (!it.fixed && it.start > now && it.end - it.start !== act.duration && !it.longer) return;
+      if (!it.fixed && it.start > now && it.end - it.start !== act.duration && !it.longer && !it.ownLen) return;   // (⏱️ v213 ownLen: its own length that day stays)
     }
     // a deleted activity that was ticked stays (history)
     if (!act && day.date > today) return;
@@ -885,12 +963,13 @@ function makePlan(mode = "replan") {
     if (!act) return;
     const pre = act.getReady || 0, post = act.breakAfter || 0;
     // ⭐ v195: a 📌 pinned session on top of a fixed activity for the same person loses its pin and is placed again
-    const people = peopleOf(act), s0 = it.start - pre, e0 = it.start + act.duration + post;
+    const dur = it.ownLen ? it.end - it.start : act.duration;   // (⏱️ v213 its own length that day)
+    const people = peopleOf(act), s0 = it.start - pre, e0 = it.start + dur + post;
     const fixedHit = days[d].items.find(x => x.fixed && !x.routine && data.fixed.some(f => f.id === x.actId)
       && x.start < e0 && s0 < x.end && x.people.some(p => people.includes(p))
       && !act.overlapWith.includes(x.actId) && !data.fixed.find(f => f.id === x.actId).overlapWith.includes(act.id));
     if (fixedHit) { moved.push(`${act.name} (${dayName(day.date)})`); return; }
-    days[d].items.push({ name: act.name, start: it.start - pre, end: it.start + act.duration + post, pre, post, pinned: true,
+    days[d].items.push({ name: act.name, start: it.start - pre, end: it.start + dur + post, pre, post, pinned: true, ...(it.ownLen ? { ownLen: true } : {}),
                          actId: it.actId, users: act.users, people: peopleOf(act) });   // (2️⃣ a pinned 2nd session keeps its "~2" id)
     (pinnedOf[act.id] = pinnedOf[act.id] || []).push(d);
   }));
@@ -1039,7 +1118,7 @@ function makeAndKeepPlan(mode = "replan") {
   // (the plan keeps the activity's own times: the get ready / break around it are added when drawing)
   // (kept items are saved exactly as they were)
   p.days.forEach(day => dates[day.date] = { items: day.items.filter(it => !it.routine).map(it => it.kept ? { ...it.kept } :
-    ({ actId: it.actId, fixed: !!it.fixed, start: it.start + (it.pre || 0), end: it.end - (it.post || 0), ...(it.pinned ? { pinned: true } : {}), ...(it.longer ? { longer: true } : {}) })) });
+    ({ actId: it.actId, fixed: !!it.fixed, start: it.start + (it.pre || 0), end: it.end - (it.post || 0), ...(it.pinned ? { pinned: true } : {}), ...(it.longer ? { longer: true } : {}), ...(it.ownLen ? { ownLen: true } : {}) })) });
   // (a new day, or 📌 a one-day event's moves, only add items: the notes and the "up to date" mark stay as the last Save / Plan my week left them)
   const roll = (mode === "roll" || mode === "fill") && old;
   data.plan = { dates, warnings: roll ? old.warnings : p.warnings, key: roll ? old.key : planKey(), upTo: addDaysYmd(today, PLAN_AHEAD) };
@@ -1170,7 +1249,8 @@ function applyMissFix(i) {
   const f = missList[i]; if (!f || !isParentId(me) || !hasPlan()) return;
   if (f.kind === "bed") { data.bedOn = data.bedOn || {}; f.kids.forEach(p => data.bedOn[`${f.ds}|${p}`] = clock24(bedMin(p, f.ds) + f.plus)); }
   const day = data.plan.dates[f.ds] = data.plan.dates[f.ds] || { items: [] };
-  day.items.push({ actId: f.kind === "second" ? f.actId + "~2" : f.actId, fixed: false, start: f.at, end: f.at + f.len, pinned: true });
+  const fa = data.flexible.find(a => a.id === f.actId);
+  day.items.push({ actId: f.kind === "second" ? f.actId + "~2" : f.actId, fixed: false, start: f.at, end: f.at + f.len, pinned: true, ...(fa && f.len !== fa.duration ? { ownLen: true } : {}) });
   day.items.sort((a, b) => a.start - b.start);
   writeData();
   render();

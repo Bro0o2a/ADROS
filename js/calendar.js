@@ -250,7 +250,7 @@ const ACT_ICONS = [[/break|get ready|lunch|dinner|breakfast|meal|bed|sleep|showe
   [/football|sport|gym|swim|karate|run|exercise|club|basket|tennis/i, "basketball"],
   [/study|revision|revise|practi[cs]e|lesson|tutor/i, "study"], [/pray|salah/i, "consistency"]];
 function actIcon3d(name, type, cls = "k-ic") {
-  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" ? "study" : type === "routine" ? "time" : type === "free" ? "rainbow" : "goal";
+  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" || type === "schoolapp" ? "study" : type === "sport" ? "basketball" : type === "routine" ? "time" : type === "free" || type === "family" ? "rainbow" : "goal";
   return ico3d(n, cls);
 }
 // What a block shows: big title, colors, and a smaller line underneath.
@@ -687,54 +687,138 @@ function openCard(b) {
   $("kModal").hidden = false;
   $("kOk").focus();
 }
-// ⚡ v191 (Broo2a) Quick edit on the big card (parents, today and later), all in one box:
-//   ⏰ the time on this day (straight in, no extra tap) · 🏷️ the type · 🔢 sessions a week (flexible ones) · 🗑️ Delete · ✏️ More changes
+// ⚡ v191 (Broo2a) Quick edit on the big card (parents, today and later).
+// 🗜️ v213 (Broo2a): smaller: ⏰ start and ⏱️ length with − / + (15 minutes; 💾 Save shows once something changed) · 🗑️ Delete
+// opens a pop-up in the middle · ⋯ More opens 🏷️ type, ⭐ Must-do and 🔢 sessions a week · ✏️ All changes
 function quickEditHtml(b, actId, canEditAct, canMove) {
   if (!canEditAct || b.gone || b.day < todayYmd()) return "";
   const base = baseActId(actId), kind = b.fixed ? "fixed" : "flex", key = `${b.day}|${actId}|${kind}`;
   const act = (b.fixed ? data.fixed : data.flexible).find(a => a.id === base); if (!act) return "";
   const fixKey = `${b.day}|${[...new Set(b.acts.map(a => a.actId))].join(",")}`, hm = m => clock24(m), type = actTypeOf(act);
-  const onDay = b.day === todayYmd() ? "today" : "on " + dayName(b.day);
-  const time = b.fixed ? `<label>From <input type="time" class="qe-from" value="${hm(b.start)}"></label><label>To <input type="time" class="qe-to" value="${hm(b.end)}"></label>`
-    : canMove ? `<label>Starts at <input type="time" class="qe-from" value="${hm(b.start)}"></label><small>(${act.duration} min)</small>` : "";
+  const it = !b.fixed && planItemsOn(b.day).find(x => !x.fixed && x.actId === actId), len = it ? it.end - it.start : act.duration;
+  const stepper = (what, label, val) => `<div class="qe-line"><span class="qe-lab">${label}</span><div class="bed-step qe-step">
+      <button type="button" class="bed-pm" data-qestep="${what}|-15" aria-label="15 minutes less">−</button><span class="bed-time" data-qeshow="${what}">${val}</span>
+      <button type="button" class="bed-pm" data-qestep="${what}|15" aria-label="15 minutes more">+</button></div></div>`;
+  const time = b.fixed ? `<div class="qe-line"><span class="qe-lab">⏰ This day</span><div class="qe-time"><label>From <input type="time" class="qe-from" value="${hm(b.start)}"></label>
+      <label>To <input type="time" class="qe-to" value="${hm(b.end)}"></label></div></div>`
+    : canMove && it ? stepper("st", "⏰ Starts", clock(b.start, true)) + stepper("len", "⏱️ Length", minsText(len)) : "";
   const maxTimes = act.twiceDay ? DAYS.length * 2 : DAYS.length;
-  return `<div class="qe-bar" data-qekey="${safe(key)}" data-qefix="${safe(fixKey)}"><b>⚡ Quick edit</b>
-    ${time ? `<div class="qe-row"><span class="qe-lab">⏰ Time ${safe(onDay)}</span><div class="qe-time">${time}<button type="button" class="pill small primary" data-qetimesave="1">💾 Save</button></div></div>` : ""}
-    <div class="qe-row"><span class="qe-lab">🏷️ Type</span><div class="qe-chips">${ACT_TYPES.map(([k, e, w]) =>
-      `<button type="button" class="pill small${k === type ? " on" : ""}" data-qetype="${k}">${e} ${w}</button>`).join("")}</div></div>
-    ${act.users.some(u => !isParentId(u)) ? `<div class="qe-row"><span class="qe-lab">⭐ Must-do</span><div class="qe-chips">
-      <button type="button" class="pill small${act.must ? "" : " on"}" data-qemust="0">Off</button><button type="button" class="pill small${act.must ? " on" : ""}" data-qemust="1">On: missing it lowers the score</button></div></div>` : ""}
-    ${b.fixed ? "" : `<div class="qe-row"><span class="qe-lab">🔢 Sessions a week</span><div class="qe-num">
-      <button type="button" class="pill small" data-qetimes="-1" ${act.times <= 1 ? "disabled" : ""} aria-label="One less">−</button><b>${act.times}</b>
-      <button type="button" class="pill small" data-qetimes="1" ${act.times >= maxTimes ? "disabled" : ""} aria-label="One more">+</button></div></div>`}
-    <div class="btnrow"><button type="button" class="pill small qe-del" data-qedel="1">🗑️ Delete</button>
-      <button type="button" class="pill small" data-kedit="${kind}|${safe(base)}">✏️ More changes</button></div>
-    <div class="qe-ask" hidden><b>Delete “${safe(b.name)}”?</b><div class="btnrow">
-      <button type="button" class="pill small" data-qeone="1">📅 Only ${safe(onDay)}</button>
-      <button type="button" class="pill small danger-text" data-qeall="1">🗑️ Every day</button>
-      <button type="button" class="pill small" data-qeno="1">Cancel</button></div></div></div>`;
+  return `<div class="qe-bar" data-qekey="${safe(key)}" data-qefix="${safe(fixKey)}" data-st="${b.start}" data-len="${len}" data-st0="${b.start}" data-len0="${len}">
+    ${time}${time ? `<button type="button" class="pill primary qe-save" data-qetimesave="1" ${b.fixed ? "" : "hidden"}>💾 Save</button>` : ""}
+    <div class="qe-btns"><button type="button" class="pill small" data-qemore="1" aria-expanded="false">⋯ More</button>
+      <button type="button" class="pill small" data-kedit="${kind}|${safe(base)}">✏️ Edit all</button>
+      <button type="button" class="pill small qe-del" data-qedel="1">🗑️ Delete</button></div>
+    <div class="qe-more" hidden>
+      <div class="qe-row"><span class="qe-lab">🏷️ Type</span><div class="qe-chips">${allActTypes().map(([k, e, w]) =>
+        `<button type="button" class="pill small${k === type ? " on" : ""}" data-qetype="${k}">${e} ${w}</button>`).join("")}</div></div>
+      ${act.users.some(u => !isParentId(u)) ? `<div class="qe-row"><span class="qe-lab">⭐ Must-do</span><div class="qe-chips">
+        <button type="button" class="pill small${act.must ? "" : " on"}" data-qemust="0">Off</button><button type="button" class="pill small${act.must ? " on" : ""}" data-qemust="1">On: missing it lowers the score</button></div></div>` : ""}
+      ${b.fixed ? "" : `<div class="qe-row"><span class="qe-lab">🔢 Sessions a week</span><div class="qe-num">
+        <button type="button" class="pill small" data-qetimes="-1" ${act.times <= 1 ? "disabled" : ""} aria-label="One less">−</button><b>${act.times}</b>
+        <button type="button" class="pill small" data-qetimes="1" ${act.times >= maxTimes ? "disabled" : ""} aria-label="One more">+</button></div></div>`}
+    </div></div>`;
+}
+const minsText = m => m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}` : `${m} min`;
+// 💬 v213 A pop-up in the middle of the screen (over the card): a question and its buttons [label, onClick, cls]. The last one closes it.
+function qePop(title, text, buttons) {
+  qePopClose();
+  const el = document.createElement("div");
+  el.className = "qe-pop"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+  el.innerHTML = `<div class="qe-popcard"><b class="qe-poptitle">${title}</b>${text ? `<p>${text}</p>` : ""}<div class="qe-popbtns">${buttons.map(([l, , cls], i) =>
+    `<button type="button" class="pill ${cls || ""}" data-qepop="${i}">${l}</button>`).join("")}</div></div>`;
+  el.addEventListener("click", e => {
+    const btn = e.target.closest("[data-qepop]");
+    if (!btn) { if (e.target === el) qePopClose(); return; }
+    const fn = buttons[Number(btn.dataset.qepop)][1]; qePopClose(); if (fn) fn();
+  });
+  document.body.appendChild(el);
+  const first = el.querySelector("button"); if (first) first.focus();
+}
+function qePopClose() { document.querySelectorAll(".qe-pop").forEach(x => x.remove()); }
+// 🔁 A free place for this session with its new length, when the one in the way stays: the same day (closest to the time picked), then the next days
+function freeSpotFor(actId, ds, len, was) {
+  const days = aheadDates(), i = Math.max(0, days.indexOf(ds));
+  for (const d of [...days.slice(i), ...days.slice(0, i).reverse()]) {
+    if (d !== ds && planItemsOn(d).some(x => !x.fixed && x.actId === actId)) continue;
+    const [ws, we] = dayWindow(weekdayOf(d)), times = [];
+    for (let t = Math.ceil(ws / SNAP) * SNAP; t < we; t += SNAP) times.push(t);
+    times.sort((a, b) => Math.abs(a - was) - Math.abs(b - was));
+    const t = times.find(x => moveCheck(actId, ds, d, x, len).ok);
+    if (t != null) return { ds: d, start: t };
+  }
+  return null;
+}
+// ⏰ ⏱️ Put a session on a day at a start, with its length (📌 pinned; ownLen = its own length that day)
+function placeSession(actId, fromDay, toDay, start, len) {
+  const act = data.flexible.find(a => a.id === baseActId(actId));
+  const from = data.plan.dates[fromDay], to = data.plan.dates[toDay] = data.plan.dates[toDay] || { items: [] };
+  if (from) from.items = from.items.filter(it => !(!it.fixed && it.actId === actId));
+  to.items.push({ actId, fixed: false, start, end: start + len, pinned: true, ...(len !== act.duration ? { ownLen: true } : {}) });
+  to.items.sort((a, b) => a.start - b.start);
+}
+function qeSaveFlex(ds, actId, start, len, everyTime) {
+  const act = data.flexible.find(a => a.id === baseActId(actId)); if (!act) return;
+  const onDay = ds === todayYmd() ? "today" : dayName(ds);
+  const done = msg => { editUndo = []; if (everyTime) act.duration = len; saveChanges(); hideSaved(); render(); toast(msg, 4000, "#16a34a"); };
+  const check = moveCheck(actId, ds, ds, start, len);
+  if (check.ok) { placeSession(actId, ds, ds, start, len); return done(`✓ ${act.name}: ${onDay} ${clock(start, true)} · ${minsText(len)}${everyTime ? " (every time)" : ""}`); }
+  if (!check.room) return toast(`✗ ${check.why}`, 4000);
+  // ⭐ v213 (Broo2a) Who comes first? The session(s) in the way, or this one
+  const names = check.room.map(id => (data.flexible.find(a => a.id === baseActId(id)) || {}).name).filter(Boolean).join(" and ");
+  const when = check.room.map(id => planItemsOn(ds).find(x => !x.fixed && x.actId === id)).filter(Boolean).map(x => clock(x.start, true)).join(", ");
+  qePop(`⭐ Who comes first?`, `${safe(names)}${when ? ` (${safe(when)})` : ""} ${check.room.length > 1 ? "are" : "is"} in the way of ${safe(act.name)} at ${clock(start, true)}.`, [
+    [`⭐ ${safe(act.name)} first: move ${safe(names)}`, () => {
+      const moved = makeRoomMove(actId, ds, ds, start, len);
+      if (!moved) return toast(`✗ There's no free place this week for ${names}. Nothing changed.`, 4000);
+      done(`✓ ${act.name}: ${onDay} ${clock(start, true)} · ${moved.join(" · ")}`); }, "primary"],
+    [`${safe(names)} first: put ${safe(act.name)} at another time`, () => {
+      const spot = freeSpotFor(actId, ds, len, start);
+      if (!spot) return toast(`✗ There's no free place this week for ${act.name}. Nothing changed.`, 4000);
+      placeSession(actId, ds, spot.ds, spot.start, len);
+      done(`✓ ${act.name} → ${dayName(spot.ds)} ${clock(spot.start, true)}`); }],
+    ["Cancel", null]]);
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest && e.target.closest("[data-qetimesave], [data-qetype], [data-qetimes], [data-qemust], [data-qedel], [data-qeno], [data-qeone], [data-qeall]");
+  const b = e.target.closest && e.target.closest("[data-qetimesave], [data-qetype], [data-qetimes], [data-qemust], [data-qedel], [data-qestep], [data-qemore]");
   if (!b || !isParentDevice()) return;
   const bar = b.closest(".qe-bar"), d = b.dataset; if (!bar) return;
-  if (d.qedel || d.qeno) { bar.querySelector(".qe-ask").hidden = !!d.qeno; return; }
   const [ds, actId, kind] = bar.dataset.qekey.split("|"), base = baseActId(actId), fixKey = bar.dataset.qefix;
   const act = (kind === "fixed" ? data.fixed : data.flexible).find(a => a.id === base); if (!act) return;
   const onDay = ds === todayYmd() ? "today" : dayName(ds);
+  if (d.qemore) { const m = bar.querySelector(".qe-more"); m.hidden = !m.hidden; b.setAttribute("aria-expanded", String(!m.hidden)); b.textContent = m.hidden ? "⋯ More" : "⋯ Less"; return; }
+  // ⏰ ⏱️ − / + (nothing is saved yet)
+  if (d.qestep) {
+    const [what, n] = d.qestep.split("|"), v = Number(bar.dataset[what]) + Number(n);
+    if (what === "len" && (v < 15 || v > 240)) return;
+    if (what === "st" && (v < 0 || v + Number(bar.dataset.len) > 24 * 60)) return;
+    bar.dataset[what] = v;
+    bar.querySelector(`[data-qeshow="${what}"]`).textContent = what === "st" ? clock(v, true) : minsText(v);
+    bar.querySelector(".qe-save").hidden = bar.dataset.st === bar.dataset.st0 && bar.dataset.len === bar.dataset.len0;
+    return;
+  }
+  // 🗑️ v213 (Broo2a): a pop-up in the middle of the screen
+  if (d.qedel) {
+    const name = act.name;
+    return qePop(`🗑️ Delete “${safe(name)}”?`, "", [
+      [`📅 Only ${safe(onDay)}`, () => qeDeleteOne(ds, actId, kind, fixKey, name, onDay)],
+      ["🗑️ Every day", () => { deleteActivity(base, kind === "fixed", true); closeCard(); if (saveChanges()) toast(`🗑️ “${name}” deleted.`, 2500); }, "danger-text"],
+      ["Cancel", null]]);
+  }
   // ⏰ the time on this day only
   if (d.qetimesave) {
-    const from = (bar.querySelector(".qe-from") || {}).value || "", to = (bar.querySelector(".qe-to") || {}).value || "";
     if (kind === "fixed") {
+      const from = (bar.querySelector(".qe-from") || {}).value || "", to = (bar.querySelector(".qe-to") || {}).value || "";
       if (!/^\d{2}:\d{2}$/.test(from) || !/^\d{2}:\d{2}$/.test(to) || from >= to) return toast("Pick a start time before the end time.", 2500);
       closeCard(); return setFixedToday(fixKey, { start: from, end: to }, false, []);
     }
-    if (!/^\d{2}:\d{2}$/.test(from)) return toast("Pick a start time.", 2500);
-    const start = toMin(from), check = moveCheck(actId, ds, ds, start);
-    if (!check.ok && check.room) { closeCard(); openMoveBox(ds, actId, ds, start); moveDirect = !editMode; return; }   // 🔁 offer to make room
-    if (!check.ok) return toast(`✗ ${check.why}`, 3500);
-    closeCard(); moveActivity(actId, ds, ds, start); editUndo = []; saveChanges(); hideSaved();
-    return toast(`✓ ${act.name}: ${onDay} at ${clock(start, true)}`, 3000, "#16a34a");
+    const start = Number(bar.dataset.st), len = Number(bar.dataset.len);
+    if (len === Number(bar.dataset.len0)) { closeCard(); return qeSaveFlex(ds, actId, start, len, false); }
+    // ⏱️ a new length: this day only, or every time?
+    closeCard();
+    return qePop(`⏱️ ${safe(act.name)}: ${minsText(len)}`, "Change the length for:", [
+      [`📅 Only ${safe(onDay)}`, () => qeSaveFlex(ds, actId, start, len, false), "primary"],
+      ["🔁 Every time", () => qeSaveFlex(ds, actId, start, len, true)],
+      ["Cancel", null]]);
   }
   // 🏷️ the type (📚 Study needs its subjects: that one goes to ✏️ More changes)
   if (d.qetype) {
@@ -759,16 +843,17 @@ document.addEventListener("click", e => {
     if (saveChanges()) toast(`🔢 ${act.name}: ${n} ${n === 1 ? "session" : "sessions"} a week. The week is planned again.`, 3000);
     return;
   }
-  // (🗑️ v190 Delete thread folded in here: every day = the activity itself, as on ✏️ Add activities; gone days keep it as history)
-  if (d.qeall) { deleteActivity(base, kind === "fixed", true); closeCard(); if (saveChanges()) toast(`🗑️ “${act.name}” deleted.`, 2500); return; }
-  // 📅 only that day: a fixed one = 🚫 didn't happen; a flexible one = off that day's plan, never planned there again
+});
+// 📅 only that day: a fixed one = 🚫 didn't happen; a flexible one = off that day's plan, never planned there again
+// (🗑️ v190: every day = the activity itself, as on ✏️ Add activities; gone days keep it as history)
+function qeDeleteOne(ds, actId, kind, fixKey, name, onDay) {
   if (kind === "fixed") { closeCard(); return setFixedToday(fixKey, { off: true }, false, []); }
   const day = hasPlan() && data.plan.dates[ds];
   if (day) day.items = day.items.filter(it => it.fixed || it.actId !== actId);
   data.skips = { ...(data.skips || {}), [`${ds}|${actId}`]: { by: me, at: new Date().toISOString(), why: "skip" } };
   writeData(); closeCard(); render();
-  toast(`🗑️ Taken off ${onDay}.`, 2500);
-});
+  toast(`🗑️ “${name}” taken off ${onDay}.`, 2500);
+}
 // 🏫 v180 (Broo2a): a fixed activity (School, a club …) that changed on ONE day: "🚫 Didn't happen" or "🕐 Other times that day".
 // Parents, today and later. That day's plan is made again around it: what clashes moves, and free time gets the activities
 // that were missing this week (then 🔍 Missed sessions and 🎈 ideas use the new free time too).
@@ -927,13 +1012,13 @@ function editBarHtml() {
 
 // Is this place free for everyone in the activity? → { ok } or { ok: false, why: "Jawad is at School then." }
 // fromDay / toDay = dates. 📅 Only today (from now) … today + 6: past days never change.
-function moveCheck(actId, fromDay, toDay, start) {
+function moveCheck(actId, fromDay, toDay, start, len) {   // (⏱️ v213 len = its own length that day; else its usual one)
   const act = data.flexible.find(a => a.id === baseActId(actId));
   if (!act) return { ok: false, why: "That activity doesn't exist any more." };
   const today = todayYmd(), last = addDaysYmd(today, PLAN_AHEAD);
   if (!isYmd(toDay) || toDay < today) return { ok: false, why: "Past days can't be changed." };
   if (toDay > last) return { ok: false, why: `The plan only goes up to ${dayLong(last)}.` };
-  const end = start + act.duration, S = start - (act.getReady || 0), E = end + (act.breakAfter || 0);
+  const end = start + (len || act.duration), S = start - (act.getReady || 0), E = end + (act.breakAfter || 0);
   if (toDay === today && start < dubaiMinutes()) return { ok: false, why: "That time has already passed today." };
   const [ws, we] = dayWindow(weekdayOf(toDay));
   if (S < ws || E > we) return { ok: false, why: `That's outside “My day” (${showTime(ws)}–${showTime(we)}).` };
@@ -982,18 +1067,18 @@ function roomItemOf(ds, day, b) {
 // 🔁 v201 (Broo2a): put actId at toDay/start and move the sessions in the way ("room") somewhere else:
 // first to the place actId came from (a swap), else the first free place that day, else another day (today … +6).
 // All of it is one step (one ↩️ Undo). → the list of what moved, e.g. ["Reading → Tue 5:00 pm"], or null (no place: nothing changes).
-function makeRoomMove(actId, fromDay, toDay, start) {
-  const check = moveCheck(actId, fromDay, toDay, start);
+function makeRoomMove(actId, fromDay, toDay, start, len) {
+  const check = moveCheck(actId, fromDay, toDay, start, len);
   if (check.ok || !check.room) return null;
   const before = JSON.stringify(data.plan), act = data.flexible.find(a => a.id === baseActId(actId));
   const fromIt = planItemsOn(fromDay).find(x => !x.fixed && x.actId === actId), origStart = fromIt ? fromIt.start : start;
   const to = data.plan.dates[toDay] = data.plan.dates[toDay] || { items: [] };
   to.items = to.items.filter(it => !(!it.fixed && check.room.includes(it.actId)));
   const undo = () => { data.plan = JSON.parse(before); return null; };
-  if (!moveCheck(actId, fromDay, toDay, start).ok) return undo();
+  if (!moveCheck(actId, fromDay, toDay, start, len).ok) return undo();
   const from = data.plan.dates[fromDay];
   if (from) from.items = from.items.filter(it => !(!it.fixed && it.actId === actId));
-  to.items.push({ actId, fixed: false, start, end: start + act.duration, pinned: true });
+  to.items.push({ actId, fixed: false, start, end: start + (len || act.duration), pinned: true, ...(len && len !== act.duration ? { ownLen: true } : {}) });
   const moved = [];
   const oldStart = id => ((JSON.parse(before).dates[toDay] || { items: [] }).items.find(x => !x.fixed && x.actId === id) || {}).start || 0;
   for (const otherId of check.room) {
@@ -1103,8 +1188,9 @@ function moveActivity(actId, fromDay, toDay, start) {
   const act = data.flexible.find(a => a.id === baseActId(actId));
   editUndo.push(JSON.stringify(data.plan));
   const from = data.plan.dates[fromDay], to = data.plan.dates[toDay] = data.plan.dates[toDay] || { items: [] };
+  const was = from && from.items.find(it => !it.fixed && it.actId === actId), len = was && was.ownLen ? was.end - was.start : act.duration;   // (⏱️ v213 keeps its own length)
   if (from) from.items = from.items.filter(it => !(!it.fixed && it.actId === actId));
-  to.items.push({ actId, fixed: false, start, end: start + act.duration, pinned: true });
+  to.items.push({ actId, fixed: false, start, end: start + len, pinned: true, ...(len !== act.duration ? { ownLen: true } : {}) });
   to.items.sort((a, b) => a.start - b.start);
   if (toDay !== fromDay && !wholeWeek && calDates().includes(toDay)) viewDay = calDates().indexOf(toDay);   // phone: follow it to its new day
   changed();

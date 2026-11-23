@@ -77,7 +77,10 @@ function familyOrder(list) {
 // 🌙 v180 Bedtime per kid (Broo2a): one time for school nights, one for weekend nights (Friday and Saturday nights),
 //  and a parent can change it for one night (data.bedOn). Nothing is planned for that kid after it. null = no bedtime set.
 const BED_TIME = /^(1[89]|2[0-3]):[0-5]\d$/;   // 6 PM … 11:45 PM
-const isWeekendNight = wd => wd === 4 || wd === 5;   // (0 = Monday: Friday and Saturday nights)
+// 🎉 v213 (Broo2a): the weekend DAYS (days off school) are the family's choice (📅 Calendar setup; default Saturday and Sunday, 0 = Monday).
+// A weekend NIGHT = the night before a day off (default Friday and Saturday nights).
+const weekendDaysOf = () => (data && Array.isArray(data.weekendDays) ? data.weekendDays : [5, 6]);
+const isWeekendNight = wd => weekendDaysOf().includes((wd + 1) % 7);
 // 🌙 v193: a "Bedtime routine" (or any routine named bed / sleep) counts as bedtime too: nothing for that person after it ends
 const isBedRoutine = r => /\b(bed|sleep)/i.test(String(r && r.name || ""));
 function routineBed(person, wd) {
@@ -88,7 +91,9 @@ function routineBed(person, wd) {
 }
 function bedUsual(person, wd) {
   const u = data && Array.isArray(data.users) && data.users.find(x => x.id === person);
-  const own = u && u.bed ? toMin(isWeekendNight(wd) ? u.bed.we : u.bed.wd) : null, rt = routineBed(person, wd);
+  // (🌙 v213: a kid's own time, else the family's one time for all kids, else the "Bedtime routine" guess)
+  const b = u && u.bed ? u.bed : data && data.bedAll && u && !isParentId(person) ? data.bedAll : null;
+  const own = b ? toMin(isWeekendNight(wd) ? b.we : b.wd) : null, rt = routineBed(person, wd);
   // (🌙 v212 Broo2a: the time a parent set wins; a "Bedtime routine" is only a guess when nothing is set, and the app asks for it)
   return own != null ? own : rt;
 }
@@ -649,6 +654,10 @@ function cleanData(d) {
     return { type, helper, subjectId: subjectIds.find(x => x !== ALL_SUBJECTS) || "", subjectIds, studyMode };
   };
 
+  // 🏷️ v213 the family's own activity types (before the activities, so their types are kept)
+  clean.actTypes = (Array.isArray(d.actTypes) ? d.actTypes : []).filter(t => t && /^c-[a-z0-9]{1,20}$/.test(t.key) && typeof t.name === "string" && t.name.trim())
+    .slice(0, 20).map(t => ({ key: t.key, emoji: String(t.emoji || "🏷️").slice(0, 8), name: t.name.trim().slice(0, 24), scored: t.scored === true }));
+  customActTypes = clean.actTypes;
   if (Array.isArray(d.fixed)) clean.fixed = d.fixed
     .filter(f => f && f.name && Array.isArray(f.days) && isTime(f.start) && isTime(f.end))
     .map(f => {
@@ -853,6 +862,9 @@ function cleanData(d) {
   const max = Math.round(Number(d.maxTogether));
   if (max >= 1 && max <= 5) clean.maxTogether = max;  // otherwise keep the default (2)
   if ([3, 4, 5].includes(Number(d.extraLimit))) clean.extraLimit = Number(d.extraLimit);
+  if (d.bedAll && BED_TIME.test(d.bedAll.wd || "") && BED_TIME.test(d.bedAll.we || "")) clean.bedAll = { wd: d.bedAll.wd, we: d.bedAll.we };   // 🌙 v213 one time for all kids
+  if (Array.isArray(d.weekendDays) && d.weekendDays.length <= 4 && d.weekendDays.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendDays = [...new Set(d.weekendDays)].sort();   // 🎉 v213
+  if (d.calSetup === true) clean.calSetup = true;   // (📅 v213 the Calendar setup box was saved once)
   if (Number.isInteger(d.calWeekStart) && d.calWeekStart >= 0 && d.calWeekStart <= 6) clean.calWeekStart = d.calWeekStart;
   if (d.fixedOn && typeof d.fixedOn === "object" && !Array.isArray(d.fixedOn))   // 🏫 v180 (only the newest 100)
     clean.fixedOn = Object.fromEntries(Object.entries(d.fixedOn).filter(([k, v]) => /^\d{4}-\d{2}-\d{2}\|.+/.test(k) && v && (v.off === true
@@ -882,7 +894,7 @@ function cleanData(d) {
   const txt = (x, n) => typeof x === "string" ? x.slice(0, n) : "";
   const cleanItems = day => (day && Array.isArray(day.items) ? day.items : [])
     .filter(it => it && typeof it.actId === "string" && Number.isFinite(it.start) && Number.isFinite(it.end))
-    .map(it => ({ actId: it.actId, fixed: !!it.fixed, start: it.start, end: it.end, ...(it.pinned === true ? { pinned: true } : {}), ...(it.longer === true ? { longer: true } : {}),
+    .map(it => ({ actId: it.actId, fixed: !!it.fixed, start: it.start, end: it.end, ...(it.pinned === true ? { pinned: true } : {}), ...(it.longer === true ? { longer: true } : {}), ...(it.ownLen === true ? { ownLen: true } : {}),
                   // (🗂️ a deleted activity kept as history: what it was)
                   ...(it.gone && typeof it.gone === "object" && txt(it.gone.name, 60) ? { gone: { name: txt(it.gone.name, 60),
                       users: (Array.isArray(it.gone.users) ? it.gone.users : []).map(String), people: (Array.isArray(it.gone.people) ? it.gone.people : []).map(String),
@@ -1098,13 +1110,20 @@ const DEFAULT_SUBJECTS = {
 // 🏫 📚 🎓 The school basics saved on the kid (in 👤 the profile), in the order a missing one is asked
 const BASIC_KEYS = ["school", "curriculum", "year"];
 // ⭐ An activity's TYPE for the score (see SCORE): [key, emoji, word]. "other" is never scored.
-const ACT_TYPES = [["study", "📚", "Study"], ["activity", "⚽", "Activity"], ["free", "🎈", "Free time"], ["other", "🗂️", "Other"]];   // (🎈 v182 Broo2a: free time, the person picks what to do; not scored)
+const ACT_TYPES = [["study", "📚", "Study"], ["schoolapp", "💻", "School app (online)"], ["activity", "⚽", "Activity"], ["sport", "🏊", "Sports"],
+  ["family", "👨‍👩‍👧", "Family time"], ["free", "🎈", "Free time"], ["other", "🗂️", "Other"]];   // (🎈 v182 Broo2a: free time, the person picks what to do; not scored)
+// (💻 🏊 👨‍👩‍👧 v213 Broo2a: School app = online study in the school's app, ticked ✅ like Study; Sports ticked like Activity; Family time not scored)
+const UNSCORED_TYPES = ["family", "free", "other"];
+// 🏷️ v213 (Broo2a) the family's own types (data.actTypes, set while loading in cleanData): [{ key "c-…", emoji, name, scored }]
+let customActTypes = [];
+const allActTypes = () => [...ACT_TYPES, ...customActTypes.map(t => [t.key, t.emoji, t.name])];
+const isScoredType = k => ["study", "schoolapp", "activity", "sport", "habit"].includes(k) || customActTypes.some(t => t.key === k && t.scored);
 const ACT_TYPE_KEYS = ACT_TYPES.map(t => t[0]);
 // An activity saved before types existed gets one, once (then it's kept): a name with "school" → "other" (on the calendar, no score),
 // everything else → "activity". An unknown type → "activity". (Hoisted: cleanData uses it while loading.)
 function isMustDate(v) { return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v); }   // (⭐ v191 an activity's Must-do: the date it started)
 function defaultActType(a) {
-  if (a && ACT_TYPE_KEYS.includes(a.type)) return a.type;
+  if (a && (ACT_TYPE_KEYS.includes(a.type) || customActTypes.some(t => t.key === a.type))) return a.type;
   if (a && a.type != null) return "activity";
   return /school/i.test(String((a && a.name) || "")) ? "other" : "activity";
 }
