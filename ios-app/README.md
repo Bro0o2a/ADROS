@@ -1,7 +1,7 @@
 # ADROS iPhone app (.ipa for the App Store)
 
 Like the Android app, the iPhone app is a small "wrapper" (Capacitor) that opens the live web app
-https://bro0o2a.github.io/Family_Planner/ full screen. Normal app changes go live by themselves:
+https://bro0o2a.github.io/ADROS/ full screen. Normal app changes go live by themselves:
 no new .ipa is needed. Make a new .ipa only when Apple asks, or the name/icon changes.
 
 - `capacitor.config.json` — app id `com.adros.app` (never change it after the first upload), name, the live site address.

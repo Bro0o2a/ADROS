@@ -4,7 +4,7 @@
   "webDir": "www",
   "backgroundColor": "#F4F5FA",
   "server": {
-    "url": "https://bro0o2a.github.io/Family_Planner/",
+    "url": "https://bro0o2a.github.io/ADROS/",
     "cleartext": false
   },
   "ios": {

@@ -1,7 +1,7 @@
 # ADROS Android app (.aab for Google Play / Galaxy Store)
 
 The Android app is a small "wrapper" (Trusted Web Activity) that opens the live web app
-https://bro0o2a.github.io/Family_Planner/ full screen. Normal app changes go live by themselves:
+https://bro0o2a.github.io/ADROS/ full screen. Normal app changes go live by themselves:
 no new .aab is needed. Make a new .aab only when the store asks, or the name/icon changes.
 
 - `twa-manifest.json` — app id `com.adros.app` (never change it after the first store upload), name, colours, version.
