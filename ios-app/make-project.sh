@@ -5,7 +5,9 @@ cd "$(dirname "$0")"
 rm -rf ios
 npm ci --no-audit --no-fund
 # Swift Package Manager (no CocoaPods needed)
-npx cap add ios --packagemanager SPM
+# "cap add" makes the project but then wrongly tries CocoaPods (it decides before the
+# SPM folder exists), so its last step may fail. "cap sync" right after sees SPM and finishes it.
+npx cap add ios --packagemanager SPM || echo "cap add finished with a CocoaPods error; cap sync fixes it"
 npx cap sync ios
 test -f ios/App/CapApp-SPM/Package.swift
 
