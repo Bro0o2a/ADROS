@@ -30,3 +30,6 @@ nav a:hover { color: var(--accent-dark); }
 footer { text-align: center; padding: 10px 16px 40px; color: var(--muted); font-size: 15px; }
 footer a { margin: 0 8px; }
 @media (max-width: 520px) { .doc { padding: 20px 18px; } nav a { margin: 0 12px 0 0; } }
+.doc table.keep { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 15px; }
+.doc table.keep th, .doc table.keep td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.doc table.keep th { background: rgba(0,0,0,.04); }
