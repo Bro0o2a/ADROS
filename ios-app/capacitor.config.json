@@ -1,0 +1,14 @@
+{
+  "appId": "com.adros.app",
+  "appName": "ADROS",
+  "webDir": "www",
+  "backgroundColor": "#F4F5FA",
+  "server": {
+    "url": "https://bro0o2a.github.io/Family_Planner/",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "never",
+    "scheme": "ADROS"
+  }
+}
