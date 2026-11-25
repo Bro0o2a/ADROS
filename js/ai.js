@@ -12,7 +12,7 @@
 const AI_URL = "https://family-plan-ai.hanifamily.workers.dev";
 const AI_OFF = "AI needs internet and the family sign-in";
 const AI_MAX = 4 * 1024 * 1024;   // all the files of one AI call together (the server takes about 4.5 MB)
-const WS_COUNTS = [5, 10, 15];
+const WS_COUNTS = [5, 10, 15, 20];
 const WS_KINDS = ["multiple_choice", "true_false", "fill_blank", "short_answer", "matching", "ordering"];
 const aiDocs = { worksheets: {}, explanations: {}, hiddenWs: {} };   // id → document, kept up to date from the cloud (🙈 hiddenWs: worksheets Dad deleted: kept in the cloud, can be brought back)
 let aiWait = null;    // the AI button that's waiting for an answer ("🤖 Thinking…")
@@ -480,8 +480,8 @@ function isNewTopic(s, kid, subject, title, workId) {
 
 // ---------- Every 🤖 worksheet: a mode + a short profile of the kid ----------
 //   mode: "level_check" (🧭 a new topic) | "practice" (🔁) | "week_review" (📰 the newsletter's week) | "challenge" (🚀)
-// 🔢 v179 (Broo2a): EVERY worksheet has 15 questions (not by age); a 📚 study session's worksheet has 20, so it fills the session.
-const WS_COUNT = 15, SESSION_COUNT = 20;
+// 🔢 v179 (Broo2a): EVERY worksheet has 15 questions (not by age). v229: a 📚 study session 15, a 📖 preview 25, a kid picks 10/15/20.
+const WS_COUNT = 15, SESSION_COUNT = 15, PREVIEW_COUNT = 25, KID_COUNTS = [10, 15, 20];   // (v229 Broo2a: session 15, 📖 preview 25, a kid picks 10/15/20)
 const LEVEL_COUNT = WS_COUNT, PRACTICE_COUNT = WS_COUNT, REVIEW_COUNT = WS_COUNT;
 // 😊 Use the family's names in story, sentence and grammar questions: always kind, happy and safe (never someone hurt, sad or naughty)
 const wsNamesNote = kid => { const me = kidNameOf(kid), others = kidsList().map(u => u.name).filter(n => n && n !== me);
@@ -961,7 +961,7 @@ async function newWorksheet(kid, subject, topics, count, mode, key, extra, open 
   //  ⚡ instant + files = only about the file (never kept); avoid = questions already given; focus = the skills to practise.
   //  Those go to the AI only: the rest of extra is saved with the worksheet.)
   const { files, instant, sections, avoid, focus, hint, ...keep } = extra || {};
-  count = keep.session ? SESSION_COUNT : WS_COUNT;   // 🔢 v179: always 15, a study session 20
+  count = keep.session ? SESSION_COUNT : mode === "preview" ? PREVIEW_COUNT : WS_COUNT;   // 🔢 v229: 15, a study session 15, a 📖 preview 25
   // 🤖 A kid's EXTRA worksheets (not in a planned study session): at most data.extraLimit a day (⚙️ Settings: 3–5, the AI costs money)
   if (!keep.session && !["level_check", "placement"].includes(mode) && wsLimitHit(kid, subject)) return null;
   // (⏱️ v179: the session's minutes are kept on the worksheet but not sent: the AI would then pick the number of questions itself)

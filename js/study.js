@@ -1229,7 +1229,7 @@ async function maybeMakePreviews() {
       if (d > addDaysYmd(j.x.start, 4)) continue;   // (the week is nearly over: too late for a preview)
       for (const y of j.x.subjects) {
         tried++;
-        if (await newWorksheet(j.kid, y.subject, y.topics, WS_COUNT, "preview", "preview", { title: `📖 Week ${j.x.n} preview`, part: `📖 Week ${j.x.n} preview` }, false)) made++;
+        if (await newWorksheet(j.kid, y.subject, y.topics, PREVIEW_COUNT, "preview", "preview", { title: `📖 Week ${j.x.n} preview`, part: `📖 Week ${j.x.n} preview` }, false)) made++;
       }
     }
     if (tried) toast(made === tried ? `📖 ${made} next-week ${made === 1 ? "preview is" : "previews are"} ready in 📝 Worksheets!` : `📖 ${made} of ${tried} previews were made.`, 4500);
@@ -1644,9 +1644,9 @@ function openWsOpts(kid, subject, topics, count, work, part) {
   $("wsoHint").textContent = `${subject} for ${kidNameOf(kid)}. The answers stay hidden until you tap 🔑.`;
   $("wsoTopics").replaceChildren(...wso.topics.map((t, i) => h("label", { class: "checkline" },
     h("input", { type: "checkbox", value: i, checked: true }), h("span", null, t))));
-  // 🔢 v191: the kid picks 10 or 15 questions (15 when nothing was picked before)
-  const pickN = [10, 15].includes(count) ? count : WS_COUNT;
-  $("wsoCount").replaceChildren(...[10, 15].map(n => h("label", null, h("input", { type: "radio", name: "wsoN", value: n, checked: n === pickN }), h("span", null, `${n} questions`))),
+  // 🔢 v229: the kid picks 10, 15 or 20 questions (15 when nothing was picked before)
+  const pickN = KID_COUNTS.includes(count) ? count : WS_COUNT;
+  $("wsoCount").replaceChildren(...KID_COUNTS.map(n => h("label", null, h("input", { type: "radio", name: "wsoN", value: n, checked: n === pickN }), h("span", null, `${n} questions`))),
     h("p", { class: "hint", style: "flex-basis:100%;margin:0" }, `At ${kidNameOf(kid)}'s level.`));
   $("wsoErr").textContent = aiReady() ? "" : "🔌 " + AI_OFF + ".";
   $("wsoTr").innerHTML = wsPickHtml(kid, subject) + wsWordsHtml(kid, subject) + translateToggleHtml(kid, subject);   // 🌐 (remembered for this kid)
@@ -1666,7 +1666,7 @@ async function makeWorksheet() {
   if (!o) return;
   const topics = [...$("wsoTopics").querySelectorAll("input:checked")].map(x => o.topics[Number(x.value)]).filter(Boolean);
   if (!topics.length) return $("wsoErr").textContent = "Please tick at least one topic.";
-  const picked = $("wsoCount").querySelector("input[name=wsoN]:checked"), count = picked && [10, 15].includes(Number(picked.value)) ? Number(picked.value) : WS_COUNT;
+  const picked = $("wsoCount").querySelector("input[name=wsoN]:checked"), count = picked && KID_COUNTS.includes(Number(picked.value)) ? Number(picked.value) : WS_COUNT;
   $("wsoErr").textContent = "";
   if (wsLimitHit(o.kid, o.subject)) return closeWsOpts();   // 📝 (v222) the kid's extra worksheets a day, like every other button
   const mode = pickMode(o.kid, o.subject);   // 🔁 practice, or 🚀 challenge when it's going very well
