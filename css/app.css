@@ -3682,3 +3682,4 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .lg-whotxt small { font-size: 15px; font-weight: 600; color: #7A5A48; line-height: 1.25; }
 .lg-go { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #EC8466; font-size: 26px; font-weight: 800; line-height: 1; }
 @media (max-width: 380px) { .lg-faces img { width: 52px; height: 52px; } .lg-kidc .lg-faces img { width: 44px; height: 44px; } .lg-whotxt b { font-size: 20px; } .lg-whotxt small { font-size: 14px; } .lg-whocard { gap: 10px; padding: 12px; } }
+.lg-kidhint { margin: 0 0 10px; }
