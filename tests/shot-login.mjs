@@ -1,0 +1,14 @@
+import { chromium } from 'playwright';
+import path from 'path';
+const [out, w] = [process.argv[2], +process.argv[3]];
+const b = await chromium.launch(); const pg = await b.newPage({ viewport: { width: w, height: 800 }, deviceScaleFactor: 2 });
+await pg.route(/gstatic|googleapis|firebase/, r => r.abort());
+await pg.goto('file://' + path.resolve('../index.html'), { waitUntil: 'domcontentloaded' });
+await pg.waitForTimeout(800);
+await pg.evaluate(() => { document.querySelectorAll('body > *').forEach(e => { if (e.id !== 'loginScreen') e.style.display = 'none'; });
+  const l = document.getElementById('loginScreen'); l.hidden = false; l.style.display = 'grid';
+  const b = l.querySelector('[data-lg="parent"]'); b && b.click(); });
+await pg.waitForTimeout(400);
+if (process.argv[4]) await pg.evaluate(() => { document.getElementById('loginEmail').value='mum@example.com'; resetSentNote('mum@example.com'); });
+await pg.screenshot({ path: out });
+await b.close();

@@ -134,7 +134,7 @@ const LG_MODES = {
 function loginMode(mode) {
   lgMode = mode;
   const [title, hint, btn] = LG_MODES[mode];
-  $("lgTitle").textContent = "👨‍👩‍👧 " + title;
+  $("lgTitle").textContent = title;
   $("lgModeHint").textContent = hint;
   $("loginBtn").textContent = btn;
   $("lgFamilyRow").hidden = mode !== "create";
@@ -144,6 +144,7 @@ function loginMode(mode) {
   $("loginPass").autocomplete = mode === "signin" ? "current-password" : "new-password";
   document.querySelectorAll("[data-lgmode]").forEach(b => { b.classList.toggle("on", b.dataset.lgmode === mode); b.setAttribute("aria-selected", b.dataset.lgmode === mode); });
   $("loginErr").textContent = "";
+  $("loginErr").classList.remove("ok");
 }
 $("loginScreen").addEventListener("click", e => {
   const b = e.target.closest("button");
@@ -195,24 +196,31 @@ $("loginForm").addEventListener("submit", async e => {
         await fb.signInWithEmailAndPassword(cloud.auth, email, pass).catch(() => { throw err; });
       }
     }
-  } catch (err) { cloud.pending = null; $("loginErr").textContent = loginError(err); }
+  } catch (err) { cloud.pending = null; $("loginErr").classList.remove("ok"); $("loginErr").textContent = loginError(err); }
   $("loginBtn").disabled = false;
   $("loginBtn").textContent = LG_MODES[lgMode][2];   // (only the button: loginMode() would also wipe the error message)
 });
+// 📧 "We sent a link" is written in the sign-in card itself: a toast sits BEHIND the sign-in screen, so nobody saw it before v230
+function resetSentNote(email) {
+  const el = $("loginErr");
+  el.textContent = "📧 Done! If " + email + " has an ADROS account, we emailed it a link to choose a new password. Check your inbox and your spam/junk folder. The email comes from noreply@ani-family-plan.firebaseapp.com.";
+  el.classList.add("ok");
+}
 // 🔑 Forgot password: Firebase emails a link to choose a new one (same answer whether or not the email has an account)
 async function forgotPassword() {
   const email = $("loginEmail").value.trim(), fb = cloud.fb;
+  $("loginErr").classList.remove("ok");
   if (!email) { $("loginErr").textContent = "Type your email above first, then tap “Forgot password?” again."; return $("loginEmail").focus(); }
   if (!fb) return $("loginErr").textContent = "No internet yet. Connect to the internet and try again.";
   try {
+    $("lgForgot").disabled = true;
     await fb.sendPasswordResetEmail(cloud.auth, email);
-    $("loginErr").textContent = "";
-    toast("📧 If " + email + " has an account, we sent it a link to choose a new password. Check your inbox (and spam).", 7000);
+    resetSentNote(email);
   } catch (err) {
     const code = (err && err.code) || "";
-    if (code.includes("user-not-found")) return toast("📧 If " + email + " has an account, we sent it a link to choose a new password. Check your inbox (and spam).", 7000);
+    if (code.includes("user-not-found")) return resetSentNote(email);
     $("loginErr").textContent = loginError(err);
-  }
+  } finally { $("lgForgot").disabled = false; }
 }
 // 🧒 Kid: the code → signed in without an email (anonymous), as that kid. This device remembers it.
 $("kidForm").addEventListener("submit", async e => {

@@ -20,7 +20,7 @@
      This section only controls colors, sizes and spacing.
      ============================================================ -->
 <!-- THE LOOK (all the CSS) is in css/app.css -->
-<link rel="stylesheet" href="css/app.css?v=228">
+<link rel="stylesheet" href="css/app.css?v=230">
 </head>
 <body>
 <!-- ============================================================
@@ -737,13 +737,21 @@
 <!-- ☁️ The first screen when nobody is signed in on this device: 👨‍👩‍👧 I'm a parent · 🧒 I'm a kid -->
 <div class="login-screen" id="loginScreen" hidden>
   <div class="card login-card">
-    <div class="brand"><span class="brand-icon" aria-hidden="true">🏠</span><span class="brand-name">ADROS</span></div>
+    <div class="login-logo"><img src="icons/logo-adros.jpg" alt="ADROS" width="900" height="398"><p class="login-tag">Calmer evenings. Bigger dreams.</p></div>
     <!-- 1. Who are you? -->
     <div id="lgChoose" class="lg-step">
       <h1>Welcome! 👋</h1>
       <p class="hint" id="loginHint">Who is using this phone?</p>
-      <button type="button" class="primary login-big" data-lg="parent">👨‍👩‍👧 I'm a parent</button>
-      <button type="button" class="login-big lg-kid" data-lg="kid">🧒 I'm a kid</button>
+      <div class="lg-who">
+        <button type="button" class="lg-whocard lg-par" data-lg="parent">
+          <span class="lg-faces"><img src="icons/chars/mum/happy.jpg" alt=""><img src="icons/chars/dad/happy.jpg" alt=""></span>
+          <span class="lg-whotxt"><b>I'm a parent</b><small>Plan the week and help with school</small></span><span class="lg-go" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="lg-whocard lg-kidc" data-lg="kid">
+          <span class="lg-faces"><img src="icons/chars/c01/happy.jpg" alt=""><img src="icons/chars/c04d/happy.jpg" alt=""><img src="icons/chars/c08/happy.jpg" alt=""></span>
+          <span class="lg-whotxt"><b>I'm a kid</b><small>See my day, study and earn stars</small></span><span class="lg-go" aria-hidden="true">›</span>
+        </button>
+      </div>
     </div>
     <!-- 2a. Parent: Sign in · Create a family account · I have a parent code -->
     <form id="loginForm" class="lg-step" novalidate hidden>
@@ -761,7 +769,7 @@
       <label class="small" for="loginEmail">Email</label>
       <input type="email" id="loginEmail" autocomplete="username" inputmode="email" placeholder="you@example.com">
       <label class="small" for="loginPass">Password</label>
-      <input type="password" id="loginPass" autocomplete="current-password" placeholder="Password (6 or more letters)">
+      <input type="password" id="loginPass" autocomplete="current-password" placeholder="At least 6 letters or numbers">
       <div id="lgCodeRow"><label class="small" for="lgPCode">Parent code</label>
         <input type="text" id="lgPCode" class="code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC234"></div>
       <button type="submit" class="primary login-btn" id="loginBtn">Sign in</button>
@@ -771,7 +779,8 @@
     </form>
     <!-- 2b. Kid: just the code -->
     <form id="kidForm" class="lg-step" novalidate hidden>
-      <h1>Hi! 🧒</h1>
+      <h1>Hi there!</h1>
+      <p class="hint lg-kidhint">Ask a parent for your code. Parents find it under Family → Family members.</p>
       <label class="small lg-codelabel" for="kidCode">Type your code</label>
       <input type="text" id="kidCode" class="code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC234">
       <button type="submit" class="primary login-btn" id="kidBtn">Let's go! 🚀</button>
@@ -903,23 +912,23 @@
 <!-- 🕌 adhan: works out the prayer times on the device (sw.js keeps a copy, so it also works offline) -->
 <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js"></script>
 <!-- THE BRAIN: the app's JavaScript, split by feature in the js/ folder (they load in this order; see CLAUDE.md) -->
-<script src="js/core.js?v=228"></script>
-<script src="js/screens.js?v=228"></script>
-<script src="js/points.js?v=228"></script>
-<script src="js/fun.js?v=228"></script>
-<script src="js/reports.js?v=228"></script>
-<script src="js/profile.js?v=228"></script>
-<script src="js/home.js?v=228"></script>
-<script src="js/activities.js?v=228"></script>
-<script src="js/calendar.js?v=228"></script>
-<script src="js/school.js?v=228"></script>
-<script src="js/ai.js?v=228"></script>
-<script src="js/pictures.js?v=228"></script>
-<script src="js/study.js?v=228"></script>
-<script src="js/settings.js?v=228"></script>
-<script src="js/taps.js?v=228"></script>
-<script src="js/cloud.js?v=228"></script>
-<script src="js/news.js?v=228"></script>
-<script src="js/start.js?v=228"></script>
+<script src="js/core.js?v=230"></script>
+<script src="js/screens.js?v=230"></script>
+<script src="js/points.js?v=230"></script>
+<script src="js/fun.js?v=230"></script>
+<script src="js/reports.js?v=230"></script>
+<script src="js/profile.js?v=230"></script>
+<script src="js/home.js?v=230"></script>
+<script src="js/activities.js?v=230"></script>
+<script src="js/calendar.js?v=230"></script>
+<script src="js/school.js?v=230"></script>
+<script src="js/ai.js?v=230"></script>
+<script src="js/pictures.js?v=230"></script>
+<script src="js/study.js?v=230"></script>
+<script src="js/settings.js?v=230"></script>
+<script src="js/taps.js?v=230"></script>
+<script src="js/cloud.js?v=230"></script>
+<script src="js/news.js?v=230"></script>
+<script src="js/start.js?v=230"></script>
 </body>
 </html>
