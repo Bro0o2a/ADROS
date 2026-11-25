@@ -770,7 +770,7 @@ function toggleDone(day, actId, user, button) {
   const nowStar = !wasStar && stars().includes(owner.id);
   const r = button.getBoundingClientRect();
   celebrate(r.left + r.width / 2, r.top + r.height / 2, colorsOf(owner).color, nowStar);
-  toast(`Great job, ${owner.name}! +${POINTS_EACH} points ⭐` + (nowStar ? " You're the Shining Star! 🌟" : ""), 3200, colorsOf(owner).color);
+  toast(`Great job, ${owner.name}! +${POINTS_EACH} points ⭐` + (nowStar ? " You're the Shining Star! 🌟" : ""), 3200, colorsOf(owner).color, [owner.id, nowStar ? "star" : "thumbs"]);
 }
 
 // Confetti and stars bursting out of the checkbox

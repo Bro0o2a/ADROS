@@ -577,7 +577,7 @@ function cleanData(d) {
                    // ✨ the Spark's own name (shown as "Spark"; the stored field stays "buddy")
                    ...(typeof u.sparkName === "string" && u.sparkName.trim() ? { sparkName: u.sparkName.trim().slice(0, 12) } : {}),
                    // 🧸 v158: their 3D avatar picture (one of AVATAR_IDS; older data: none → their emoji)
-                   ...(typeof u.avatar === "string" && /^(boy|girl|parent)-\d{1,2}$/.test(u.avatar) ? { avatar: u.avatar } : {}),
+                   ...(typeof u.avatar === "string" && /^((boy|girl|parent)-\d{1,2}|c\d{2}d?|mum|dad)$/.test(u.avatar) ? { avatar: u.avatar } : {}),
                    // 🖼️ a parent's picture: a small square JPEG photo (about 160×160) instead of their emoji (newer: older data has none)
                    ...(typeof u.photo === "string" && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(u.photo) && u.photo.length <= 60000 ? { photo: u.photo } : {}),
                    // ⭐ a parent's chosen habits ("ph-" ids, as many as they like) + focusAt (when chosen: the newer choice wins, see mergeBuddies)
@@ -1537,9 +1537,28 @@ function emojisOf(ids) { return ids.map(id => userById(id).emoji).join(""); }
 // 👤 A person's face on the screen (HTML): a parent's photo (picked in 👤 My profile) or, without one, their emoji.
 // (Text-only places — toasts, PDFs, screen-reader labels — keep the emoji.) Kids: their emoji (their ✨ Spark stays as it is).
 // 🧸 v158: the 3D avatars (icons/avatars/<id>.jpg), picked in 👤 My profile. Kids see boys + girls, parents see all.
-const AVATARS = { boys: ["boy-1", "boy-2", "boy-3", "boy-4", "boy-5"], girls: ["girl-1", "girl-2", "girl-3", "girl-4", "girl-5", "girl-6"], parents: ["parent-1", "parent-2"] };
-const AVATAR_IDS = [...AVATARS.boys, ...AVATARS.girls, ...AVATARS.parents];
-const avatarSrc = id => `icons/avatars/${id}.jpg`;
+// 🧒 v227 ADROS CHARACTERS (Broo2a's pictures): each child picks ONE character (+ a skin colour) and sees it on every page,
+//   with the feeling that fits: icons/chars/<id>/<mood>.jpg. Ids: c01..c13 (lighter skin), c01d..c11d (darker skin), mum, dad.
+//   Moods: happy · star (Shining Star) · thumbs · wow · oops · confused · sleepy · reading, + full (full body, the Shining Star pop-up).
+const CHARS = [["c01", "Giggle Girl", "g"], ["c02", "Surprised Boy", "b"], ["c03", "Wink Girl", "g"], ["c04", "Cheer Boy", "b"], ["c05", "Puffs Girl", "g"],
+  ["c06", "Messy Boy", "b"], ["c07", "Fringe Girl", "g"], ["c08", "Glasses Boy", "b"], ["c09", "Headband Girl", "g"], ["c10", "Curly Boy", "b"],
+  ["c11", "Ponytail Girl", "g"], ["c12", "Space Buns Girl", "g"], ["c13", "Bow Girl", "g"]];
+const CHAR_DARK = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10", "c11"];   // the ones with a darker-skin version too
+const CHAR_MOODS = ["happy", "star", "thumbs", "wow", "oops", "confused", "sleepy", "reading"];
+const OLD_AVATARS = ["boy-1", "boy-2", "boy-3", "boy-4", "boy-5", "girl-1", "girl-2", "girl-3", "girl-4", "girl-5", "girl-6", "parent-1", "parent-2"];   // v158 pictures (still shown if picked before)
+const AVATARS = { boys: CHARS.filter(c => c[2] === "b").map(c => c[0]), girls: CHARS.filter(c => c[2] === "g").map(c => c[0]), parents: ["mum", "dad"] };
+const AVATAR_IDS = [...CHARS.map(c => c[0]), ...CHAR_DARK.map(id => id + "d"), "mum", "dad", ...OLD_AVATARS];
+const isCharId = id => /^(c\d{2}d?|mum|dad)$/.test(id || "");
+// the picture of a character in a mood (a mood it doesn't have → its happy face; full body: only the lighter-skin kids + mum/dad, else the round star)
+function avatarSrc(id, mood = "happy") {
+  if (!isCharId(id)) return `icons/avatars/${id}.jpg`;
+  if (mood === "full" && /d$/.test(id)) mood = "star";
+  if ((id === "mum" || id === "dad") && !["happy", "thumbs", "full"].includes(mood)) mood = mood === "star" ? "full" : "happy";
+  if (mood !== "full" && !CHAR_MOODS.includes(mood)) mood = "happy";
+  return `icons/chars/${id}/${mood}.jpg`;
+}
+// a person's character picture in a mood ("" when they haven't picked a character)
+const charPic = (u, mood) => u && isCharId(u.avatar) ? avatarSrc(u.avatar, mood) : "";
 const faceAvatar = u => u && AVATAR_IDS.includes(u.avatar) ? u.avatar : "";
 const facePhoto = u => u && isParentId(u.id) && typeof u.photo === "string" && u.photo.startsWith("data:image/jpeg;base64,") ? u.photo : "";
 const faceHtml = u => facePhoto(u) ? `<img class="face-img" src="${u.photo}" alt="${safe(u.name)}">`
@@ -1582,9 +1601,11 @@ function draftToast(text) { toast(`${text} · tap 💾 Save to keep it`, 3200); 
 // Short messages at the bottom of the screen
 let toastTimer = null;
 // cheerColor = make it a big, bouncy, colorful "well done" message
-function toast(text, ms, cheerColor) {
-  const el = $("toast");
+// (🧒 v227 pic = [person id, mood]: their character with that feeling next to the words, when they picked one)
+function toast(text, ms, cheerColor, pic) {
+  const el = $("toast"), src = pic && typeof charPic === "function" ? charPic(userById(pic[0]), pic[1]) : "";
   el.textContent = text;
+  if (src) el.insertAdjacentHTML("afterbegin", `<img class="toast-char" src="${src}" alt="">`);
   el.className = "toast" + (cheerColor ? " cheer" : "");
   el.style.cssText = cheerColor ? `--c:${cheerColor}` : "";
   el.hidden = true; void el.offsetWidth; // restart the bounce
