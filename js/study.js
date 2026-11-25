@@ -2449,7 +2449,8 @@ async function checkWorksheetNow(wsId) {
   if (first) {
     celebrate(innerWidth / 2, innerHeight / 3, color, true);
     if (!isParentPhone()) pointPop(POINTS_EACH, color);   // ✏️ +10 ⭐ points (homeworkPoints: every checked worksheet; the weekly 🎯 score follows the mark)
-    toast(`🎉 ${num(c.score)}/${num(c.max_score)}! Worksheet done +${POINTS_EACH} ⭐`, 3500, color);
+    toast(`🎉 ${num(c.score)}/${num(c.max_score)}! Worksheet done +${POINTS_EACH} ⭐`, 3500, color,
+      [now.kid, (p => p >= 0.8 ? "wow" : p >= 0.5 ? "thumbs" : "oops")(Number(c.max_score) ? Number(c.score) / Number(c.max_score) : 1)]);   // (🧒 v227 the feeling follows the mark)
   } else toast(`✅ Checked again: ${num(c.score)}/${num(c.max_score)}`, 3000);
 }
 // 🔔 "🦉 Mody · Math: 5/6" + the coach's tip, in the family's What's new (it pops up on the parents' devices)
@@ -2545,6 +2546,7 @@ function schoolExplainHtml(s, isDad) {
       h("button", { data: { exact: "ws" } }, "📝 Worksheet on this"),
       h("button", { data: { aireport: "explanation|" + schoolDoc } }, "🚩 Report"),
       isDad ? h("button", { class: "danger-text", data: { exact: "delete" } }, "🗑️ Delete") : null),
+    (src => src ? h("div", { class: "char-note" }, h("img", { src, alt: "" }), h("p", null, h("b", null, "Stuck? That's OK!"), " Let's read it together, step by step.")) : null)(charPic(userById(x.kid), "confused")),   // 🧒 v227
     exSheetNode(x), gotItNode(x), aiLinksNode(x))) : notHere();
 }
 // 👍 "I got it" at the end of an explanation: +5 ⭐ for the kid, once a topic a day (on their own device)
@@ -2571,7 +2573,7 @@ function exAction(act) {
   if (act === "gotit") {
     const got = giveStudy(x.kid, "ex", topicRef(x.topic || x.title));
     render();
-    return toast(got ? `👍 Great! +${STUDY_POINTS.ex} ⭐` : "👍 Great! (Points for this topic come once a day.)", 2600, colorsOf(userById(x.kid)).color);
+    return toast(got ? `👍 Great! +${STUDY_POINTS.ex} ⭐` : "👍 Great! (Points for this topic come once a day.)", 2600, colorsOf(userById(x.kid)).color, [x.kid, "thumbs"]);
   }
   if (act === "ws") return openWsOpts(x.kid, x.subject, [x.topic || x.title], 10, x.work);
   if (act === "delete") {

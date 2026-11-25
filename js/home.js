@@ -6,30 +6,31 @@
 // =====================================================================
 let kidPanel = null;
 // 🫧 v159 THE PUFFY BANNER (Broo2a's "Daily Planner" picture): a cream puffy board, the title in 3D bubble letters
-//   (the last word purple, the rest pink), a soft pill under it, and cute 3D friends (icons/deco) around it.
+//   (the last word purple, the rest pink), a soft pill under it, and (🧒 v227) your own character at the top left.
 //   Every page title (h1.page-title) becomes one after each render; the home's date is one too (see drawHome).
 const PUFF_PILLS = { home: "plan your day, make it happen!", mine: "plan your week, make it happen!", school: "learn, explore, grow!", points: "every star counts!",
   me: "this is me!", add: "what's on this week?", settings: "make it just right", family: "together is better", diary: "how was your day?", report: "look how you grow!",
   kidswork: "busy little bees!", kid: "all about them", extra: "have fun together!", setup: "make the app yours" };
 const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, try, discover!"], [/english/i, "read, write, shine!"], [/arabic/i, "every word counts!"],
   [/islam|quran/i, "learn with your heart"], [/ssa|social|humanit/i, "explore the world!"]];
-const puffDeco = (l = "bunny", r = "bear") => `<img class="pb-deco pb-l" src="icons/deco/${l}.png" alt=""><img class="pb-deco pb-r" src="icons/deco/${r}.png" alt="">
-  <i class="pb-st pb-s1">★</i><i class="pb-st pb-s2">★</i><i class="pb-st pb-s3">♥</i>`;
+// 🧒 v227 (Broo2a): the bunny/bear/heart stickers are gone; the banner shows YOUR character (picked in 👤 Me) with the feeling of that page.
+const PAGE_MOODS = { home: "happy", mine: "thumbs", school: "reading", points: "wow", me: "happy", add: "thumbs", settings: "thumbs", family: "happy",
+  diary: "happy", report: "wow", kidswork: "reading", kid: "happy", extra: "happy", setup: "thumbs" };
+const puffDeco = mood => { const src = charPic(userById(me), mood || PAGE_MOODS[screen] || "happy");
+  return src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : ""; };
 const plainWords = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F⬅️➡️›‹·]/gu, "").replace(/\s+/g, " ").trim();
-function puffBannerHtml(title, pill, deco = ["bunny", "bear"]) {
+function puffBannerHtml(title, pill, mood) {
   const w = plainWords(title).split(" "), last = w.pop();
-  return `${puffDeco(...deco)}<span class="pb-t">${w.length ? `<span class="bub bub-pink">${safe(w.join(" "))}</span> ` : ""}<span class="bub ${w.length ? "bub-lilac" : "bub-pink"}">${safe(last)}</span></span>
-    ${pill ? `<span class="bub-pill">${safe(pill)} <i>♥</i></span>` : ""}`;
+  return `${puffDeco(mood)}<span class="pb-t">${w.length ? `<span class="bub bub-pink">${safe(w.join(" "))}</span> ` : ""}<span class="bub ${w.length ? "bub-lilac" : "bub-pink"}">${safe(last)}</span></span>
+    ${pill ? `<span class="bub-pill">${safe(pill)}</span>` : ""}`;
 }
-const DECOS = [["bunny", "bear"], ["bunny2", "tulip"], ["cloud", "star"], ["bunny", "carrot"]];
 function puffTitles() {
   const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
   scr.querySelectorAll("h1.page-title").forEach(h => {
     const raw = h.dataset.puffed && h.querySelector(".pb-t") ? h.dataset.puffed : h.textContent, t = plainWords(raw);
     if (!t || (h.dataset.puffed === raw && h.querySelector(".pb-t"))) return;
     const sub = screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
-    const deco = DECOS[[...t].reduce((n, c) => n + c.charCodeAt(0), 0) % DECOS.length];
-    h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub, deco); h.dataset.puffed = raw;
+    h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub); h.dataset.puffed = raw;
   });
 }
 // 🧸 v159 planner style (Broo2a's "Daily Planner" picture): 3D icons (icons/3d/<name>.png, cut from their icon set),
@@ -66,7 +67,9 @@ function drawKidHome(u) {
   const hi = hr < 12 ? "Good morning!" : hr < 17 ? "Good afternoon!" : "Good evening!";
   const next = today.find(x => !isDone(todayYmd(), x.id, u.id));
   const tile = (cls, attr, icon, label, big, sub) => `<button class="kt ${cls}" ${attr}><span class="kt-ico" aria-hidden="true">${icon}</span><span class="kt-label">${label}</span><b class="kt-big">${big}</b><small>${sub}</small></button>`;
-  $("homeBig").innerHTML = `<div class="k-hero">${faceAvatar(u) ? `<img class="k-hero-pic" src="${avatarSrc(u.avatar)}" alt="">` : `<span class="k-hero-pic k-hero-emoji">${safe(u.emoji)}</span>`}
+  // 🧒 v227 the hero: my character, happy · 👍 when today is all done · 😴 after my bedtime · no character yet → my emoji + "Choose your character"
+  const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "thumbs" : "happy";
+  $("homeBig").innerHTML = `<div class="k-hero">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
       <div class="k-hero-text"><h2>${hi}</h2>${scoredUsers().some(x => x.id === u.id) ? `<p class="k-cheer">${safe(kidCheerShort(u.id))}</p>` : ""}<p>${!today.length ? "Nothing planned today. Enjoy!" : left ? `${left} ${left === 1 ? "thing" : "things"} left today. You can do it!` : "All done today. Amazing!"}</p>
       ${next ? `<button class="k-go" data-kidcal>▶ ${safe(next.name.length > 18 ? next.name.slice(0, 17) + "…" : next.name)}</button>` : `<button class="k-go" data-kidcal>📅 My day</button>`}</div>
       <svg class="k-plant" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 100V45" stroke="#5e8f5a" stroke-width="5" fill="none"/><path d="M60 70C35 70 22 52 20 34c22 0 36 14 40 36z" fill="#7fae6e"/><path d="M60 60C85 60 98 42 100 22c-22 0-36 14-40 38z" fill="#8fbb7c"/><path d="M60 50C48 36 46 20 54 6c10 10 12 26 6 44z" fill="#9ec68a"/><path d="M28 96h64l-8 40H36z" fill="#ead7bd"/><rect x="24" y="90" width="72" height="14" rx="7" fill="#f3e4cf"/></svg></div>
