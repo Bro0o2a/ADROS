@@ -3659,3 +3659,9 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .star-pop .sp-chars .sp-char { width: auto; height: 260px; max-height: 34vh; max-width: 80%; }
 .star-pop .sp-chars .sp-char:not(:only-child) { height: 200px; max-width: 45%; }
 @media (max-width: 380px) { .puff-banner .bub { font-size: 30px !important; } .puff-banner .bub-sm { font-size: 24px !important; } }   /* (small phones: "Wednesday" stays one word) */
+
+/* v230 sign-in logo + tagline */
+.login-logo { text-align: center; margin: -4px 0 12px; }
+.login-logo img { display: block; width: 100%; height: auto; border-radius: 22px; background: #F4E5D6; }
+.login-tag { margin: 8px 0 0; font-size: 19px; font-weight: 800; color: #C99A82; letter-spacing: .01em; }
+@media (max-width: 380px) { .login-tag { font-size: 16px; } }
