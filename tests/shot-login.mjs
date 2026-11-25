@@ -9,5 +9,6 @@ await pg.evaluate(() => { document.querySelectorAll('body > *').forEach(e => { i
   const l = document.getElementById('loginScreen'); l.hidden = false; l.style.display = 'grid';
   const b = l.querySelector('[data-lg="parent"]'); b && b.click(); });
 await pg.waitForTimeout(400);
+if (process.argv[4]) await pg.evaluate(() => { document.getElementById('loginEmail').value='mum@example.com'; resetSentNote('mum@example.com'); });
 await pg.screenshot({ path: out });
 await b.close();

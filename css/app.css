@@ -3665,3 +3665,4 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .login-logo img { display: block; width: 100%; height: auto; border-radius: 22px; background: #F4E5D6; }
 .login-tag { margin: 8px 0 0; font-size: 19px; font-weight: 800; color: #C99A82; letter-spacing: .01em; }
 @media (max-width: 380px) { .login-tag { font-size: 16px; } }
+#loginErr.ok { color: #4F7A3A; background: #EEF5E6; border-radius: 14px; padding: 10px 14px; font-weight: 700; }
