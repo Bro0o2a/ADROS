@@ -3666,3 +3666,19 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .login-tag { margin: 8px 0 0; font-size: 19px; font-weight: 800; color: #C99A82; letter-spacing: .01em; }
 @media (max-width: 380px) { .login-tag { font-size: 16px; } }
 #loginErr.ok { color: #4F7A3A; background: #EEF5E6; border-radius: 14px; padding: 10px 14px; font-weight: 700; }
+/* v230 "Who is using this phone?" cards with ADROS characters */
+.lg-who { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.lg-whocard { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 104px; padding: 14px 16px; border-radius: 28px; text-align: left;
+  border: 3px solid #fff; box-shadow: 0 10px 22px rgba(74, 52, 38, .12), inset 0 -6px 0 rgba(0, 0, 0, .05); color: #4A3426; cursor: pointer; }
+.lg-par { background: linear-gradient(135deg, #FBE0D2, #F6C8B4); }
+.lg-kidc { background: linear-gradient(135deg, #DCEAF5, #BFD8EC); }
+.lg-whocard:active { transform: scale(.98); }
+.lg-faces { display: flex; flex: none; }
+.lg-faces img { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; background: #FBF3E9; box-shadow: 0 3px 8px rgba(74, 52, 38, .15); }
+.lg-faces img + img { margin-left: -18px; }
+.lg-kidc .lg-faces img { width: 46px; height: 46px; }
+.lg-whotxt { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lg-whotxt b { font-size: 22px; white-space: nowrap; font-weight: 800; line-height: 1.1; }
+.lg-whotxt small { font-size: 15px; font-weight: 600; color: #7A5A48; line-height: 1.25; }
+.lg-go { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #EC8466; font-size: 26px; font-weight: 800; line-height: 1; }
+@media (max-width: 380px) { .lg-faces img { width: 52px; height: 52px; } .lg-kidc .lg-faces img { width: 44px; height: 44px; } .lg-whotxt b { font-size: 20px; } .lg-whotxt small { font-size: 14px; } .lg-whocard { gap: 10px; padding: 12px; } }

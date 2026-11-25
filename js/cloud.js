@@ -134,7 +134,7 @@ const LG_MODES = {
 function loginMode(mode) {
   lgMode = mode;
   const [title, hint, btn] = LG_MODES[mode];
-  $("lgTitle").textContent = "👨‍👩‍👧 " + title;
+  $("lgTitle").textContent = title;
   $("lgModeHint").textContent = hint;
   $("loginBtn").textContent = btn;
   $("lgFamilyRow").hidden = mode !== "create";
