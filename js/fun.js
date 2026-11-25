@@ -90,10 +90,10 @@ function toggleHabit(who, habitId, part, button) {
   const nowStar = !wasStar && stars().includes(who);
   const r = button.getBoundingClientRect();
   celebrate(r.left + r.width / 2, r.top + r.height / 2, color, allDone || nowStar);
-  if (allDone) toast(`All good habits done, ${owner.name}! 🌟`, 3200, color);
-  else if (nowStar) toast(`You're the Shining Star, ${owner.name}! 🌟`, 3200, color);
-  else if (h.kind === "prayers") toast(`${h.emoji} Well done, ${owner.name}! +${gained} ⭐`, 2200, color);   // each prayer
-  else if (habitDone(h, now)) toast(`${h.emoji} Well done, ${owner.name}! +${gained} ⭐`, 2200, color);
+  if (allDone) toast(`All good habits done, ${owner.name}! 🌟`, 3200, color, [who, "wow"]);
+  else if (nowStar) toast(`You're the Shining Star, ${owner.name}! 🌟`, 3200, color, [who, "star"]);
+  else if (h.kind === "prayers") toast(`${h.emoji} Well done, ${owner.name}! +${gained} ⭐`, 2200, color, [who, "thumbs"]);   // each prayer
+  else if (habitDone(h, now)) toast(`${h.emoji} Well done, ${owner.name}! +${gained} ⭐`, 2200, color, [who, "thumbs"]);
 }
 
 // (👨‍👩‍👧 The PARENTS' habits and prayers were removed: no card, picker, editor or points. Their old data stays saved in the cloud

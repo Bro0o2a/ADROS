@@ -3630,3 +3630,32 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
   #scr-mine .bar [data-printcal] { display: none; }   /* (📱 small phones: 🖨️ Print is in ☰ / on a computer; 🚪 Sign out stays on the screen) */
   #scr-settings .setting .row { flex-wrap: wrap; }
 }
+
+/* 🧒 v227 ADROS characters: the child's own character on every page (no more bunny/bear/heart stickers) */
+.pb-st, .pb-r { display: none !important; }
+.puff-banner .pb-char { left: -10px; top: -22px; width: 74px; height: 74px; border: 4px solid #fff; background: #fbf3e9; object-fit: cover;
+  box-shadow: 0 4px 10px rgba(120, 80, 50, .18); }
+@media (max-width: 380px) { .puff-banner .pb-char { width: 62px; height: 62px; left: -8px; top: -18px; } }
+.k-hero-pic { object-fit: cover; }
+.k-pickchar { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 3px dashed var(--coral); cursor: pointer; padding: 4px; }
+.k-pickchar small { font: 800 11px/1.1 Nunito, sans-serif; color: var(--coral); text-align: center; }
+.av-hint { margin: 2px 2px 8px; }
+.av-tones { display: flex; gap: 8px; margin: 0 0 4px; }
+.av-tone { display: inline-flex; align-items: center; gap: 6px; }
+.av-tone.on { background: var(--coral); color: #fff; }
+.av-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
+.av-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.av-opt, .av-opt img { border-radius: 50%; }
+.sp-chars { display: flex; justify-content: center; gap: 8px; margin: 6px auto 4px; }
+.sp-char { max-height: 230px; max-width: 70%; object-fit: contain; border-radius: 24px; filter: drop-shadow(0 6px 14px rgba(200, 150, 40, .35)); }
+.sp-chars .sp-char:not(:only-child) { max-width: 45%; max-height: 190px; }
+.sp-face { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
+.face-av { object-fit: cover; }
+.toast-char { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin: -6px 10px -6px -8px; border: 3px solid #fff; background: #fbf3e9; }
+.char-note { display: flex; align-items: center; gap: 12px; background: #fff8ee; border-radius: 20px; padding: 10px 14px; margin: 10px 0; }
+.char-note img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; border: 3px solid #fff; }
+.char-note p { margin: 0; }
+.puff-banner .pb-char { border-radius: 50% !important; width: 62px !important; height: 62px !important; left: -12px !important; top: -26px !important; }
+.star-pop .sp-chars .sp-char { width: auto; height: 260px; max-height: 34vh; max-width: 80%; }
+.star-pop .sp-chars .sp-char:not(:only-child) { height: 200px; max-width: 45%; }
+@media (max-width: 380px) { .puff-banner .bub { font-size: 30px !important; } .puff-banner .bub-sm { font-size: 24px !important; } }   /* (small phones: "Wednesday" stays one word) */

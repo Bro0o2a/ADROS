@@ -53,7 +53,7 @@ function drawMe() {
           <button type="button" class="pill" data-menophoto ${(mePhoto !== null ? mePhoto : facePhoto(u)) ? "" : "hidden"}>😀 Use my emoji instead</button></div>
         <input type="file" id="mePhotoFile" accept="image/*" hidden>
         <p class="hint">Or tap an emoji below. A photo is cut to a square and kept small.</p>` : ""}
-      <label class="small">🧸 ${my} picture</label>${avatarPickHtml(u)}
+      <label class="small">🧒 ${mine ? "Choose your character" : `${safe(u.name)}'s character`}</label>${avatarPickHtml(u)}
       <label class="small">😀 ${my} emoji ${faceAvatar(u) ? `<small>(shown when no picture is picked)</small>` : ""}</label><div class="emoji-pick me-emojis">${[...new Set([u.emoji, ...EMOJIS])].map(e => `<button type="button" class="${e === u.emoji ? "on" : ""}" data-meemoji="${e}" aria-label="Use ${e}">${e}</button>`).join("")}</div>
       <label class="small">🎨 ${my} colour</label><div class="swatches me-colors">${Object.entries(PALETTE).map(([key, x]) => `<label title="${key}"><input type="radio" name="meColor" value="${key}" ${u.color === key ? "checked" : ""}><span style="background:${x.color}"></span></label>`).join("")}</div>
       <label class="small" for="meBirthday">🎂 Birthday</label><input type="date" id="meBirthday" value="${safe(u.birthday || "")}">`, true)}
@@ -193,13 +193,20 @@ document.addEventListener("click", e => {
 });
 // Who changes a profile: the person themselves (kids too), or a parent for any kid
 const canEditProfile = id => exists(id) && (id === me || (isParentViewer() && !isParentId(id)));
-// 🧸 v158: Choose your picture: the 3D avatars (kids: boys + girls · parents: parents too) + "No picture" (= the emoji)
-function avatarPickHtml(u) {
-  const groups = [["Boys", AVATARS.boys], ["Girls", AVATARS.girls], ...(isParentId(u.id) ? [["Parents", AVATARS.parents]] : [])];
+// 🧒 v227 Choose your character: the ADROS characters (girls · boys · parents for a parent) + a skin colour switch + "No picture" (= the emoji).
+//   The one you pick shows on every page, with a different feeling (see charPic in core.js).
+let avTone = null;   // the skin colour shown in the picker ("" lighter · "d" darker); null = from the saved pick
+function avatarPickHtml(u, tone) {
   const cur = faceAvatar(u);
-  return `<div class="av-pick" id="avPick">${groups.map(([name, ids]) => `<p class="av-group">${name}</p><div class="av-grid">${ids.map(id =>
-      `<button type="button" class="av-opt ${id === cur ? "on" : ""}" data-meavatar="${id}" aria-label="Use this picture"><img src="${avatarSrc(id)}" alt=""></button>`).join("")}</div>`).join("")}
-    <div class="btnrow"><button type="button" class="pill av-none ${cur ? "" : "on"}" data-meavatar="">😀 No picture, use my emoji</button></div></div>`;
+  if (tone == null) tone = avTone != null ? avTone : /^c\d{2}d$/.test(cur) ? "d" : "";
+  const kidIds = ids => ids.map(id => tone === "d" && CHAR_DARK.includes(id) ? id + "d" : id);
+  const groups = [["Girls", kidIds(AVATARS.girls)], ["Boys", kidIds(AVATARS.boys)], ...(isParentId(u.id) ? [["Parents", AVATARS.parents]] : [])];
+  return `<div class="av-pick" id="avPick"><p class="hint av-hint">Pick the one that looks like you! It shows on every page.</p>
+    <div class="av-tones" role="group" aria-label="Skin colour"><button type="button" class="pill av-tone ${tone ? "" : "on"}" data-metone=""><i class="av-dot" style="background:#f3c9a6"></i>Lighter</button>
+      <button type="button" class="pill av-tone ${tone ? "on" : ""}" data-metone="d"><i class="av-dot" style="background:#b97b52"></i>Darker</button></div>
+    ${groups.map(([name, ids]) => `<p class="av-group">${name}</p><div class="av-grid">${ids.map(id =>
+      `<button type="button" class="av-opt ${id === cur ? "on" : ""}" data-meavatar="${id}" aria-label="Use this character"><img src="${avatarSrc(id)}" alt="" loading="lazy"></button>`).join("")}</div>`).join("")}
+    <div class="btnrow"><button type="button" class="pill av-none ${cur ? "" : "on"}" data-meavatar="">😀 No character, use my emoji</button></div></div>`;
 }
 // 🖼️ A parent's picture while editing: null = as saved · "" = use the emoji · a new photo (a small JPEG, see takePhoto)
 let mePhoto = null;
@@ -274,7 +281,7 @@ document.addEventListener("click", e => {
   const ds = b.dataset;
   if (ds.mewho) { meWho = ds.mewho; meEdit = false; return render(); }
   if ("menotyou" in ds) return askWhichParent(true);   // 👨‍👩‍👧 the family's main login: pick yourself again (this device only)
-  if ("meedit" in ds) { meEdit = true; mePhoto = null; render();
+  if ("meedit" in ds) { meEdit = true; mePhoto = null; avTone = null; render();
     // (✏️ v180: from the 🎂 Birthday / ❤️ Things I love card: that part opens, ready to type)
     const field = ds.meedit === "birthday" ? $("meBirthday") : ds.meedit === "loves" ? $("meBody").querySelector("[id^='meLove-']") : null;
     if (field) { const g = field.closest("details"); if (g) g.open = true; field.scrollIntoView({ behavior: "smooth", block: "center" }); try { field.focus({ preventScroll: true }); } catch (e) {} return; }
@@ -284,6 +291,14 @@ document.addEventListener("click", e => {
   // 🖼️ a parent: 📷 take or choose a photo · 😀 use my emoji instead (tapping an emoji picks the emoji too)
   if ("mephoto" in ds) { $("mePhotoFile").value = ""; return $("mePhotoFile").click(); }
   if ("menophoto" in ds) { mePhoto = ""; $("mePicNow").innerHTML = mePicHtml(userById(meWho)); b.hidden = true; return; }
+  if ("metone" in ds) {   // 🎨 the skin colour switch: the same characters, lighter or darker (the picked one follows)
+    const u = userById(meWho), on = $("meBody").querySelector("[data-meavatar].on"), picked = on ? on.dataset.meavatar : "";
+    avTone = ds.metone;
+    const base = picked.replace(/d$/, ""), next = /^c\d{2}d?$/.test(picked) ? (avTone === "d" && CHAR_DARK.includes(base) ? base + "d" : base) : picked;
+    $("avPick").outerHTML = avatarPickHtml({ ...u, avatar: next }, avTone);
+    if (next !== picked) { const nb = $("meBody").querySelector(`[data-meavatar="${next}"]`); if (nb) nb.click(); }
+    return;
+  }
   if ("meavatar" in ds) {
     $("meBody").querySelectorAll("[data-meavatar]").forEach(x => x.classList.toggle("on", x === b));
     if (ds.meavatar && $("mePicNow")) { mePhoto = ""; $("mePicNow").innerHTML = `<img class="face-img me-pic-img" src="${avatarSrc(ds.meavatar)}" alt="">`;
@@ -551,13 +566,13 @@ function maybeShowStar() {
   try { localStorage.setItem("starSeen", w); } catch (e) { return; }   // (no storage: never pop up again and again)
   const win = stars(w), medal = i => ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
   const rows = rec.board.filter(x => exists(x.id)).map((x, i) => { const u = userById(x.id);
-    return `<div class="sp-row${win.includes(x.id) ? " win" : ""}"><span>${medal(i)} ${safe(u.emoji)} ${safe(u.name)}</span><b>${x.s}</b></div>`; }).join("");
+    return `<div class="sp-row${win.includes(x.id) ? " win" : ""}"><span>${medal(i)} ${charPic(u) ? `<img class="sp-face" src="${charPic(u, win.includes(x.id) ? "star" : "happy")}" alt="">` : safe(u.emoji)} ${safe(u.name)}</span><b>${x.s}</b></div>`; }).join("");
   // 📣 v171: one BIG full-screen message, the same for every parent and kid
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
   $("kCard").innerHTML = `<div class="sp-confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>
-    <div class="sp-star" aria-hidden="true">🌟</div>
+    ${(pics => pics.length ? `<div class="sp-chars">${pics.join("")}</div>` : `<div class="sp-star" aria-hidden="true">🌟</div>`)(win.map(id => charPic(userById(id), "full")).filter(Boolean).map(src => `<img class="sp-char" src="${src}" alt="">`))}
     <div class="sp-title">Shining Star of the Week!</div>
-    <div class="sp-names">${win.map(id => `<div>${safe(userById(id).emoji)} ${safe(userById(id).name)}</div>`).join("")}</div>
+    <div class="sp-names">${win.map(id => `<div>${charPic(userById(id)) ? "" : safe(userById(id).emoji) + " "}${safe(userById(id).name)}</div>`).join("")}</div>
     <div class="sp-board">${rows}</div>
     <p class="sp-note">Well done everyone! A new week starts at midnight. Good luck! 💪${win.includes(me) ? "<br><b>🎁 Choose your gift in ⭐ Points!</b>" : ""}</p>
     <button class="k-ok" id="kOk">Yay! 🎉</button>`;
@@ -902,8 +917,8 @@ function drawHome() {
   $("homeDate").className = "home-date" + (isParentDevice() ? "" : " kid");
   // 🫧 v159: the date in the middle, in the puffy banner: "Thursday" (pink) · "5 November" (purple) · a soft pill
   $("homeDate").className += " puff-banner pb-home";
-  $("homeDate").innerHTML = `${puffDeco("bunny", "bear")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
-    <span class="bub-pill">${PUFF_PILLS.home} <i>♥</i></span>`;
+  $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
+    <span class="bub-pill">${PUFF_PILLS.home}</span>`;
   const myPoints = pointsByUser()[me], myFair = scoreText(scoreOf(me));
   $("homePoints").textContent = (stars().includes(me) ? `🌟 Shining Star of the Week · ⭐ Score ${myFair} · ${myPoints} points` : `⭐ Score ${myFair} · ${myPoints} points this week`)
     + ` · ${kindsText(weekKinds(me))}`;
@@ -937,3 +952,11 @@ function drawHome() {
   maybeShowTour();
   maybeShowSetup();   // ✨ a parent, the first time: "Make the app yours"
 }
+// 🧒 v227 "Choose your character" (from the kid's home when no character is picked yet): opens my settings at the character list
+document.addEventListener("click", e => {
+  if (!e.target.closest("[data-pickchar]") || !exists(me)) return;
+  openProfile(me);
+  if (!canEditProfile(me)) return;
+  meEdit = true; avTone = null; render();
+  setTimeout(() => { const p = $("avPick"); if (!p) return; const g = p.closest("details"); if (g) g.open = true; p.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+});
