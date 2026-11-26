@@ -1119,6 +1119,7 @@ function planKey() {
     // (🌙 v215: the bedtime for all kids and the weekend days too, so changing them in 📅 Calendar setup plans the week again)
     ...(data.bedAll ? { bedAll: [data.bedAll.wd, data.bedAll.we] } : {}),
     ...(Array.isArray(data.weekendDays) ? { we: data.weekendDays } : {}),
+    ...(Array.isArray(data.weekendNights) ? { wn: data.weekendNights } : {}),   // (🌙 v231 the weekend nights the parents picked)
     ...(data.routines.length ? { rt: data.routines.map(r => [r.id, r.days, r.start, r.duration, r.users]) } : {})
   });
 }

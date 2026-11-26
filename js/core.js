@@ -80,7 +80,9 @@ const BED_TIME = /^(1[89]|2[0-3]):[0-5]\d$/;   // 6 PM … 11:45 PM
 // 🎉 v213 (Broo2a): the weekend DAYS (days off school) are the family's choice (📅 Calendar setup; default Saturday and Sunday, 0 = Monday).
 // A weekend NIGHT = the night before a day off (default Friday and Saturday nights).
 const weekendDaysOf = () => (data && Array.isArray(data.weekendDays) ? data.weekendDays : [5, 6]);
-const isWeekendNight = wd => weekendDaysOf().includes((wd + 1) % 7);
+// 🌙 v231 (Broo2a): the parents pick the weekend nights (later bedtime) in 📅 Calendar setup; none picked yet → the nights before a day off
+const weekendNightsOf = () => (data && Array.isArray(data.weekendNights) ? data.weekendNights : DAYS.map((_, i) => i).filter(i => weekendDaysOf().includes((i + 1) % 7)));
+const isWeekendNight = wd => weekendNightsOf().includes(wd);
 // 🏖️ v231 (Broo2a): a weekend day ("2026-11-28") = a rest day: the planner puts no flexible activities on it (a parent may move
 // one there by hand), missed ⭐ must-dos and missed activities there don't lower the score; a tick there still gives points.
 const isRestDay = ymd => weekendDaysOf().includes(weekdayOf(ymd));
@@ -884,6 +886,7 @@ function cleanData(d) {
     if (Object.keys(w).length) clean.wsDay = w;
   }
   if (d.bedAll && BED_TIME.test(d.bedAll.wd || "") && BED_TIME.test(d.bedAll.we || "")) clean.bedAll = { wd: d.bedAll.wd, we: d.bedAll.we };   // 🌙 v213 one time for all kids
+  if (Array.isArray(d.weekendNights) && d.weekendNights.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendNights = [...new Set(d.weekendNights)].sort();   // 🌙 v231
   if (Array.isArray(d.weekendDays) && d.weekendDays.length <= 4 && d.weekendDays.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendDays = [...new Set(d.weekendDays)].sort();   // 🎉 v213
   if (d.calSetup === true) clean.calSetup = true;   // (📅 v213 the Calendar setup box was saved once)
   if (Number.isInteger(d.calWeekStart) && d.calWeekStart >= 0 && d.calWeekStart <= 6) clean.calWeekStart = d.calWeekStart;
