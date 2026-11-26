@@ -191,7 +191,8 @@ function calBoxHtml() {
        <div class="bed-lab">🎉 Weekend days <small>(${names(order.filter(i => d.weekend.includes(i)))})</small></div>${step("start|we", d.start.we)}`)}
     ${sec("end", "🌙 Day ends", `${hm(d.all.wd)} · weekend ${hm(d.all.we)}${owners.length ? ` · own: ${safe(owners.join(", "))}` : ""}`,
       `<p class="hint">Nothing is planned for the kids after this time. The same for every kid; change one kid only if needed.</p>
-       <div class="bed-lab">🎉 Which nights are weekend nights? <small>(tap to change; the later bedtime is on these nights)</small></div>${dayBtns("data-bednight", i => d.nights.includes(i))}
+       <div class="bed-lab">🎉 Which nights are weekend nights? <small>(tap to change)</small></div>${dayBtns("data-bednight", i => d.nights.includes(i))}
+       <p class="hint">💡 Weekend nights are the nights your kids may stay up later, usually the night before a day off (with a Sat + Sun weekend: Friday and Saturday nights). On these nights the later bedtime below is used, and nothing is planned after it.</p>
        <div class="bed-lab">📚 School nights <small>(${names(nightsOf(false))})</small></div>${step("all|wd", d.all.wd)}
        <div class="bed-lab">🎉 Weekend nights <small>(${names(nightsOf(true))})</small></div>${step("all|we", d.all.we)}${kidRows}`)}
     ${sec("school", "🏫 School", sc.on ? `${hm(sc.start)}–${hm(sc.end)}${sc.short != null ? ` · ${SHORT[sc.short]} ${hm(sc.shortEnd)}` : ""}` : "not shown",
