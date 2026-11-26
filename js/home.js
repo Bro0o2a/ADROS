@@ -211,7 +211,7 @@ function kidCheerShort(id) {
   if (!gap) return `💪 Tied with ${above.name}! One more tick puts you ahead.`;
   if (gap <= 5) return pick([`💪 Only ${gap} behind ${above.name}. One good worksheet can do it!`, `💪 So close: ${gap} to catch ${above.name}. You can do it!`]);
   const sc = scoreOf(id), lost = sc.base - sc.overall, d = todayTrend(id);
-  if (lost >= 3) return `⭐ Do all your must-dos and win back up to ${lost} points!`;
+  if (lost >= 3) return `⭐ Missed must-dos cost you ${lost} points. Tick them every day to keep your points!`;
   if (d > 0) return pick([`🌱 ▲ ${d} today. Keep climbing!`, `🌱 Up ${d} today. Every step counts!`]);
   const next = todayItems(id).find(x => !isDone(todayYmd(), x.id, id));
   return next ? pick([`▶ Next: ${next.name}. Every tick lifts your score!`, `🌱 Tick ${next.name} today and watch your score grow.`]) : "🌱 A good worksheet today can lift your score a lot!";
@@ -796,7 +796,7 @@ const TOUR_KID = [["✅", "Tick your tasks", "When you finish something, tap its
                   ["✨", "Grow your Spark", "All your points help your Spark grow. Can you reach the next level?"]];
 const TOUR_PARENT = [["📅", "Family calendar", "Everyone's week in one place. ✨ Plan my week fits all the activities together."],
                      ["🎒", "School coach", "Upload today's school work: 🤖 makes worksheets, checks the answers and tells you what to practise."],
-                     ["⭐", "Points & the kids' habits", "⭐ Score (out of 100, each week): 📝 every checked worksheet adds points from its mark (100% = 10, 80% = 8; a study-session one 5% more), up to 80 + ✅ 📚 ⚽ 🌱 items ticked (20). Missed ⭐ must-dos lower it, except on your days off (📅 Calendar setup). Points still grow the ✨ Spark."],
+                     ["⭐", "Points & the kids' habits", "⭐ Score (out of 100, each week): 📚 study sessions (60: 30 for doing the planned time + 30 for their results) + ⚡ extra worksheets (each adds its mark × 2, up to 20) + ✅ items and habits ticked (20). Each missed ⭐ must-do takes off 2, except on your days off (📅 Calendar setup). Points still grow the ✨ Spark."],
                      ["⚙️", "Settings", "Turn features on or off for your family, and set up the people and the day."]];
 let tourShown = false;   // (once per opening of the app)
 function maybeShowTour() {

@@ -153,11 +153,15 @@ try {
     fixQuestion("sesstest", 2, "right");
     const after = data.points.sessions[key].pct, scoreAfter = scoreOf(kid).overall, c = aiDocs.worksheets.sesstest.check;
     delete aiDocs.worksheets.sesstest; delete data.points.sessions[key];
-    return before === 80 && after === 100 && c.score === 5 && scoreAfter > scoreBefore ? "ok" : JSON.stringify({ before, after, scoreBefore, scoreAfter, score: c.score });
+    const real = studySessions(kid).find(x => x.ended || x.done);
+    let grows = true;
+    if (real) { const old = data.points.sessions[real.key]; data.points.sessions[real.key] = { pct: 20 }; const lo = scoreOf(kid).base;
+      data.points.sessions[real.key] = { pct: 100 }; grows = scoreOf(kid).base > lo; if (old) data.points.sessions[real.key] = old; else delete data.points.sessions[real.key]; }
+    return before === 80 && after === 100 && c.score === 5 && scoreAfter >= scoreBefore && grows ? "ok" : JSON.stringify({ before, after, scoreBefore, scoreAfter, score: c.score });
   }, FAKE_WS);
   if (fixSess !== "ok") errors.push("[session score after a parent fix] " + fixSess);
 
-  // 📝 v208 every worksheet adds points from its mark (100 % = 10), a session one 5 % more, at most 80 a week
+  // ⚡ v232 an extra worksheet adds its mark × 2 (80 % → 1.6); session ones count through the session
   const wsPts = await run("worksheet points", () => {
     const kid = "ex-kid1", s = schoolFor(kid), fid = Object.keys(s.subjects || {})[0];
     if (!fid) return "no subject";
@@ -167,8 +171,10 @@ try {
     const a = scoreMarks(kid);
     L.history = Array.from({ length: 12 }, (_, i) => ({ date: d, ws: "m" + i, pct: 100, level: 5 }));
     const b = scoreMarks(kid);
+    b.capped = (L.history.forEach(h => { data.points.free[`${d}|${h.ws}|${kid}`] = { make: 0, up: 1, bonus: 0, at: "t", sub: "x" }; }), scoreMarks(kid).extraPts);
+    L.history.forEach(h => delete data.points.free[`${d}|${h.ws}|${kid}`]);
     L.history = keep; delete data.points.free[fk];
-    return a.sessPts === 10.5 && a.extraPts === 8 && a.pts === 18.5 && a.avg === 90 && b.pts === 80 ? "ok" : JSON.stringify({ a, b });
+    return a.extraPts === 1.6 && a.count === 1 && a.extraCount === 1 && a.avg === 90 && b.extraPts === 0 && b.capped === 20 ? "ok" : JSON.stringify({ a, b });
   });
   if (wsPts !== "ok") errors.push("[worksheet points] " + wsPts);
 
