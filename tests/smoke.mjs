@@ -240,9 +240,16 @@ try {
   });
   if (mustAct !== "ok") errors.push("[must-do activity] " + mustAct);
 
-  // 🏖️ v209 must-dos don't count on Friday / Saturday
-  const offDay = await run("must-dos off on Friday and Saturday", () =>
-    mustOffDay("2026-11-20") && mustOffDay("2026-11-21") && !mustOffDay("2026-11-22") && !mustOffDay("2026-11-19") ? "ok" : "wrong days");
+  // 🏖️ v231 must-dos don't count on the family's days off (📅 Calendar setup weekend days; default Sat + Sun)
+  const offDay = await run("must-dos off on the weekend days", () => {
+    const old = data.weekendDays;
+    delete data.weekendDays;   // default: Sat 21 + Sun 22 Nov off, Fri 20 counts
+    const a = mustOffDay("2026-11-21") && mustOffDay("2026-11-22") && !mustOffDay("2026-11-20") && !mustOffDay("2026-11-19");
+    data.weekendDays = [4, 5];  // a Fri + Sat family
+    const b = mustOffDay("2026-11-20") && mustOffDay("2026-11-21") && !mustOffDay("2026-11-22");
+    if (old) data.weekendDays = old; else delete data.weekendDays;
+    return a && b ? "ok" : "wrong days " + a + " " + b;
+  });
   if (offDay !== "ok") errors.push("[must-dos off days] " + offDay);
 
   // 📖📋 v191 newsletter: the preview day is the Sunday before the week; the missing topics of a week are found

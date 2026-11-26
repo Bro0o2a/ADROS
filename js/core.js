@@ -80,7 +80,12 @@ const BED_TIME = /^(1[89]|2[0-3]):[0-5]\d$/;   // 6 PM … 11:45 PM
 // 🎉 v213 (Broo2a): the weekend DAYS (days off school) are the family's choice (📅 Calendar setup; default Saturday and Sunday, 0 = Monday).
 // A weekend NIGHT = the night before a day off (default Friday and Saturday nights).
 const weekendDaysOf = () => (data && Array.isArray(data.weekendDays) ? data.weekendDays : [5, 6]);
-const isWeekendNight = wd => weekendDaysOf().includes((wd + 1) % 7);
+// 🌙 v231 (Broo2a): the parents pick the weekend nights (later bedtime) in 📅 Calendar setup; none picked yet → the nights before a day off
+const weekendNightsOf = () => (data && Array.isArray(data.weekendNights) ? data.weekendNights : DAYS.map((_, i) => i).filter(i => weekendDaysOf().includes((i + 1) % 7)));
+const isWeekendNight = wd => weekendNightsOf().includes(wd);
+// 🏖️ v231 (Broo2a): a weekend day ("2026-11-28") = a rest day: the planner puts no flexible activities on it (a parent may move
+// one there by hand), missed ⭐ must-dos and missed activities there don't lower the score; a tick there still gives points.
+const isRestDay = ymd => weekendDaysOf().includes(weekdayOf(ymd));
 // 🌙 v193: a "Bedtime routine" (or any routine named bed / sleep) counts as bedtime too: nothing for that person after it ends
 const isBedRoutine = r => /\b(bed|sleep)/i.test(String(r && r.name || ""));
 function routineBed(person, wd) {
@@ -476,6 +481,7 @@ function emptyData() {
     // weekendOwn = true → Saturday and Sunday use weekendStart / weekendEnd instead.
     myDay: { start: "08:00", end: "21:00", weekendOwn: false, weekendStart: "08:00", weekendEnd: "21:00" },
     starAt: { day: 4, time: "15:30" },
+    asks: [],      // 🙋 v231 a kid's new / changed activity waiting for a parent's ✅ (see askParent in activities.js)
     aiOk: null,    // 🤖 a parent said OK to the AI helper for the family: { by, at } (see askAiOk in ai.js)
     starV: 2,        // ⭐ 2 = the old Friday 6 PM was moved to Friday 3:30 PM once (v171)
     fixedOn: {},    // 🏫 v180: a fixed activity changed on ONE date: "date|actId" → { off: true } (didn't happen) or { start, end } ("09:00")
@@ -753,6 +759,10 @@ function cleanData(d) {
     else if (typeof v === "number" && v >= 1 && v <= WATER_DROPS) clean.habitMarks[key] = Math.round(v);
   });
 
+  // 🙋 v231 the kids' activities waiting for a parent's ✅
+  clean.asks = (Array.isArray(d.asks) ? d.asks : []).filter(a => a && (a.kind === "fx" || a.kind === "fl") && a.act && typeof a.act === "object"
+    && typeof a.act.name === "string" && a.act.name.trim() && userIds.includes(a.by) && JSON.stringify(a.act).length < 4000).slice(-30)
+    .map(a => ({ id: String(a.id || newId()), kind: a.kind, act: a.act, of: typeof a.of === "string" ? a.of : null, by: a.by, at: typeof a.at === "string" ? a.at.slice(0, 30) : "", ...(a.del === true ? { del: true } : {}) }));
   if (Array.isArray(d.flexible)) clean.flexible = d.flexible
     .filter(f => f && f.name && Number(f.duration) > 0 && Number(f.times) > 0)
     .map(f => {
@@ -876,6 +886,7 @@ function cleanData(d) {
     if (Object.keys(w).length) clean.wsDay = w;
   }
   if (d.bedAll && BED_TIME.test(d.bedAll.wd || "") && BED_TIME.test(d.bedAll.we || "")) clean.bedAll = { wd: d.bedAll.wd, we: d.bedAll.we };   // 🌙 v213 one time for all kids
+  if (Array.isArray(d.weekendNights) && d.weekendNights.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendNights = [...new Set(d.weekendNights)].sort();   // 🌙 v231
   if (Array.isArray(d.weekendDays) && d.weekendDays.length <= 4 && d.weekendDays.every(n => Number.isInteger(n) && n >= 0 && n <= 6)) clean.weekendDays = [...new Set(d.weekendDays)].sort();   // 🎉 v213
   if (d.calSetup === true) clean.calSetup = true;   // (📅 v213 the Calendar setup box was saved once)
   if (Number.isInteger(d.calWeekStart) && d.calWeekStart >= 0 && d.calWeekStart <= 6) clean.calWeekStart = d.calWeekStart;

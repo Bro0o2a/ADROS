@@ -215,8 +215,9 @@ function showTimeShort(short) {
   $("kModal").hidden = false;
   $("kOk").focus();
 }
-// The small live line on ✏️ Add activities (parents): "Mody: 9 h 15 min of 11 h free · Bana: …" (red when it doesn't fit)
-const timeLineHtml = () => timeBudget().map(x => `<span class="${x.need > x.free ? "over" : ""}">${safe(x.kid.name)}: ${hmText(x.need)} of ${hmText(x.free)} free</span>`).join(" · ");
+// The small live line on ✏️ Add activities (parents), red when it doesn't fit
+// (v231 clearer words: "Layla: 2 h 30 min of flexible activities · 79 h free in the next 7 days")
+const timeLineHtml = () => "Flexible activities in the next 7 days: " + timeBudget().map(x => `<span class="${x.need > x.free ? "over" : ""}">${safe(x.kid.name)} ${x.need ? hmText(x.need) : "none yet"} <small>(${hmText(x.free)} free)</small></span>`).join(" · ");
 // The "Saved! ✓" box with "📅 See the calendar" under it (goes away by itself after a few seconds)
 let savedTimer = null;
 function showSaved() {

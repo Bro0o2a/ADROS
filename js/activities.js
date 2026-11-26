@@ -173,6 +173,12 @@ document.addEventListener("click", e => {
 });
 // 👤 v213 (Broo2a): a button per person on top; tap one = ALL their activities (📌 fixed and 🔄 flexible) in one list
 let addWho = null;   // null = All (the 3 sections as usual)
+// 👤 v231: who a NEW activity is for at first: the person picked on top, else (a parent) the first kid, else me
+function newFormWho() {
+  if (addWho && data.users.some(u => u.id === addWho)) return [addWho];
+  const kid = isParentDevice() ? kidsList()[0] : null;
+  return [kid ? kid.id : me];
+}
 function addWhoHtml() {
   const people = isParentId(me) ? data.users : data.users.filter(u => u.id === me);
   if (people.length < 2) return "";
@@ -194,7 +200,8 @@ document.addEventListener("click", e => {
 });
 function drawAddSections() {
   const parent = isParentId(me);
-  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="addWho"></div>`);
+  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="addAsks"></div><div id="addWho"></div>`);
+  $("addAsks").innerHTML = asksCardHtml();
   if (addWho && !data.users.some(u => u.id === addWho)) addWho = null;
   $("addWho").innerHTML = addWhoHtml() + (addWho ? addWhoListHtml(addWho) : "");
   $("scr-add").querySelector(".add-secs").hidden = !!addWho;
@@ -357,6 +364,8 @@ $("fxAdd").onclick = () => {
     return;
   }
 
+  // 🙋 v231 (Broo2a): a kid's new or changed activity waits for a parent's ✅ (see askParent)
+  if (!isParentId(me)) return askParent("fx", putHelp({ name, days, start, end, overlapWith, users, getReady, breakAfter, type }, help), old ? old.id : null, resetFixedForm);
   let id = editingFixed;
   if (old) putHelp(Object.assign(old, { name, days, start, end, overlapWith, users, getReady, breakAfter, type }), help);   // update the existing one
   else { id = newId(); data.fixed.push(putHelp({ id, name, days, start, end, overlapWith, users, getReady, breakAfter, type }, help)); } // add a new one
@@ -401,7 +410,7 @@ function resetFixedForm() {
   $("fxEnd").value = "14:00";
   padTouched.fx = false;
   fillPads("fx");          // automatic times (the name is empty now → 5 min before)
-  drawWho("fx", [me]);
+  drawWho("fx", newFormWho());
   drawStudy("fx", { subjectIds: [], studyMode: "sole", helper: "" });
   $("fxFormTitle").textContent = "➕ New fixed activity";
   $("fxDel").hidden = true; delete $("fxDel").dataset.delFixed;
@@ -449,6 +458,8 @@ $("flAdd").onclick = () => {
   if (help.err) return $("flErr").textContent = help.err;
   const twice = $("flTwice").checked;   // (2️⃣ off = never twice on one day)
 
+  if (!isParentId(me)) return askParent("fl", putHelp({ name, duration, times, overlapWith, users, getReady, breakAfter, type, ...(between ? { between } : {}),
+    ...(twice ? {} : { twice: false }), ...(twiceDay ? { twiceDay: true } : {}) }, help), old ? old.id : null, resetFlexForm);   // (🙋 v231 a kid asks first)
   let id = editingFlex;
   if (old) {                                                                       // update the existing one
     putHelp(Object.assign(old, { name, duration, times, overlapWith, users, getReady, breakAfter, type }), help);
@@ -503,7 +514,7 @@ function resetFlexForm() {
   $("flFrom").value = $("flTo").value = "";   // any free time
   padTouched.fl = false;
   fillPads("fl");          // automatic times
-  drawWho("fl", [me]);
+  drawWho("fl", newFormWho());
   drawStudy("fl", { subjectIds: [], studyMode: "sole", helper: "" });
   $("flFormTitle").textContent = "➕ New flexible activity";
   $("flDel").hidden = true; delete $("flDel").dataset.delFlex;
@@ -609,6 +620,8 @@ function deleteActivity(id, isFixedOne, asked) {
   const list = isFixedOne ? data.fixed : data.flexible;
   const act = list.find(a => a.id === id);
   if (!act || !canEdit(act)) return;
+  // 🙋 v231 (Broo2a): a kid asks to delete too (a parent's ✅ Yes deletes it)
+  if (!isParentId(me)) return confirm(`Ask Mum or Dad to delete “${act.name}”?`) ? askParent(isFixedOne ? "fx" : "fl", JSON.parse(JSON.stringify(act)), id, () => {}, true) : undefined;
   if (!asked && !confirm(`Delete “${act.name}”?`)) return;   // (⚡ the card's Quick edit asked already)
   // 📅 Its items on the days that are gone (and today) stay as history: they remember its name, people and type
   // (today's ones that haven't started and aren't ticked are taken out when the week is planned again, see makePlan)
@@ -1002,6 +1015,7 @@ function makePlan(mode = "replan") {
         for (let d = 0; d < days.length; d++) {
           if (usedDays.includes(d)) continue;                             // rule: never twice on the same date
           if (skippedOn(days[d].date, act.id)) continue;                  // (📌 removed for that day by a one-day event)
+          if (isRestDay(days[d].date)) continue;                          // (🏖️ v231 weekend days: rest, only by hand)
           const start = earliestStart(days[d], act, mode);
           if (start === null) continue;                                   // doesn't fit this day
           // Score the day: emptier days win (balance),
@@ -1107,6 +1121,7 @@ function planKey() {
     // (🌙 v215: the bedtime for all kids and the weekend days too, so changing them in 📅 Calendar setup plans the week again)
     ...(data.bedAll ? { bedAll: [data.bedAll.wd, data.bedAll.we] } : {}),
     ...(Array.isArray(data.weekendDays) ? { we: data.weekendDays } : {}),
+    ...(Array.isArray(data.weekendNights) ? { wn: data.weekendNights } : {}),   // (🌙 v231 the weekend nights the parents picked)
     ...(data.routines.length ? { rt: data.routines.map(r => [r.id, r.days, r.start, r.duration, r.users]) } : {})
   });
 }
@@ -1184,6 +1199,7 @@ function missDayCtx(ds) {
 }
 // The first start (every 5 minutes) where the activity (with its get ready / break) fits that day, or null
 function missFitOn(ds, act, len) {
+  if (isRestDay(ds)) return null;   // (🏖️ v231 not on a weekend day)
   const day = missDayCtx(ds); if (!day.window) return null;
   const pre = act.getReady || 0, post = act.breakAfter || 0, only = onlyWindow(act);
   const a = { ...act, duration: pre + len + post, ...(only ? { lo: only[0] - pre, hi: only[1] + post } : {}) };
@@ -1272,3 +1288,48 @@ document.addEventListener("click", e => {
 
 // 2️⃣ v181: "Can be twice a day" ticked → "Times per week" may go up to 14
 document.addEventListener("change", e => { if (e.target && e.target.id === "flTwiceDay") $("flTimes").max = e.target.checked ? 14 : 7; });
+
+// =====================================================================
+//  🙋 v231 (Broo2a): KIDS ASK FIRST. A kid's new activity, or a change to one of theirs, isn't planned until a parent says ✅ Yes.
+//  It waits in data.asks [{ id, kind "fx" | "fl", act (the activity as the form made it), of (the activity it changes, or null), by, at }]:
+//  sent straight away (no 💾 Save needed). Parents see it in 🔔 Needs you and on ✏️ Add activities; the kid sees "Waiting".
+//  Deleting one of their own activities asks too ({ del: true }).
+// =====================================================================
+function askParent(kind, act, of, reset, del = false) {
+  data.asks = (data.asks || []).filter(a => !(a.by === me && of && a.of === of));   // (asked again: the newest wins)
+  data.asks.push({ id: newId(), kind, act, of: of || null, by: me, at: new Date().toISOString(), ...(del ? { del: true } : {}) });
+  reset();
+  keepNow();
+  toast(del ? `🙋 Sent to Mum or Dad. “${act.name}” is deleted when they say yes.` : `🙋 Sent to Mum or Dad. “${act.name}” goes on your calendar when they say yes.`, 4500);
+}
+const askWhen = a => a.kind === "fx" ? `📌 ${daysText(a.act.days)} · ${clock(toMin(a.act.start), true)}–${clock(toMin(a.act.end), true)}`
+  : `🔄 ${showDuration(a.act.duration)} × ${a.act.times} a week`;
+function asksMine() { const all = data.asks || []; return isParentId(me) ? all : all.filter(a => a.by === me); }
+function asksCardHtml() {
+  const list = asksMine(), parent = isParentId(me);
+  if (!list.length) return "";
+  return `<div class="card ask-card"><h2>🙋 ${parent ? "The kids are asking" : "Waiting for Mum or Dad"}</h2>${list.map(a => `<div class="ask-row">
+    <p>${parent ? `<b>${safe(kidNameOf(a.by))}</b> ${a.del ? "wants to delete" : a.of ? "wants to change" : "wants to add"}` : a.del ? "You asked to delete" : a.of ? "You asked to change" : "You asked to add"} <b>${safe(a.act.name)}</b><br><small>${safe(askWhen(a))}</small></p>
+    <div class="btnrow">${parent ? `<button class="primary" data-askyes="${safe(a.id)}">✅ Yes</button><button data-askno="${safe(a.id)}">❌ No</button>`
+      : `<span class="hint">⏳ Waiting…</span><button data-askno="${safe(a.id)}">✕ Cancel</button>`}</div></div>`).join("")}</div>`;
+}
+function answerAsk(id, yes) {
+  const a = (data.asks || []).find(x => x.id === id);
+  if (!a || (!isParentId(me) && a.by !== me)) return;
+  data.asks = data.asks.filter(x => x !== a);
+  if (!yes) { keepNow(); return toast(!isParentId(me) ? "✕ Cancelled." : a.del ? `❌ Not deleted. ${kidNameOf(a.by)}'s “${a.act.name}” stays.` : a.of ? `❌ Not changed. ${kidNameOf(a.by)}'s “${a.act.name}” stays as it was.` : `❌ Not added. ${kidNameOf(a.by)}'s “${a.act.name}” is taken away.`, 3500); }
+  if (!isParentId(me)) return;
+  if (a.del) { deleteActivity(a.of, a.kind === "fx", true); if (saveChanges()) toast(`🗑️ ${kidNameOf(a.by)}'s “${a.act.name}” is deleted.`, 3500); return; }
+  const list = a.kind === "fx" ? data.fixed : data.flexible, i = a.of ? list.findIndex(x => x.id === a.of) : -1;
+  if (i >= 0) {   // a change: the form's answers over the old activity (what the form doesn't show, like ⭐ Must-do, stays)
+    const base = { ...list[i] };
+    ["between", "twice", "twiceDay", "needsDad", "subjectId", "subjectIds", "studyMode", "helper"].forEach(k => delete base[k]);
+    list[i] = { ...base, ...a.act, id: a.of };
+  } else list.push({ ...a.act, id: newId() });
+  if (saveChanges()) toast(`✅ ${kidNameOf(a.by)}'s “${a.act.name}” is on the calendar.`, 3500);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-askyes], [data-askno]");
+  if (!b) return;
+  if (b.dataset.askyes) answerAsk(b.dataset.askyes, true); else answerAsk(b.dataset.askno, false);
+});

@@ -153,6 +153,7 @@ function calDraftNow() {
     const work = DAYS.map((_, i) => i).find(i => !off.includes(i)), rest = off[0];
     const w = i => (i == null ? null : dayWindow(i)), sc = schoolActs();
     bedDraft = { sec: null, all: { ...(data.bedAll || (first && first.bed) || { wd: "20:30", we: "21:30" }) }, weekend: [...off], open: null, kids: {},
+      nights: [...weekendNightsOf()], nightsOwn: Array.isArray(data.weekendNights),   // (🌙 v231 picked by the parents; else they follow the weekend days)
       weekStart: calWeekStartOf(),
       start: { wd: clock24(w(work) ? w(work)[0] : 8 * 60), we: clock24(w(rest) ? w(rest)[0] : 8 * 60) },
       school: { on: !!sc.main, start: sc.main ? sc.main.start : "07:30", end: sc.main ? sc.main.end : "14:30",
@@ -168,7 +169,7 @@ function calBoxHtml() {
     <span class="bed-time">${hm(t)}</span><button type="button" class="bed-pm" data-bedstep="${key}|15" aria-label="15 minutes later">+</button></div>`;
   const dayBtns = (attr, on, list = order) => `<div class="bed-days">${list.map(i => `<button type="button" class="bed-day ${on(i) ? "on" : ""}" ${attr}="${i}" aria-pressed="${on(i)}">${SHORT[i]}</button>`).join("")}</div>`;
   const schoolDays = order.filter(i => !d.weekend.includes(i)), names = l => l.map(i => SHORT[i]).join(", ") || "none";
-  const nightsOf = we => order.filter(i => d.weekend.includes((i + 1) % 7) === we);   // (a night before a day off = a weekend night)
+  const nightsOf = we => order.filter(i => d.nights.includes(i) === we);   // (🌙 v231 the weekend nights the parents picked)
   // (🗂️ v213 Broo2a: each part is a title line with its answer; tap it to open, one part open at a time)
   const sec = (key, title, sum, body) => `<div class="bed-sec ${d.sec === key ? "open" : ""}"><button type="button" class="bed-sechead" data-calsec="${key}" aria-expanded="${d.sec === key}">
       <span class="bed-sect">${title}</span><span class="bed-secsum">${sum}</span><span class="bed-chev">${d.sec === key ? "▾" : "›"}</span></button>
@@ -184,12 +185,14 @@ function calBoxHtml() {
   return `<div class="bed-box"><p class="hint">Tap a line to change it.</p>
     ${sec("week", "📅 Week", `starts ${SHORT[d.weekStart]} · weekend ${names(order.filter(i => d.weekend.includes(i)))}`,
       `<div class="bed-lab">Week starts on</div>${dayBtns("data-calweek", i => i === d.weekStart)}
-       <div class="bed-lab">🎉 Weekend days <small>(days off school)</small></div>${dayBtns("data-bedwe", i => d.weekend.includes(i))}`)}
+       <div class="bed-lab">🎉 Weekend days <small>(days off school: rest days, the planner puts no flexible activities there and they don't lower the score)</small></div>${dayBtns("data-bedwe", i => d.weekend.includes(i))}`)}
     ${sec("start", "☀️ Day starts", `${hm(d.start.wd)} · weekend ${hm(d.start.we)}`,
       `<div class="bed-lab">📚 School days <small>(${names(schoolDays)})</small></div>${step("start|wd", d.start.wd)}
        <div class="bed-lab">🎉 Weekend days <small>(${names(order.filter(i => d.weekend.includes(i)))})</small></div>${step("start|we", d.start.we)}`)}
     ${sec("end", "🌙 Day ends", `${hm(d.all.wd)} · weekend ${hm(d.all.we)}${owners.length ? ` · own: ${safe(owners.join(", "))}` : ""}`,
       `<p class="hint">Nothing is planned for the kids after this time. The same for every kid; change one kid only if needed.</p>
+       <div class="bed-lab">🎉 Which nights are weekend nights? <small>(tap to change)</small></div>${dayBtns("data-bednight", i => d.nights.includes(i))}
+       <p class="hint">💡 Weekend nights are the nights your kids may stay up later, usually the night before a day off (with a Sat + Sun weekend: Friday and Saturday nights). On these nights the later bedtime below is used, and nothing is planned after it.</p>
        <div class="bed-lab">📚 School nights <small>(${names(nightsOf(false))})</small></div>${step("all|wd", d.all.wd)}
        <div class="bed-lab">🎉 Weekend nights <small>(${names(nightsOf(true))})</small></div>${step("all|we", d.all.we)}${kidRows}`)}
     ${sec("school", "🏫 School", sc.on ? `${hm(sc.start)}–${hm(sc.end)}${sc.short != null ? ` · ${SHORT[sc.short]} ${hm(sc.shortEnd)}` : ""}` : "not shown",
@@ -205,6 +208,7 @@ function redrawBedBox() { document.querySelectorAll(".bed-box").forEach(b => b.o
 function saveCalBox(d) {
   data.calWeekStart = d.weekStart;
   data.weekendDays = [...d.weekend].sort();
+  if (d.nightsOwn) data.weekendNights = [...d.nights].sort(); else delete data.weekendNights;   // 🌙 v231
   const old = data.myDay.days || DAYS.map((_, i) => ({ start: clock24(dayWindow(i)[0]), end: clock24(dayWindow(i)[1]) }));
   const days = old.map((x, i) => { const s = d.weekend.includes(i) ? d.start.we : d.start.wd;
     return { start: s, end: toMin(x.end) > toMin(s) ? x.end : "23:00" }; });
@@ -228,7 +232,7 @@ function saveCalBox(d) {
   data.calSetup = true;
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest && e.target.closest("[data-calsec], [data-bedstep], [data-bedwe], [data-calweek], [data-calshort], [data-calschool], [data-bedkid], [data-bedown], [data-bedsame], [data-bedsave]");
+  const b = e.target.closest && e.target.closest("[data-calsec], [data-bedstep], [data-bedwe], [data-bednight], [data-calweek], [data-calshort], [data-calschool], [data-bedkid], [data-bedown], [data-bedsame], [data-bedsave]");
   if (!b || !b.closest(".bed-box") || !isParentId(me)) return;
   const d = calDraftNow(), ds = b.dataset;
   if (ds.bedstep) {
@@ -237,7 +241,9 @@ document.addEventListener("click", e => {
     const [lo, hi] = STEP_LIMITS[who === "start" ? "start" : who === "school" ? "school" : "bed"];
     o[which] = clock24(Math.max(lo, Math.min(hi, toMin(o[which]) + Number(n))));
   }
-  if (ds.bedwe) { const i = Number(ds.bedwe); d.weekend = d.weekend.includes(i) ? d.weekend.filter(x => x !== i) : [...d.weekend, i].sort(); }
+  if (ds.bedwe) { const i = Number(ds.bedwe); d.weekend = d.weekend.includes(i) ? d.weekend.filter(x => x !== i) : [...d.weekend, i].sort();
+    if (!d.nightsOwn) d.nights = DAYS.map((_, n) => n).filter(n => d.weekend.includes((n + 1) % 7)); }   // (not picked yet: the nights before the days off)
+  if (ds.bednight) { const i = Number(ds.bednight); d.nights = d.nights.includes(i) ? d.nights.filter(x => x !== i) : [...d.nights, i].sort(); d.nightsOwn = true; }
   if (ds.calweek) d.weekStart = Number(ds.calweek);
   if (ds.calshort) d.school.short = d.school.short === Number(ds.calshort) ? null : Number(ds.calshort);
   if ("calschool" in ds) d.school.on = b.checked;
@@ -613,9 +619,11 @@ async function saveFamilyKid() {
   if (data.users.some(u => u.id !== famEdit && u.name.toLowerCase() === name.toLowerCase())) return $("famErr").textContent = "Someone already has that name.";
   const about = $("famSchool") ? schoolFieldsValue("fam") : {};   // (a new kid only: then they're kept in 👤 the profile)
   let u = famEdit !== "new" && data.users.find(x => x.id === famEdit);
+  const currBefore = u ? u.curriculum : "";
   if (u) Object.assign(u, { name, emoji, color }, about);
   else { u = { id: newId(), name, emoji, color, ...about }; data.users.push(u); }
   Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; });
+  if (!isParentId(u.id)) addCurrSubjects(u.id, currBefore);   // (📚 v231: the curriculum's subjects)
   const isNew = famEdit === "new";
   famEdit = null;
   keepNow();
