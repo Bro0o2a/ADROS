@@ -567,7 +567,7 @@ function scoreOf(id) {
   const overall = Math.max(0, base - missed.lost);   // ⭐ each missed must-do −2
   const max = Math.round(100 * Object.keys(SCORE_WEIGHTS).reduce((s, k) => s + (has[k] ? SCORE_WEIGHTS[k] : 0), 0));
   return { ...subs, study, level: lv.score, activity: activityScore(id), habit: habitScore(id), has, base, overall, max, must: missed,
-           sp: sessions.length ? sp : null, free, levels: lv.subs, extra: { count: 0, bonus: 0 }, marksCount: mk.count, extraCount: mk.extraCount, wsCount: mk.wsCount, extraPts: mk.extraPts, tk };
+           sp: sessions.length ? sp : null, free, levels: lv.subs, extra: { count: 0, bonus: 0 }, extraPct: subs.extra, marksCount: mk.count, extraCount: mk.extraCount, wsCount: mk.wsCount, extraPts: mk.extraPts, tk };
 }
 // 📈 SCORE THROUGH ONE DAY (v184): the week's score again at each moment something changed it on that day.
 // Rebuilt from what the app already keeps: ✅ calendar ticks have their time (marks[key].at), 📝 worksheets their check time
@@ -619,7 +619,7 @@ const scoreText = s => `${s.overall} / ${s.max}${s.extra && s.extra.bonus ? ` (�
 // The small bars: 📝 Marks (with each subject under it) · ✅ Ticks (a part with nothing this week: "–")
 function subBarsHtml(s) {
   return `<div class="score-subs">${Object.keys(SCORE_WEIGHTS).map(k => { const [, e, w] = scorePartInfo(k), on = s.has[k];
-    const v = s[k];
+    const v = k === "extra" ? s.extraPct || 0 : s[k];   // (s.extra is the old ⚡ bonus object: the % is extraPct)
     return `<div class="score-sub ${on ? "" : "none"}"><span class="score-sub-l">${e} ${w}</span><span class="score-sub-bar"><i style="width:${on ? Math.min(100, v) : 0}%"></i></span><b>${on ? v + "%" : "–"}</b></div>${
       k === "study" && on && s.sp ? `<div class="score-parts">📚 Time done: ${s.sp.hours} of 50 · Results: ${s.sp.eff} of 50${s.marksCount ? ` · ${s.marksCount} session ${s.marksCount === 1 ? "worksheet" : "worksheets"} checked` : ""}</div>${
         (s.levels || []).filter(x => x.avg != null).map(x => `<div class="score-parts">${safe(x.emoji)} ${safe(x.name)} · ${x.avg}% · Level ${x.level}/10</div>`).join("")}` : ""}${

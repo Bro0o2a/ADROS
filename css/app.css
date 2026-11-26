@@ -3699,3 +3699,55 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .k-check.time-lock[data-at] { position: relative; overflow: visible; }
 .k-check.time-lock[data-at]::after { content: attr(data-at); position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%);
   font-size: 10px; font-weight: 800; line-height: 1.1; color: #6b7280; white-space: nowrap; filter: none; }
+
+/* =====================================================================
+   🍦 v233 NEW BASE LOOK (Broo2a's pictures, 26 Nov 2026): plain cream ground, soft cream-white cards,
+   dark brown Fredoka titles on the left, pill buttons with a soft shadow, ADROS colours
+   (blue · coral · green · purple · yellow) for buttons and tiles. Sits on top of everything above.
+   ===================================================================== */
+:root {
+  --bg: #f4e8da; --card: #fffaf3; --text: #3a2a1f; --muted: #7a6656; --line: #ecdfcf;
+  --accent: #7fb2e5; --accent-dark: #5f97cf; --accent-soft: #dceaf8;
+  --a-blue: #7fb2e5; --a-coral: #ee8b80; --a-green: #9cc58c; --a-purple: #b69be0; --a-yellow: #f3c75e;
+  --t-blue: #dceaf8; --t-coral: #f8dcd6; --t-green: #dfead3; --t-purple: #ece2f8; --t-yellow: #fbeac0;
+  --coral: #ee8b80; --sage: #dfead3; --sage-dk: #5f8f4f; --butter: #f3c75e; --peach: #f8dcd6; --dusty: #dceaf8;
+  --shadow: 0 6px 16px rgba(120, 90, 60, .10);
+  --clay: 0 6px 16px rgba(120, 90, 60, .10);
+  --puff: 0 4px 0 rgba(90, 60, 40, .10), 0 6px 14px rgba(120, 90, 60, .12);
+}
+body { background: var(--bg) !important; color: var(--text); }
+/* no more dots / waves / sky pictures behind cards */
+.card, .ip-panel, .pl-card, .hub-group, .kt, .pt-row, .k-day, .k-hero, .sc-tile2, #scr-me .card:nth-of-type(n), .card.sj-sum, #ptsList .pt-row, .hub-group[open] { background-image: none !important; }
+.card { background-color: var(--card); border: 0; border-radius: 28px; box-shadow: var(--shadow); }
+
+/* page titles: big dark brown words on the left, small grey line under (no puffy board) */
+.puff-banner { text-align: left !important; background: none !important; border: 0 !important; box-shadow: none !important;
+  padding: 0 !important; margin: 8px 2px 16px !important; border-radius: 0 !important; }
+.puff-banner .pb-deco, .puff-banner .pb-st, .puff-banner .pb-char { display: none !important; }
+.puff-banner .bub, .puff-banner .bub-pink, .puff-banner .bub-lilac, .pb-home .bub-pink { color: var(--text) !important; -webkit-text-stroke: 0 !important;
+  text-shadow: none !important; font: 600 34px/1.1 Fredoka, "Baloo 2", sans-serif !important; }
+.puff-banner .bub-sm { font-size: 28px !important; }
+.puff-banner .bub-pink + .bub-lilac { margin-left: .22em; }
+.puff-banner .bub-pill { display: block !important; margin: 4px 0 0 !important; padding: 0 !important; background: none !important; border: 0 !important;
+  box-shadow: none !important; color: var(--muted) !important; font: 600 16px/1.3 Nunito, sans-serif !important; white-space: normal; }
+@media (max-width: 380px) { .puff-banner .bub, .puff-banner .bub-pink, .puff-banner .bub-lilac { font-size: 30px !important; } }
+h1, h2, h3 { color: var(--text); }
+
+/* buttons: white pills with a soft shadow, no border */
+.pill, .bar .pill { background: #fffaf3; border: 0; box-shadow: var(--puff); color: var(--text); font-family: Nunito, sans-serif; font-weight: 700; }
+.pill:hover { background: #fff; }
+.bar .cal-btn, .cal-btn { background: var(--a-green) !important; color: #fff !important; border: 0 !important; }
+.bar .sch-btn { background: var(--a-yellow) !important; color: #4a3410 !important; border: 0 !important; }
+.cal-btn.here, .cal-btn.here:hover { background: var(--t-green) !important; color: #3d6a30 !important; }
+/* section labels ("SCHOOL TOOLS", "MY SUBJECTS"): small grey capitals, no ribbon */
+.pl-rib, .ip-rib { position: static !important; transform: none !important; display: block; width: max-content; margin: 0 0 12px 2px; padding: 0 !important; background: none !important; box-shadow: none !important;
+  color: var(--muted) !important; font: 800 14px/1.2 Nunito, sans-serif !important; letter-spacing: .14em; text-transform: uppercase; text-shadow: none !important; }
+.pl-rib::after, .ip-rib::after, .ip-rib::before { content: none !important; }
+.ip-rib i { display: none; }
+.ip-sec { margin-top: 18px; }
+.ip-panel { border: 0 !important; border-radius: 28px !important; background: var(--card) !important; box-shadow: var(--shadow) !important; }
+/* yellow notes ("3 things need you"): soft butter card, no hard line */
+.note { background: var(--t-yellow); border: 0; border-radius: 20px; box-shadow: var(--shadow); }
+.needs-line { background: var(--t-yellow) !important; border: 0 !important; border-radius: 20px !important; box-shadow: var(--shadow); }
+.k-day, .k-dbtn, .k-dayname { border-color: transparent !important; }
+#mineWeek { border-color: var(--card) !important; background: var(--card) !important; }
