@@ -781,6 +781,7 @@ function toggleDone(day, actId, user, button) {
 
 // Confetti and stars bursting out of the checkbox
 function celebrate(x, y, color, big) {
+  return; // 🚫 v231 (Broo2a): no confetti anywhere in the app (the toast message still shows)
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const box = document.createElement("div");
   box.className = "confetti";
