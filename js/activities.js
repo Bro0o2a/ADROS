@@ -1013,6 +1013,7 @@ function makePlan(mode = "replan") {
         for (let d = 0; d < days.length; d++) {
           if (usedDays.includes(d)) continue;                             // rule: never twice on the same date
           if (skippedOn(days[d].date, act.id)) continue;                  // (📌 removed for that day by a one-day event)
+          if (isRestDay(days[d].date)) continue;                          // (🏖️ v231 weekend days: rest, only by hand)
           const start = earliestStart(days[d], act, mode);
           if (start === null) continue;                                   // doesn't fit this day
           // Score the day: emptier days win (balance),
@@ -1195,6 +1196,7 @@ function missDayCtx(ds) {
 }
 // The first start (every 5 minutes) where the activity (with its get ready / break) fits that day, or null
 function missFitOn(ds, act, len) {
+  if (isRestDay(ds)) return null;   // (🏖️ v231 not on a weekend day)
   const day = missDayCtx(ds); if (!day.window) return null;
   const pre = act.getReady || 0, post = act.breakAfter || 0, only = onlyWindow(act);
   const a = { ...act, duration: pre + len + post, ...(only ? { lo: only[0] - pre, hi: only[1] + post } : {}) };

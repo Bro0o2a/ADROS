@@ -184,7 +184,7 @@ function calBoxHtml() {
   return `<div class="bed-box"><p class="hint">Tap a line to change it.</p>
     ${sec("week", "📅 Week", `starts ${SHORT[d.weekStart]} · weekend ${names(order.filter(i => d.weekend.includes(i)))}`,
       `<div class="bed-lab">Week starts on</div>${dayBtns("data-calweek", i => i === d.weekStart)}
-       <div class="bed-lab">🎉 Weekend days <small>(days off school)</small></div>${dayBtns("data-bedwe", i => d.weekend.includes(i))}`)}
+       <div class="bed-lab">🎉 Weekend days <small>(days off school: rest days, the planner puts no flexible activities there and they don't lower the score)</small></div>${dayBtns("data-bedwe", i => d.weekend.includes(i))}`)}
     ${sec("start", "☀️ Day starts", `${hm(d.start.wd)} · weekend ${hm(d.start.we)}`,
       `<div class="bed-lab">📚 School days <small>(${names(schoolDays)})</small></div>${step("start|wd", d.start.wd)}
        <div class="bed-lab">🎉 Weekend days <small>(${names(order.filter(i => d.weekend.includes(i)))})</small></div>${step("start|we", d.start.we)}`)}

@@ -81,6 +81,9 @@ const BED_TIME = /^(1[89]|2[0-3]):[0-5]\d$/;   // 6 PM … 11:45 PM
 // A weekend NIGHT = the night before a day off (default Friday and Saturday nights).
 const weekendDaysOf = () => (data && Array.isArray(data.weekendDays) ? data.weekendDays : [5, 6]);
 const isWeekendNight = wd => weekendDaysOf().includes((wd + 1) % 7);
+// 🏖️ v231 (Broo2a): a weekend day ("2026-11-28") = a rest day: the planner puts no flexible activities on it (a parent may move
+// one there by hand), missed ⭐ must-dos and missed activities there don't lower the score; a tick there still gives points.
+const isRestDay = ymd => weekendDaysOf().includes(weekdayOf(ymd));
 // 🌙 v193: a "Bedtime routine" (or any routine named bed / sleep) counts as bedtime too: nothing for that person after it ends
 const isBedRoutine = r => /\b(bed|sleep)/i.test(String(r && r.name || ""));
 function routineBed(person, wd) {

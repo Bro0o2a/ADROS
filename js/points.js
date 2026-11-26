@@ -497,7 +497,7 @@ function ticksTally(id) {
       const a = acts.find(x => x.id === baseActId(it.actId));
       if (!a || !isScoredType(actTypeOf(a))) return;
       const ok = isDone(day.date, it.actId, id);
-      if (day.date === today && !ok) return;
+      if ((day.date === today || isRestDay(day.date)) && !ok) return;   // (🏖️ v231 a weekend day: only a tick counts, a miss doesn't)
       planned++; if (ok) done++;
     });
   });
@@ -508,7 +508,7 @@ function ticksTally(id) {
 // 💧 4 of 6 drops = 0.67, a one-tick habit 1 or 0. → { ratio (0–1, 1 when nothing is due yet), due, done, missed: [{ name, date }] }
 // The week's ⭐ Score = the total × ratio (✖️ the must-do multiplier).
 // 🏖️ v231: must-dos don't count on the family's days off (📅 Calendar setup → weekend days, 0 = Monday; was always Fri + Sat)
-const mustOffDay = ymd => weekendDaysOf().includes(weekdayOf(ymd));
+const mustOffDay = ymd => isRestDay(ymd);
 function mustMissed(id) {
   const today = todayYmd(), missed = [];
   let due = 0, done = 0;
