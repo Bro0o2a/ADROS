@@ -587,7 +587,7 @@ function maybeShowStar() {
   try { localStorage.setItem("starSeen", w); } catch (e) { return; }   // (no storage: never pop up again and again)
   const win = stars(w), medal = i => ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
   const rows = rec.board.filter(x => exists(x.id)).map((x, i) => { const u = userById(x.id);
-    return `<div class="sp-row${win.includes(x.id) ? " win" : ""}"><span>${medal(i)} ${charPic(u) ? `<img class="sp-face" src="${charPic(u, win.includes(x.id) ? "star" : "happy")}" alt="">` : safe(u.emoji)} ${safe(u.name)}</span><b>${x.s}</b></div>`; }).join("");
+    return `<div class="sp-row${win.includes(x.id) ? " win" : ""}"><span>${medal(i)} ${charPic(u) ? `<img class="sp-face" src="${charPic(u, win.includes(x.id) ? "confetti" : "happy")}" alt="">` : safe(u.emoji)} ${safe(u.name)}</span><b>${x.s}</b></div>`; }).join("");
   // 📣 v171: one BIG full-screen message, the same for every parent and kid
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
   $("kCard").innerHTML = `<div class="sp-confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>

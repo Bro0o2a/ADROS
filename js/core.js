@@ -281,14 +281,15 @@ const GET_READY = [0, 5, 10, 15, 20, 30];        // "Get ready before" / "Break 
 // Soft, calm colors that look good together. Each person has ONE of them, used everywhere
 // (calendar blocks, name buttons, ticks, legend, print). ink = dark, easy-to-read text for that color.
 const PALETTE = {
-  blue:   { color: "#4a7fd4", soft: "#e4edfb", ink: "#1f4a8f" },
-  green:  { color: "#3e9f68", soft: "#e2f3e8", ink: "#1d6340" },
-  pink:   { color: "#d45a8e", soft: "#fbe7ef", ink: "#94295a" },
-  orange: { color: "#df8238", soft: "#fdeedd", ink: "#924a10" },
-  teal:   { color: "#2f9a92", soft: "#dcf2ef", ink: "#14615b" },
-  purple: { color: "#8167d2", soft: "#ece8fa", ink: "#4f3796" },
-  red:    { color: "#d25f5f", soft: "#fae6e6", ink: "#922f2f" },
-  yellow: { color: "#c79a22", soft: "#faf1d5", ink: "#755607" }
+  // 🎨 v233 (Broo2a's pictures): the soft ADROS colours (blue · coral · green · purple …), same names so nobody's colour changes
+  blue:   { color: "#6fa6e0", soft: "#dceaf8", ink: "#1f4a8f" },
+  green:  { color: "#86bb74", soft: "#dfead3", ink: "#2f5f22" },
+  pink:   { color: "#e8837a", soft: "#f8dcd6", ink: "#8e2f27" },
+  orange: { color: "#eb9a5a", soft: "#fce6d3", ink: "#8a4510" },
+  teal:   { color: "#62b3aa", soft: "#d8efeb", ink: "#14615b" },
+  purple: { color: "#a68bdb", soft: "#ece2f8", ink: "#4f3796" },
+  red:    { color: "#df7474", soft: "#f8dede", ink: "#922f2f" },
+  yellow: { color: "#e2b443", soft: "#fbeac0", ink: "#6e5006" }
 };
 // The grey for fixed and shared activities
 const GREY = { color: "#a9aebb", soft: "#f2f3f6", ink: "#4b5263" };
@@ -1550,12 +1551,17 @@ function emojisOf(ids) { return ids.map(id => userById(id).emoji).join(""); }
 // 🧸 v158: the 3D avatars (icons/avatars/<id>.jpg), picked in 👤 My profile. Kids see boys + girls, parents see all.
 // 🧒 v227 ADROS CHARACTERS (Broo2a's pictures): each child picks ONE character (+ a skin colour) and sees it on every page,
 //   with the feeling that fits: icons/chars/<id>/<mood>.jpg. Ids: c01..c13 (lighter skin), c01d..c11d (darker skin), mum, dad.
-//   Moods: happy · star (Shining Star) · thumbs · wow · oops · confused · sleepy · reading, + full (full body, the Shining Star pop-up).
+//   Moods: happy · star (Shining Star) · thumbs · wow · oops · confused · sleepy · reading, + full (full body, the Shining Star pop-up),
+//   + v233: wave · point · think · sad · proud · jump · confetti. Darker skin: c01d..c13d.
 const CHARS = [["c01", "Giggle Girl", "g"], ["c02", "Surprised Boy", "b"], ["c03", "Wink Girl", "g"], ["c04", "Cheer Boy", "b"], ["c05", "Puffs Girl", "g"],
   ["c06", "Messy Boy", "b"], ["c07", "Fringe Girl", "g"], ["c08", "Glasses Boy", "b"], ["c09", "Headband Girl", "g"], ["c10", "Curly Boy", "b"],
   ["c11", "Ponytail Girl", "g"], ["c12", "Space Buns Girl", "g"], ["c13", "Bow Girl", "g"]];
-const CHAR_DARK = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10", "c11"];   // the ones with a darker-skin version too
-const CHAR_MOODS = ["happy", "star", "thumbs", "wow", "oops", "confused", "sleepy", "reading"];
+const CHAR_DARK = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10", "c11", "c12", "c13"];   // the ones with a darker-skin version too
+// 🎭 v233: 7 more feelings (Broo2a's pictures, 26 Nov): wave (hello) · point (tips) · think (hints, making) · sad (missed) · proud (good work) · jump (all done) · confetti (big win)
+const CHAR_NEW_MOODS = ["wave", "point", "think", "sad", "proud", "jump", "confetti"];
+const CHAR_MOODS = ["happy", "star", "thumbs", "wow", "oops", "confused", "sleepy", "reading", ...CHAR_NEW_MOODS];
+const CHAR_NEW_DARK = { c10d: CHAR_NEW_MOODS, c12d: CHAR_NEW_MOODS, c04d: ["wave", "point"] };   // darker kids that already have new feelings (the rest: the closest old one)
+const MOOD_BACKUP = { wave: "happy", point: "thumbs", think: "confused", sad: "oops", proud: "thumbs", jump: "star", confetti: "star" };
 const OLD_AVATARS = ["boy-1", "boy-2", "boy-3", "boy-4", "boy-5", "girl-1", "girl-2", "girl-3", "girl-4", "girl-5", "girl-6", "parent-1", "parent-2"];   // v158 pictures (still shown if picked before)
 const AVATARS = { boys: CHARS.filter(c => c[2] === "b").map(c => c[0]), girls: CHARS.filter(c => c[2] === "g").map(c => c[0]), parents: ["mum", "dad"] };
 const AVATAR_IDS = [...CHARS.map(c => c[0]), ...CHAR_DARK.map(id => id + "d"), "mum", "dad", ...OLD_AVATARS];
@@ -1564,8 +1570,9 @@ const isCharId = id => /^(c\d{2}d?|mum|dad)$/.test(id || "");
 function avatarSrc(id, mood = "happy") {
   if (!isCharId(id)) return `icons/avatars/${id}.jpg`;
   if (mood === "full" && /d$/.test(id)) mood = "star";
-  if ((id === "mum" || id === "dad") && !["happy", "thumbs", "full"].includes(mood)) mood = mood === "star" ? "full" : "happy";
   if (mood !== "full" && !CHAR_MOODS.includes(mood)) mood = "happy";
+  if (/d$/.test(id) && CHAR_NEW_MOODS.includes(mood) && !(CHAR_NEW_DARK[id] || []).includes(mood)) mood = MOOD_BACKUP[mood];   // (not drawn yet)
+  if ((id === "mum" || id === "dad") && !["happy", "thumbs", "full", ...CHAR_NEW_MOODS].includes(mood)) mood = mood === "star" ? "full" : (MOOD_BACKUP[mood] === "thumbs" ? "thumbs" : "happy");
   return `icons/chars/${id}/${mood}.jpg`;
 }
 // a person's character picture in a mood ("" when they haven't picked a character)

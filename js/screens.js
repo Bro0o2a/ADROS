@@ -156,6 +156,8 @@ function render() {
   maybeAskMood();     // 📔 v180: the kids' evening mood + wish reminder
   maybeAskPrayer();   // 🕌 the first time after this update: "Show prayer times on your calendar?"
   puffTitles();   // 🫧 v159: every page title = the puffy "Daily Planner" banner
+  // 🎨 v233: a kid sees their OWN colour on the main buttons and bars (parents: the app's coral)
+  document.documentElement.style.setProperty("--kc", exists(me) && !isParentId(me) ? colorsOf(userById(me)).color : "");
 }
 // A change on "Add activities" or "Settings": it's only a draft until you tap 💾 Save.
 function changed() { render(); }

@@ -1458,7 +1458,7 @@ function tickSchoolTask(id, box) {
   if (box.checked) {
     const r = box.getBoundingClientRect(), color = colorsOf(userById(schoolKid)).color;
     celebrate(r.left + r.width / 2, r.top + r.height / 2, color, false);
-    toast(`${me === schoolKid ? "🎉 Well done!" : "✓ Done"} +${POINTS_EACH} ⭐`, 2200, color, [schoolKid, "thumbs"]);
+    toast(`${me === schoolKid ? "🎉 Well done!" : "✓ Done"} +${POINTS_EACH} ⭐`, 2200, color, [schoolKid, "proud"]);
   }
 }
 

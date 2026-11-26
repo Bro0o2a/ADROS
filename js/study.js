@@ -2547,7 +2547,7 @@ function schoolExplainHtml(s, isDad) {
       h("button", { data: { exact: "ws" } }, "📝 Worksheet on this"),
       h("button", { data: { aireport: "explanation|" + schoolDoc } }, "🚩 Report"),
       isDad ? h("button", { class: "danger-text", data: { exact: "delete" } }, "🗑️ Delete") : null),
-    (src => src ? h("div", { class: "char-note" }, h("img", { src, alt: "" }), h("p", null, h("b", null, "Stuck? That's OK!"), " Let's read it together, step by step.")) : null)(charPic(userById(x.kid), "confused")),   // 🧒 v227
+    (src => src ? h("div", { class: "char-note" }, h("img", { src, alt: "" }), h("p", null, h("b", null, "Stuck? That's OK!"), " Let's read it together, step by step.")) : null)(charPic(userById(x.kid), "think")),   // 🧒 v227
     exSheetNode(x), gotItNode(x), aiLinksNode(x))) : notHere();
 }
 // 👍 "I got it" at the end of an explanation: +5 ⭐ for the kid, once a topic a day (on their own device)
@@ -2574,7 +2574,7 @@ function exAction(act) {
   if (act === "gotit") {
     const got = giveStudy(x.kid, "ex", topicRef(x.topic || x.title));
     render();
-    return toast(got ? `👍 Great! +${STUDY_POINTS.ex} ⭐` : "👍 Great! (Points for this topic come once a day.)", 2600, colorsOf(userById(x.kid)).color, [x.kid, "thumbs"]);
+    return toast(got ? `👍 Great! +${STUDY_POINTS.ex} ⭐` : "👍 Great! (Points for this topic come once a day.)", 2600, colorsOf(userById(x.kid)).color, [x.kid, "proud"]);
   }
   if (act === "ws") return openWsOpts(x.kid, x.subject, [x.topic || x.title], 10, x.work);
   if (act === "delete") {

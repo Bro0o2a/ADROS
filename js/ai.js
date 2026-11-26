@@ -56,7 +56,9 @@ function showAiWait() {
   let bar = document.getElementById("aiMaking");
   const making = /^(session|more)\|/.test(String(aiWait || ""));
   if (making && !bar) { bar = document.createElement("div"); bar.id = "aiMaking"; bar.className = "ai-making"; bar.setAttribute("role", "status"); document.body.appendChild(bar); }
-  if (bar) { bar.hidden = !making; bar.textContent = making ? "🤖 Making your worksheet… it takes about a minute. Stay here 🙂" : ""; }
+  if (bar) { bar.hidden = !making; bar.textContent = making ? "🤖 Making your worksheet… it takes about a minute. Stay here 🙂" : "";
+    const src = making && typeof charPic === "function" ? charPic(userById(me), "think") : "";   // 🎭 v233: my character, thinking
+    if (src) { bar.textContent = "Making your worksheet… it takes about a minute. Stay here 🙂"; bar.insertAdjacentHTML("afterbegin", `<img class="toast-char" src="${src}" alt="">`); } }
 }
 // Asks the AI server. → the result, or null (then a friendly message was shown)
 // 🤖 This month's AI use for a family with a limit (kept on this device: { used, limit, month }); our family has no limit, so nothing shows

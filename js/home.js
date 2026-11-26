@@ -14,8 +14,9 @@ const PUFF_PILLS = { home: "plan your day, make it happen!", mine: "plan your we
 const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, try, discover!"], [/english/i, "read, write, shine!"], [/arabic/i, "every word counts!"],
   [/islam|quran/i, "learn with your heart"], [/ssa|social|humanit/i, "explore the world!"]];
 // 🧒 v227 (Broo2a): the bunny/bear/heart stickers are gone; the banner shows YOUR character (picked in 👤 Me) with the feeling of that page.
-const PAGE_MOODS = { home: "happy", mine: "thumbs", school: "reading", points: "wow", me: "happy", add: "thumbs", settings: "thumbs", family: "happy",
-  diary: "happy", report: "wow", kidswork: "reading", kid: "happy", extra: "happy", setup: "thumbs" };
+// 🎭 v233: the new feelings (wave = hello · point = tips · think = help · proud = how you grow)
+const PAGE_MOODS = { home: "wave", mine: "point", school: "reading", points: "proud", me: "wave", add: "point", settings: "point", family: "wave",
+  diary: "happy", report: "proud", kidswork: "think", kid: "wave", extra: "happy", setup: "point" };
 const puffDeco = mood => { const src = charPic(userById(me), mood || PAGE_MOODS[screen] || "happy");
   return src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : ""; };
 const plainWords = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F⬅️➡️›‹·]/gu, "").replace(/\s+/g, " ").trim();
@@ -28,7 +29,9 @@ function puffTitles() {
   const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
   scr.querySelectorAll("h1.page-title").forEach(h => {
     const raw = h.dataset.puffed && h.querySelector(".pb-t") ? h.dataset.puffed : h.textContent, t = plainWords(raw);
-    if (!t || (h.dataset.puffed === raw && h.querySelector(".pb-t"))) return;
+    const who = `${me}|${userById(me).avatar || ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
+    if (!t || (h.dataset.puffed === raw && h.dataset.puffWho === who && h.querySelector(".pb-t"))) return;
+    h.dataset.puffWho = who;
     const sub = screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
     h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub); h.dataset.puffed = raw;
   });
@@ -68,7 +71,7 @@ function drawKidHome(u) {
   const next = today.find(x => !isDone(todayYmd(), x.id, u.id));
   const tile = (cls, attr, icon, label, big, sub) => `<button class="kt ${cls}" ${attr}><span class="kt-ico" aria-hidden="true">${icon}</span><span class="kt-label">${label}</span><b class="kt-big">${big}</b><small>${sub}</small></button>`;
   // 🧒 v227 the hero: my character, happy · 👍 when today is all done · 😴 after my bedtime · no character yet → my emoji + "Choose your character"
-  const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "thumbs" : "happy";
+  const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "jump" : "wave";   // (🎭 v233: all done = jump, else wave)
   $("homeBig").innerHTML = `<div class="k-hero">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
       <div class="k-hero-text"><h2>${hi}</h2>${scoredUsers().some(x => x.id === u.id) ? `<p class="k-cheer">${safe(kidCheerShort(u.id))}</p>` : ""}<p>${!today.length ? "Nothing planned today. Enjoy!" : left ? `${left} ${left === 1 ? "thing" : "things"} left today. You can do it!` : "All done today. Amazing!"}</p>
       ${next ? `<button class="k-go" data-kidcal>▶ ${safe(next.name.length > 18 ? next.name.slice(0, 17) + "…" : next.name)}</button>` : `<button class="k-go" data-kidcal>📅 My day</button>`}</div>

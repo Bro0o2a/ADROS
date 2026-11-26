@@ -3751,3 +3751,31 @@ h1, h2, h3 { color: var(--text); }
 .needs-line { background: var(--t-yellow) !important; border: 0 !important; border-radius: 20px !important; box-shadow: var(--shadow); }
 .k-day, .k-dbtn, .k-dayname { border-color: transparent !important; }
 #mineWeek { border-color: var(--card) !important; background: var(--card) !important; }
+
+/* 🎭 v233 THE BUDDY: under each page title, the kid's own character (with the feeling of that page) + a speech bubble */
+.puff-banner { display: grid !important; grid-template-columns: auto 1fr; grid-template-areas: "t t" "c p"; column-gap: 12px; align-items: center; }
+.puff-banner .pb-t { grid-area: t; }
+.puff-banner .bub-pill { grid-area: p; justify-self: start; }
+.puff-banner .bub-pill::first-letter { text-transform: uppercase; }
+.puff-banner .pb-char { display: block !important; grid-area: c; position: static !important; width: 76px !important; height: 76px !important; margin-top: 12px;
+  border-radius: 24px !important; border: 0 !important; background: var(--card) !important; box-shadow: var(--shadow) !important; filter: none !important; object-fit: cover !important; }
+.puff-banner:not(.pb-home):has(.pb-char) .bub-pill { position: relative; margin: 12px 0 0 !important; padding: 12px 16px !important; background: var(--card) !important; border-radius: 20px !important;
+  box-shadow: var(--shadow) !important; color: var(--text) !important; font: 700 16px/1.3 Nunito, sans-serif !important; }
+.puff-banner:not(.pb-home):has(.pb-char) .bub-pill::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-left: 0; border-right-color: var(--card); }
+.pb-home .pb-char { display: none !important; }   /* (home: the big hello card already shows the character) */
+.puff-banner.pb-home { grid-template-columns: 1fr; grid-template-areas: "t" "p"; }
+.pb-home .bub-pill { background: none !important; box-shadow: none !important; padding: 0 !important; margin-top: 4px !important; color: var(--muted) !important; font-weight: 600 !important; }
+.pb-home .bub-pill::before { content: none !important; }
+@media (max-width: 380px) { .puff-banner .pb-char { width: 64px !important; height: 64px !important; } }
+
+/* 🎨 v233 a kid's own colour on the main buttons (parents: coral) */
+button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; border-color: var(--kc, var(--coral)) !important; color: #fff; }
+button.primary:hover { filter: brightness(.95); }
+.k-go { background: var(--kc, var(--coral)) !important; color: #fff !important; }
+.toast-char { border-radius: 14px; }
+.ai-making { display: flex; align-items: center; gap: 10px; }
+/* 📅 v233 home date card (Broo2a's picture): "THURSDAY" small coral capitals · "26 November" big · a grey line */
+.puff-banner.pb-home { background: var(--card) !important; border-radius: 28px !important; box-shadow: var(--shadow) !important; padding: 18px 22px !important; }
+.puff-banner.pb-home .bub-pink { font: 800 14px/1.2 Nunito, sans-serif !important; letter-spacing: .14em; text-transform: uppercase; color: var(--a-coral) !important; }
+.puff-banner.pb-home .bub-lilac, .puff-banner.pb-home .bub-sm { font-size: 34px !important; }
+.puff-banner.pb-home .pb-t br { display: block; margin-bottom: 4px; }
