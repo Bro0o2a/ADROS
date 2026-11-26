@@ -124,8 +124,28 @@ const SUBJECTS_BY_CURRICULUM = {
   ICSE: ["Math", "English", "Science", "History & Civics", "Geography", "Hindi", "Arabic", "Computing"],
   "UAE MOE": ["Math", "Arabic", "English", "Science", "Islamic", "Social Studies", "Moral Education", "Computing", "PE"],
   French: ["Math", "French", "English", "Science", "Arabic", "Islamic", "History & Geography"],
-  German: ["Math", "German", "English", "Science", "Arabic", "Islamic"]
+  German: ["Math", "German", "English", "Science", "Arabic", "Islamic"],
+  // 📚 v231: the curricula that had no list yet
+  Iranian: ["Math", "Persian", "English", "Science", "Arabic", "Islamic", "Social Studies"],
+  Australian: ["Math", "English", "Science", "Humanities (HASS)", "Arabic", "Islamic", "Technologies", "PE", "Art"],
+  Chinese: ["Math", "Chinese", "English", "Science", "Arabic", "Islamic", "Social Studies"],
+  Japanese: ["Math", "Japanese", "English", "Science", "Social Studies", "Arabic", "Islamic"],
+  Russian: ["Math", "Russian", "English", "Science", "History", "Arabic", "Islamic"],
+  SABIS: ["Math", "English", "Science", "Arabic", "Islamic", "Social Studies", "French", "Computing"],
+  Pakistani: ["Math", "English", "Urdu", "Science", "Islamic", "Pakistan Studies", "Arabic", "Computing"],
+  Philippine: ["Math", "English", "Filipino", "Science", "Social Studies", "Arabic", "Islamic", "Computing"]
 };
+// 📚 v231: a kid's curriculum is picked or changed (Family, 🏫 School settings, 👤 profile …) → its study subjects get a folder in 🎒 School.
+// Only subjects the kid doesn't have yet (a folder a parent hid stays hidden). PE / Art / Music aren't added (not studied at home).
+const CURR_NOT_ADDED = ["PE", "Art", "Music"];
+function addCurrSubjects(kid, before) {
+  const u = userById(kid), list = u && u.curriculum && u.curriculum !== before ? SUBJECTS_BY_CURRICULUM[curriculumShort(u.curriculum)] : null;
+  if (!list) return 0;
+  const s = schoolFor(kid);
+  let added = 0;
+  list.filter(n => !CURR_NOT_ADDED.includes(n)).forEach(n => { if (!folderIdFor(s, n)) { ensureFolder(s, n); added++; } });
+  return added;
+}
 const CORE_SUBJECTS = ["Math", "English", "Science", "Arabic"];
 const setupPending = u => !isParentId(u.id) && u.setupAsked !== true && !u.school && !u.curriculum && !u.year && !schoolOf(u.id).info.name;
 function setupKid() { return isParentDevice() && !isKidDevice() ? kidsList().find(setupPending) || null : null; }
@@ -255,9 +275,10 @@ function saveMe() {
   if (Object.keys(loves).length) u.loves = loves; else delete u.loves;
   // 🏫 📚 🎓 the school basics and 📘 the subjects (a kid: the same subjects as in 🎒 School)
   if (!isParentId(u.id) && $("meSchool")) {
-    const about = schoolFieldsValue("me");
+    const about = schoolFieldsValue("me"), currBefore = u.curriculum;
     Object.assign(u, about);
     Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; });
+    addCurrSubjects(u.id, currBefore);
     const s = schoolFor(u.id);
     subjectList(s, true).forEach(f => {
       const box = $("mesub-" + f.id), show = $("meshow-" + f.id);

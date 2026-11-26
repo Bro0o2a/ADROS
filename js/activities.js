@@ -173,6 +173,12 @@ document.addEventListener("click", e => {
 });
 // 👤 v213 (Broo2a): a button per person on top; tap one = ALL their activities (📌 fixed and 🔄 flexible) in one list
 let addWho = null;   // null = All (the 3 sections as usual)
+// 👤 v231: who a NEW activity is for at first: the person picked on top, else (a parent) the first kid, else me
+function newFormWho() {
+  if (addWho && data.users.some(u => u.id === addWho)) return [addWho];
+  const kid = isParentDevice() ? kidsList()[0] : null;
+  return [kid ? kid.id : me];
+}
 function addWhoHtml() {
   const people = isParentId(me) ? data.users : data.users.filter(u => u.id === me);
   if (people.length < 2) return "";
@@ -401,7 +407,7 @@ function resetFixedForm() {
   $("fxEnd").value = "14:00";
   padTouched.fx = false;
   fillPads("fx");          // automatic times (the name is empty now → 5 min before)
-  drawWho("fx", [me]);
+  drawWho("fx", newFormWho());
   drawStudy("fx", { subjectIds: [], studyMode: "sole", helper: "" });
   $("fxFormTitle").textContent = "➕ New fixed activity";
   $("fxDel").hidden = true; delete $("fxDel").dataset.delFixed;
@@ -503,7 +509,7 @@ function resetFlexForm() {
   $("flFrom").value = $("flTo").value = "";   // any free time
   padTouched.fl = false;
   fillPads("fl");          // automatic times
-  drawWho("fl", [me]);
+  drawWho("fl", newFormWho());
   drawStudy("fl", { subjectIds: [], studyMode: "sole", helper: "" });
   $("flFormTitle").textContent = "➕ New flexible activity";
   $("flDel").hidden = true; delete $("flDel").dataset.delFlex;

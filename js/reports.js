@@ -17,13 +17,21 @@ function reportRange() {
 }
 const stars5 = lv => lv ? "★".repeat(lv) + "☆".repeat(Math.max(0, 3 - lv)) : "";   // (the 👤 profile levels: 1–3)
 // Everything the report shows for one kid (plain numbers and short lists)
+// 🏫 v231: the marks a parent typed in School → 📊 Marks (quiz, exam, homework …) between two dates (to = not included).
+// Only shown in the reports: the 🎯 weekly score doesn't use them.
+function typedMarksIn(kid, from, to, subject) {
+  return Object.values(schoolOf(kid).grades).filter(g => g && g.max > 0 && isYmd(g.date) && g.date >= from && g.date < to && (!subject || sameSubject(g.subject, subject)));
+}
+const typedMarksText = list => list.length ? `${avgOf(list)}% (${list.length} ${list.length === 1 ? "mark" : "marks"})` : "–";
 function reportData(kid, r) {
   const s = schoolOf(kid), inR = d => d && d >= r.from && d < r.to;
   const files = Object.values(s.files).filter(f => inR(f.date)).length;
   const sheets = Object.values(aiDocs.worksheets).filter(w => w.kid === kid && w.check && inR(String(w.check.at || w.date).slice(0, 10)));
   const subjects = subjectList(s).map(f => {
     const all = checkedOf(kid, f.name), last = all[0], inside = all.filter(w => sheets.includes(w));
+    const typed = typedMarksIn(kid, r.from, r.to, f.name);
     return { id: f.id, emoji: f.emoji, name: f.name, level: (s.profile.subjects[f.id] || {}).level || 0, avg: avgPct(inside), avgAll: avgPct(all),
+             typed: typed.length ? { n: typed.length, avg: avgOf(typed) } : null,
              strong: last ? (last.check.strong_points || []).slice(0, 3) : [], weak: last ? (last.check.weak_points || []).slice(0, 3) : [] };
   });
   const habits = habitsFor(kid).map(h => ({ h, days: new Set(Object.entries(data.habitMarks).filter(([k, v]) => { const [date, id, who] = k.split("|"); return who === kid && id === h.id && inR(date) && habitDone(h, v); })
@@ -34,7 +42,8 @@ function reportData(kid, r) {
   const points = Object.entries(data.points.lifetime).filter(([k]) => { const [wk, who] = k.split("|"); return who === kid && inR(wk) && wk !== data.points.week; })
     .reduce((n, [, v]) => n + v, 0) + (weekNowIn ? pointsByUser()[kid] || 0 : 0);
   const planned = plannedCount(kid), done = (activityPointsByUser()[kid] || 0) / POINTS_EACH;
-  return { s, files, sheets: sheets.length, avg: avgPct(sheets), subjects, habits, moods, points,
+  const typed = typedMarksIn(kid, r.from, r.to);
+  return { s, files, sheets: sheets.length, avg: avgPct(sheets), typed, subjects, habits, moods, points,
            tasksPct: planned ? Math.min(100, Math.round(done / planned * 100)) : null, done, planned,
            level: levelOf(lifetimePoints(kid)) };   // (🧩 riddles: not in the report, they're just for fun)
 }
@@ -42,6 +51,7 @@ function reportData(kid, r) {
 function reportLines(x, r, name) {
   const cands = [
     ...x.subjects.filter(f => f.avg != null).map(f => ({ score: f.avg / 100, best: `${f.emoji} ${f.name}: ${f.avg}% on worksheets`, help: `${f.emoji} ${f.name}: ${f.avg}% on worksheets. A short practice together will help.` })),
+    ...x.subjects.filter(f => f.typed).map(f => ({ score: f.typed.avg / 100, best: `${f.emoji} ${f.name}: ${f.typed.avg}% in school marks`, help: `${f.emoji} ${f.name}: ${f.typed.avg}% in school marks. A short practice together will help.` })),
     ...x.habits.map(({ h, days }) => ({ score: days / Math.max(1, r.days), best: `${h.emoji} ${h.name}: ${days} of ${r.days} days`, help: `${h.emoji} ${h.name}: only ${days} of ${r.days} days. A small reminder could help.` })),
     ...(x.tasksPct != null && rpRange === "week" ? [{ score: x.tasksPct / 100, best: `✅ ${x.tasksPct}% of the planned activities done`, help: `✅ ${x.tasksPct}% of the planned activities done so far.` }] : [])];
   if (!cands.length) return { best: "", help: "" };
@@ -53,12 +63,13 @@ function reportCardsHtml(kid, forPdf) {
   const big = (n, label) => `<div class="rp-num"><b>${n}</b><small>${label}</small></div>`;
   const sc = rpRange === "week" ? scoreOf(kid) : null;   // (⭐ the score is for this week only)
   return `${sc ? `<div class="card rp-card"><h2>⭐ Score this week</h2>${scoreBlockHtml(sc)}</div>${forPdf ? "" : dayGraphHtml(u, colorsOf(u).color)}` : ""}
-    <div class="card rp-card"><h2>📚 Study per subject</h2>${sc ? `<p class="rp-free">📚 Sessions: ${sc.sp ? sc.sp.study + "%" : "–"} · 📝 Marks: ${sc.wsCount ? sc.marks + "%" : "–"}${
+    <div class="card rp-card"><h2>📚 Study per subject</h2>${sc ? `<p class="rp-free">📚 Sessions: ${sc.sp ? sc.sp.study + "%" : "–"} · 📝 Worksheet marks: ${sc.wsCount ? sc.marks + "%" : "–"} · 🏫 School marks: ${typedMarksText(x.typed)}${
       sc.free.count ? ` <small>(${sc.free.count} ${sc.free.count === 1 ? "worksheet" : "worksheets"}, ${sc.free.points} points)</small>` : ""}</p>` : ""}${studyTableHtml(kid, null)}</div>
     <div class="card rp-card"><h2>🎒 Topics</h2>${topicsSummaryHtml(kid)}</div>
-    <div class="card rp-card"><h2>🧠 Learning profile</h2>${learnReportHtml(kid)}</div><div class="card rp-card"><h2>🎒 School</h2><div class="rp-nums">${big(x.files, "files uploaded")}${big(x.sheets, "worksheets done")}${big(x.avg != null ? x.avg + "%" : "–", "average mark")}</div>
+    <div class="card rp-card"><h2>🧠 Learning profile</h2>${learnReportHtml(kid)}</div><div class="card rp-card"><h2>🎒 School</h2><div class="rp-nums">${big(x.files, "files uploaded")}${big(x.sheets, "worksheets done")}${big(x.avg != null ? x.avg + "%" : "–", "worksheets average")}${big(x.typed.length ? avgOf(x.typed) + "%" : "–", `school marks${x.typed.length ? ` (${x.typed.length})` : ""}`)}</div>
       ${x.subjects.length ? `<ul class="rp-subs">${x.subjects.map(f => `<li>${forPdf ? `<div class="rp-sub">` : `<button class="rp-sub" data-rpsub="${safe(f.id)}">`}
         <span class="rp-subname">${safe(f.emoji)} ${safe(f.name)}</span><span class="rp-stars" aria-label="${f.level ? `Level ${f.level} of 3` : "No level yet"}">${stars5(f.level) || "–"}</span>
+        ${f.typed ? `<small>🏫 School marks: <b>${f.typed.avg}%</b> (${f.typed.n})</small>` : ""}${f.avg != null ? `<small>📝 Worksheets: <b>${f.avg}%</b></small>` : ""}
         ${f.strong.length ? `<small>Good at: ${safe(f.strong.join(", "))}</small>` : ""}${f.weak.length ? `<small>Work on: ${safe(f.weak.join(", "))}</small>` : ""}${forPdf ? "</div>" : "</button>"}</li>`).join("")}</ul>` : ""}</div>
     <div class="card rp-card"><h2>✅ Tasks</h2><div class="rp-nums">${x.tasksPct != null ? big(x.tasksPct + "%", `of planned activities done this week (${x.done} of ${x.planned})`) : big("–", "no planned activities this week")}
       ${rpRange === "month" ? big(x.points, "points this month") : ""}</div></div>
@@ -110,6 +121,7 @@ function fsPerson(u, wk) {
   // 📚 school: the worksheets checked that week
   const sheets = kid ? Object.values(aiDocs.worksheets).filter(w => w.kid === id && w.check && String(w.check.at || w.date).slice(0, 10) >= wk.from && String(w.check.at || w.date).slice(0, 10) < wk.to) : [];
   const pick = key => [...new Set(sheets.flatMap(w => w.check[key] || []))].slice(0, 3);
+  const typed = kid ? typedMarksIn(id, wk.from, wk.to) : [];   // (🏫 the marks typed in School)
   // ⭐ habits and 🕌 prayers
   let ticks = 0, prayed = 0, prayerDays = 0, fajrMissed = 0, leftDays = 0;
   const kidHabits = kid ? habitsFor(id) : [], parentHabits = [];   // (👨‍👩‍👧 parents have no habits or prayers any more)
@@ -128,7 +140,7 @@ function fsPerson(u, wk) {
   const moods = days.map(date => { const e = diaryOf(id, date); return e ? moodFace(e.mood) : ""; });
   const L = levelOf(lifetimePoints(id));
   return { u, kid, raw, fair: fi ? fi.fair : null, score: fi, tasksPct: st ? st.pct : null, tasksDone: st ? st.done : doneLast, tasksPlanned: st ? st.planned : 0,
-           sheets: sheets.length, avg: avgPct(sheets), strong: pick("strong_points"), weak: pick("weak_points"),
+           sheets: sheets.length, avg: avgPct(sheets), typed, strong: pick("strong_points"), weak: pick("weak_points"),
            ticks, habitCount: kidHabits.filter(h => h.kind !== "prayers").length + parentHabits.length, prayed, prayerMax: prayerDays * PRAYERS.length, fajrMissed,
            leftDays, days: days.length, moods, L, face: buddyFace(id, L) };   // (🧩 riddles: not in the summary, just for fun)
 }
@@ -155,6 +167,7 @@ function fsCardHtml(p) {
     ${p.fair != null ? bar(p.fair) + subBarsHtml(p.score) : ""}
     ${row("✅ Tasks done", p.tasksPct != null ? `${p.tasksPct}% (${p.tasksDone} of ${p.tasksPlanned})` : `${p.tasksDone} done`)}
     ${p.kid ? row("📚 Worksheets done", `${p.sheets}${p.avg != null ? ` · average ${p.avg}%` : ""}`) : ""}
+    ${p.kid && p.typed.length ? row("🏫 School marks", typedMarksText(p.typed)) : ""}
     ${p.strong.length ? row("Good at", safe(p.strong.join(", "))) : ""}${p.weak.length ? row("Work on", safe(p.weak.join(", "))) : ""}
     ${p.habitCount ? row("⭐ Habits ticked", p.ticks) : ""}${p.prayerMax ? row("🕌 Prayers", `${p.prayed} of ${p.prayerMax}`) : ""}
     ${feat("diary") && p.moods.length ? `<div class="fs-row"><span>📔 Moods</span><b class="fs-moods">${p.moods.map(m => m || "·").join(" ")}</b></div>` : ""}

@@ -3686,3 +3686,7 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 /* v230 sign-in buttons: soft caramel (user's choice C) */
 .login-card .login-btn, .login-card .login-btn:hover { background: linear-gradient(180deg, #D6AE97, #C99A82); border: 3px solid #fff; color: #fff;
   text-shadow: 0 1px 2px rgba(80, 50, 30, .3); box-shadow: 0 8px 18px rgba(150, 100, 70, .28), inset 0 -5px 0 rgba(0, 0, 0, .08); }
+
+/* v231: 🎒 Get ready / ☕ Break strips much fainter, so the calendar looks less busy (tap or hover: clear again) */
+.k-routine.pad { opacity: .45; background: transparent; border: 1px dotted #d6d8e2; }
+.k-routine.pad:hover, .k-routine.pad:focus-visible { opacity: .95; }

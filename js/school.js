@@ -474,6 +474,7 @@ function askBasicHtml(kid) {
 function saveBasic(k, skip) {
   const kid = schoolKid, u = data.users.find(x => x.id === kid);
   if (!u || !isDadNow() || !BASIC_KEYS.includes(k)) return;
+  const currBefore = u.curriculum;
   if (skip) {
     const p = schoolFor(kid).profile;
     p.skip = [...new Set([...(p.skip || []), k])];
@@ -488,6 +489,7 @@ function saveBasic(k, skip) {
     if (!v) return;
     u[k] = v;
   }
+  addCurrSubjects(kid, currBefore);
   writeData();
   schoolFresh = true;
   render();
@@ -564,7 +566,7 @@ function saveProfile(skip) {
     Object.assign(p, { subjects, other: $("spOther").value.trim().slice(0, 400), likes: $("spLikes").value.trim().slice(0, 200) });
     // 🏫 📚 🎓 kept on the kid (shared family data, like 👨‍👩‍👧 Family)
     const u = data.users.find(x => x.id === kid), about = schoolFieldsValue("sp");
-    if (u) { Object.assign(u, about); Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; }); }
+    if (u) { const before = u.curriculum; Object.assign(u, about); Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; }); addCurrSubjects(kid, before); }
   }
   p.asked = true;   // asked once: it doesn't come by itself again
   writeData();
@@ -2150,14 +2152,15 @@ const redrawSchoolSet = () => { const b = $("ssBody"); if (b) b.innerHTML = schS
 function saveSchoolSet() {
   const kid = schSetKid, u = data.users.find(x => x.id === kid), d = schSetDraft;
   if (!u || !isParentDevice() || !d) return;
-  const about = schoolFieldsValue("ss");
+  const about = schoolFieldsValue("ss"), currBefore = u.curriculum;
   Object.assign(u, about); Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; });
   data.wsDay = { ...(data.wsDay || {}), [kid]: d.per ? { per: { ...d.list } } : { n: d.n } };
   // 📚 v220 the subjects to study: off = hidden (its work is kept), new ones get a folder
   const s = schoolFor(kid);
   Object.entries(d.show || {}).forEach(([id, on]) => { const f = s.subjects[id]; if (!f) return; if (on) delete f.hidden; else f.hidden = true; });
   (d.add || []).forEach(n => ensureFolder(s, n));
-  qePopClose(); keepNow(); toast(`🏫 Saved for ${u.name}.`, 2500);
+  const added = addCurrSubjects(kid, currBefore);   // (📚 a new curriculum: its subjects)
+  qePopClose(); keepNow(); toast(`🏫 Saved for ${u.name}.${added ? ` 📚 ${added} ${u.curriculum} ${added === 1 ? "subject" : "subjects"} added.` : ""}`, 3500);
 }
 document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp], [data-sssub], [data-ssunadd], [data-ssnew], [data-ssaddtyped]");

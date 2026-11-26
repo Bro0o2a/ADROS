@@ -798,7 +798,8 @@ async function loadMap(kid, sid) {
   const r = await callAi("topics", { ...kidInfo(kid), subject: f.name, today: todayYmd(), ...(syl && syl.text ? { syllabus: syl.text } : {}) }, "map|" + sid);
   const list = (r && Array.isArray(r.topics) ? r.topics : []).map(t => ({ title: aiTxt(t.title, 80), term: aiTxt(t.term, 20), now: t.now === true,
     ...(Array.isArray(t.parts) && t.parts.length ? { parts: t.parts.map(x => aiTxt(x, 80)).filter(Boolean).slice(0, 8) } : {}) })).filter(t => t.title).slice(0, 30);
-  if (!list.length) return;
+  // (v231: never silent. No answer at all → callAi already said why; an empty answer → say so)
+  if (!list.length) { if (r) toast(`📖 No topics came back for ${f.name}. Check the curriculum and year in 🏫 School settings, then try again.`, 6000); return; }
   schoolFor(kid).map[sid] = { at: new Date().toISOString(), list };
   writeData();
   render();

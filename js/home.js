@@ -52,7 +52,7 @@ function kidPlannerHtml(u, today, hb) {
       ${today.slice(0, 7).map(x => `<button class="pl-line pl-time${done(x) ? " done" : ""}" data-kidcal><span class="pl-t">${x.start >= 0 ? clock(x.start, true) : "Any"}</span><b>${safe(x.name)}</b><span class="pl-box">${done(x) ? "✓" : ""}</span></button>`).join("")}
       ${today.length > 7 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}</div>` : ""}
     ${hb.all ? `<button class="pl-card pl-blue pl-track" data-kidpanel="habits">${ribbon("Habit tracker", "blue")}
-      <span class="pl-cups">${Array.from({ length: cups }, (_, i) => cup(i < full)).join("")}</span><small>${hb.done} of ${hb.all} good habits today</small></button>` : ""}
+      <span class="pl-cups">${Array.from({ length: cups }, (_, i) => cup(i < full)).join("")}</span><small>${hb.all <= 10 ? `${hb.done} of ${hb.all} good habits today` : `${Math.round(hb.done / hb.all * 100)}% of today's habits done`}</small></button>` : ""}
     <div class="pl-quote">${ico3d("idea", "pl-qi")}<p>${quote}</p></div>`;
 }   // the part opened from the bottom bar on the home: "habits" | null
 function drawKidHome(u) {
@@ -453,13 +453,13 @@ function kidSectionHtml(k, sec) {
         ${stars().includes(k.id) ? `<p>${want && want.text ? `🎁 Gift: <b>${safe(want.text)}</b>${want.ok ? " ✅" : ""}` : "🎁 No gift picked yet."}</p>` : ""}
         <div class="btnrow"><button class="pill" data-go="points">🏆 Points and leaderboard</button></div></div>`,
     score: () => `<div class="card"><h2>🏆 Score this week</h2>${scoreBlockHtml(sc)}${sc.free && sc.free.count ? `<p class="kid-free">${freeLine(sc.free)}</p>` : ""}</div>${dayGraphHtml(k, c.color)}`,
-    study: () => `<div class="card rp-card"><h2>📚 Study per subject</h2><p class="rp-free">📚 Sessions: ${sc.sp ? sc.sp.study + "%" : "–"} · 📝 Marks: ${sc.wsCount ? sc.marks + "%" : "–"}${
+    study: () => `<div class="card rp-card"><h2>📚 Study per subject</h2><p class="rp-free">📚 Sessions: ${sc.sp ? sc.sp.study + "%" : "–"} · 📝 Worksheet marks: ${sc.wsCount ? sc.marks + "%" : "–"} · 🏫 School marks: ${typedMarksText(x.typed)}${
         sc.free.count ? ` <small>(${sc.free.count} ${sc.free.count === 1 ? "worksheet" : "worksheets"}, ${sc.free.points} points)</small>` : ""}</p>${studyTableHtml(k.id, null)}</div>
       <div class="card rp-card"><h2>🎒 Topics</h2>${topicsSummaryHtml(k.id)}</div>`,
     points: () => `<p class="hint ks-intro">Each subject in a few words, from ${safe(k.name)}'s checked worksheets.</p>${kidSubjectsHtml(k.id)}`,
     tasks: () => `<div class="card rp-card"><h2>✅ Tasks this week</h2><div class="rp-nums">${x.tasksPct != null ? big(x.tasksPct + "%", `of planned activities done (${x.done} of ${x.planned})`) : big("–", "no planned activities this week")}</div>
         <div class="btnrow"><button class="pill" data-viewcal="${safe(k.id)}">📅 The week</button></div></div>${dutyRowsCardHtml([k], `✅ Did ${safe(k.name)} do the duties on time today?`)}`,
-    school: () => `<div class="card rp-card"><h2>🎒 School this week</h2><div class="rp-nums">${big(x.files, "files uploaded")}${big(x.sheets, "worksheets done")}${big(x.avg != null ? x.avg + "%" : "–", "average mark")}</div>
+    school: () => `<div class="card rp-card"><h2>🎒 School this week</h2><div class="rp-nums">${big(x.files, "files uploaded")}${big(x.sheets, "worksheets done")}${big(x.avg != null ? x.avg + "%" : "–", "worksheets average")}${big(x.typed.length ? avgOf(x.typed) + "%" : "–", `school marks${x.typed.length ? ` (${x.typed.length})` : ""}`)}</div>
         <div class="btnrow"><button class="primary" data-school="${safe(k.id)}">🎒 Open ${safe(k.name)}'s School</button></div></div>`,
     work: () => `${kwCardHtml(k, items).replace("data-kwdetail", "data-kwsame").replace("<small>Details ›</small>", "")}
       <div class="card"><h2>📋 Everything ${safe(k.name)} did today (${mine.length})</h2>
@@ -793,7 +793,7 @@ const TOUR_KID = [["✅", "Tick your tasks", "When you finish something, tap its
                   ["✨", "Grow your Spark", "All your points help your Spark grow. Can you reach the next level?"]];
 const TOUR_PARENT = [["📅", "Family calendar", "Everyone's week in one place. ✨ Plan my week fits all the activities together."],
                      ["🎒", "School coach", "Upload today's school work: 🤖 makes worksheets, checks the answers and tells you what to practise."],
-                     ["⭐", "Points & the kids' habits", "⭐ Score (out of 100, each week): 📝 every checked worksheet adds points from its mark (100% = 10, 80% = 8; a study-session one 5% more), up to 80 + ✅ 📚 ⚽ 🌱 items ticked (20). Missed ⭐ must-dos lower it, except on Friday and Saturday. Points still grow the ✨ Spark."],
+                     ["⭐", "Points & the kids' habits", "⭐ Score (out of 100, each week): 📝 every checked worksheet adds points from its mark (100% = 10, 80% = 8; a study-session one 5% more), up to 80 + ✅ 📚 ⚽ 🌱 items ticked (20). Missed ⭐ must-dos lower it, except on your days off (📅 Calendar setup). Points still grow the ✨ Spark."],
                      ["⚙️", "Settings", "Turn features on or off for your family, and set up the people and the day."]];
 let tourShown = false;   // (once per opening of the app)
 function maybeShowTour() {

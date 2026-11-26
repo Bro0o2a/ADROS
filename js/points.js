@@ -213,6 +213,12 @@ const tallyPct = t => t.planned ? Math.round(t.done / t.planned * 100) : 0;
 // The subjects an activity allows for one kid, from THEIR 🎒 School (shown ones only): [{ id, name, emoji, … }]
 // (a saved id may be another kid's id for the same subject: matched by its name)
 const subjectIdsOf = a => Array.isArray(a.subjectIds) && a.subjectIds.length ? a.subjectIds : a.subjectId ? [a.subjectId] : [];
+// 🔎 The kid's school subject an activity's name talks about ("Maths homework" → Math), or null
+function guessSubjectFor(name, kid) {
+  const mine = subjectList(schoolOf(kid)), n = String(name || "").toLowerCase(), f = findSubject(n);
+  return (f && (mine.find(y => sameSubject(y.name, f.name)) || mine.find(y => findSubject(y.name) === f)))
+    || mine.find(y => y.name && n.includes(String(y.name).toLowerCase())) || null;
+}
 function actSubjectsFor(a, kid) {
   const ids = subjectIdsOf(a), mine = subjectList(schoolOf(kid));
   if (ids.includes(ALL_SUBJECTS)) return mine;
@@ -277,7 +283,8 @@ function sessionsIn(id, dates, full = false) {
     const key = `${date}|${it.actId}|${id}`;
     // 📚 Its subject: the one the kid picked (several allowed), the only one allowed, or (none set) the older subject / the name
     const options = actSubjectsFor(a, id), pick = data.points.picks[key], picked = pick && options.find(o => o.id === pick.sid);
-    const sub = picked || (options.length === 1 ? options[0] : null);
+    // 🔎 v231: no subject ticked on the activity → guessed from its name ("Maths homework" → the kid's Math)
+    const sub = picked || (options.length === 1 ? options[0] : null) || (!options.length && !subjectNameOf(a.users, a.subjectId) ? guessSubjectFor(a.name, id) : null);
     out.push({ key, date, actId: it.actId, act: a, person: id, options, needsPick: options.length > 1 && !picked,
                subject: sub ? sub.name : options.length > 1 ? a.name : subjectNameOf(a.users, a.subjectId) || a.name, subjectId: sub ? sub.id : options.length > 1 ? "" : a.subjectId || "",
                mode: a.studyMode === "assisted" ? "assisted" : "sole", helper: a.studyMode === "assisted" ? a.helper || "" : "",
@@ -500,15 +507,14 @@ function ticksTally(id) {
 // until yesterday (today never counts: the kid has until midnight). Each habit-day counts its part done: 🕌 3 of 5 prayers = 0.6,
 // 💧 4 of 6 drops = 0.67, a one-tick habit 1 or 0. → { ratio (0–1, 1 when nothing is due yet), due, done, missed: [{ name, date }] }
 // The week's ⭐ Score = the total × ratio (✖️ the must-do multiplier).
-// 🏖️ v209 Off days (Friday and Saturday, the family's weekend): missed must-dos there don't lower the score
-const MUST_OFF_DAYS = [4, 5];   // (0 = Monday)
-const mustOffDay = ymd => MUST_OFF_DAYS.includes(weekdayOf(ymd));
+// 🏖️ v231: must-dos don't count on the family's days off (📅 Calendar setup → weekend days, 0 = Monday; was always Fri + Sat)
+const mustOffDay = ymd => weekendDaysOf().includes(weekdayOf(ymd));
 function mustMissed(id) {
   const today = todayYmd(), missed = [];
   let due = 0, done = 0;
   data.habits.filter(h => h.must && !h.gone && !h.off.includes(id)).forEach(h => {
     for (let d = h.must > data.points.week ? h.must : data.points.week; d < today && d < weekEnd(); d = addDaysYmd(d, 1)) {
-      if (mustOffDay(d)) continue;   // (🏖️ Friday / Saturday: must-dos don't count)
+      if (mustOffDay(d)) continue;   // (🏖️ a day off: must-dos don't count)
       const v = data.habitMarks[habitKey(d, h.id, id)];
       const part = h.kind === "prayers" ? (Array.isArray(v) ? v.filter(Boolean).length : 0) / PRAYERS.length
         : h.kind === "water" ? Math.min(WATER_DROPS, Number(v) || 0) / WATER_DROPS : v === true ? 1 : 0;

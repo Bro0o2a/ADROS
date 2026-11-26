@@ -191,7 +191,7 @@ function calBoxHtml() {
     ${sec("end", "🌙 Day ends", `${hm(d.all.wd)} · weekend ${hm(d.all.we)}${owners.length ? ` · own: ${safe(owners.join(", "))}` : ""}`,
       `<p class="hint">Nothing is planned for the kids after this time. The same for every kid; change one kid only if needed.</p>
        <div class="bed-lab">📚 School nights <small>(${names(nightsOf(false))})</small></div>${step("all|wd", d.all.wd)}
-       <div class="bed-lab">🎉 Weekend nights <small>(${names(nightsOf(true))})</small></div>${step("all|we", d.all.we)}${kidRows}`)}
+       <div class="bed-lab">🎉 Weekend nights <small>(${names(nightsOf(true))}: the nights before a day off)</small></div>${step("all|we", d.all.we)}${kidRows}`)}
     ${sec("school", "🏫 School", sc.on ? `${hm(sc.start)}–${hm(sc.end)}${sc.short != null ? ` · ${SHORT[sc.short]} ${hm(sc.shortEnd)}` : ""}` : "not shown",
       `<label class="bed-tick"><input type="checkbox" data-calschool ${sc.on ? "checked" : ""}><span>Show school on the calendar<br><small>Nothing is planned in school time.</small></span></label>
        ${sc.on ? `<div class="bed-lab">Starts at</div>${step("school|start", sc.start)}<div class="bed-lab">Ends at</div>${step("school|end", sc.end)}
@@ -613,9 +613,11 @@ async function saveFamilyKid() {
   if (data.users.some(u => u.id !== famEdit && u.name.toLowerCase() === name.toLowerCase())) return $("famErr").textContent = "Someone already has that name.";
   const about = $("famSchool") ? schoolFieldsValue("fam") : {};   // (a new kid only: then they're kept in 👤 the profile)
   let u = famEdit !== "new" && data.users.find(x => x.id === famEdit);
+  const currBefore = u ? u.curriculum : "";
   if (u) Object.assign(u, { name, emoji, color }, about);
   else { u = { id: newId(), name, emoji, color, ...about }; data.users.push(u); }
   Object.keys(about).forEach(k => { if (!u[k]) delete u[k]; });
+  if (!isParentId(u.id)) addCurrSubjects(u.id, currBefore);   // (📚 v231: the curriculum's subjects)
   const isNew = famEdit === "new";
   famEdit = null;
   keepNow();
