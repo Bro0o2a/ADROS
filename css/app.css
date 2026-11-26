@@ -3695,3 +3695,7 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .ask-card .ask-row:first-of-type { border-top: 0; }
 .ask-card .ask-row p { margin: 0; flex: 1 1 180px; }
 .ask-card .btnrow { margin: 0; }
+/* v231: the 🔒 says when it opens ("11:00 AM", or the day) under the circle */
+.k-check.time-lock[data-at] { position: relative; overflow: visible; }
+.k-check.time-lock[data-at]::after { content: attr(data-at); position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 800; line-height: 1.1; color: #6b7280; white-space: nowrap; filter: none; }

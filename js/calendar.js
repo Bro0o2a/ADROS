@@ -365,6 +365,7 @@ function weekHtml(days, opts) {
         // ⏰ Everyone: locked (grey 🔒) until the start time; a tap says when (see tickTimeLock). Future days: locked too.
         const timeLock = !on && (ds > today || tickTimeLock(ds, b.start) != null);
         if (timeLock && (isParentId(me) || a.user === me)) return `<button class="k-check time-lock" data-check="${ds}|${safe(a.actId)}|${safe(a.user)}" style="--c:${colorsOf(owner).color}"
+                  data-at="${safe(ds > today ? SHORT[weekdayOf(ds)] : clock(b.start, true))}"
                   aria-label="${safe(`Locked until ${ds > today ? dayName(ds) : clock(b.start, true)}: ${b.name}`)}" title="${safe(ds > today ? `On ${dayName(ds)}` : `At ${clock(b.start, true)}`)}">🔒</button>`;
         const label = `${on ? "Done! Tap to untick" : ds > today ? "Not yet" : "Tap when done"}: ${owner.name}, ${b.name}`;
         // 🔒 A kid's device: someone else's tick is only a picture (look-only, no button). 📅 Past days: look-only
@@ -1815,3 +1816,15 @@ document.addEventListener("click", e => {
   if (b.dataset.dayhours) return openDayHours(b.dataset.dayhours);
   saveDayHoursOf(Number(b.dataset.dhsave));
 });
+
+// ⏰ v231: a 🔒 opens by itself when its time comes (no refresh): every 20 seconds, if an activity of today has just started
+// (and nobody is in the middle of editing), the page is drawn again.
+let lockMinSeen = null;
+setInterval(() => {
+  try {
+    if (document.hidden || typeof data === "undefined" || !data || !hasPlan() || editMode || hasDraft() || !["mine", "home", "kid"].includes(screen)) return;
+    const now = dubaiMinutes(), was = lockMinSeen; lockMinSeen = now;
+    if (was == null || now === was) return;
+    if (planDay(todayYmd()).items.some(it => it.start > was && it.start <= now)) render();
+  } catch (e) {}
+}, 20000);
