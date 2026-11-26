@@ -762,7 +762,7 @@ function cleanData(d) {
   // 🙋 v231 the kids' activities waiting for a parent's ✅
   clean.asks = (Array.isArray(d.asks) ? d.asks : []).filter(a => a && (a.kind === "fx" || a.kind === "fl") && a.act && typeof a.act === "object"
     && typeof a.act.name === "string" && a.act.name.trim() && userIds.includes(a.by) && JSON.stringify(a.act).length < 4000).slice(-30)
-    .map(a => ({ id: String(a.id || newId()), kind: a.kind, act: a.act, of: typeof a.of === "string" ? a.of : null, by: a.by, at: typeof a.at === "string" ? a.at.slice(0, 30) : "" }));
+    .map(a => ({ id: String(a.id || newId()), kind: a.kind, act: a.act, of: typeof a.of === "string" ? a.of : null, by: a.by, at: typeof a.at === "string" ? a.at.slice(0, 30) : "", ...(a.del === true ? { del: true } : {}) }));
   if (Array.isArray(d.flexible)) clean.flexible = d.flexible
     .filter(f => f && f.name && Number(f.duration) > 0 && Number(f.times) > 0)
     .map(f => {
