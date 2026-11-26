@@ -476,6 +476,7 @@ function emptyData() {
     // weekendOwn = true → Saturday and Sunday use weekendStart / weekendEnd instead.
     myDay: { start: "08:00", end: "21:00", weekendOwn: false, weekendStart: "08:00", weekendEnd: "21:00" },
     starAt: { day: 4, time: "15:30" },
+    asks: [],      // 🙋 v231 a kid's new / changed activity waiting for a parent's ✅ (see askParent in activities.js)
     aiOk: null,    // 🤖 a parent said OK to the AI helper for the family: { by, at } (see askAiOk in ai.js)
     starV: 2,        // ⭐ 2 = the old Friday 6 PM was moved to Friday 3:30 PM once (v171)
     fixedOn: {},    // 🏫 v180: a fixed activity changed on ONE date: "date|actId" → { off: true } (didn't happen) or { start, end } ("09:00")
@@ -753,6 +754,10 @@ function cleanData(d) {
     else if (typeof v === "number" && v >= 1 && v <= WATER_DROPS) clean.habitMarks[key] = Math.round(v);
   });
 
+  // 🙋 v231 the kids' activities waiting for a parent's ✅
+  clean.asks = (Array.isArray(d.asks) ? d.asks : []).filter(a => a && (a.kind === "fx" || a.kind === "fl") && a.act && typeof a.act === "object"
+    && typeof a.act.name === "string" && a.act.name.trim() && userIds.includes(a.by) && JSON.stringify(a.act).length < 4000).slice(-30)
+    .map(a => ({ id: String(a.id || newId()), kind: a.kind, act: a.act, of: typeof a.of === "string" ? a.of : null, by: a.by, at: typeof a.at === "string" ? a.at.slice(0, 30) : "" }));
   if (Array.isArray(d.flexible)) clean.flexible = d.flexible
     .filter(f => f && f.name && Number(f.duration) > 0 && Number(f.times) > 0)
     .map(f => {

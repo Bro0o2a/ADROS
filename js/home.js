@@ -115,6 +115,9 @@ let homeAddPlan = false, needsOpen = null;   // the ✏️ Add / Plan menu is op
 function needsItems() {
   const out = [], rate = rateCardsHtml(), nRate = (rate.match(/class="card rate-card"/g) || []).length;
   if (nRate) out.push({ key: "rate", text: `⭐ ${nRate} ${nRate === 1 ? "session" : "sessions"} to rate`, html: rate });
+  // 🙋 v231: a kid asks to add or change an activity
+  const asks = isParentId(me) ? data.asks || [] : [];
+  if (asks.length) out.push({ key: "asks", text: asks.length === 1 ? `🙋 ${kidNameOf(asks[0].by)} asks: ${asks[0].act.name}` : `🙋 ${asks.length} activities the kids ask for`, html: asksCardHtml() });
   const setup = kidSetupHtml();
   if (setup) out.push({ key: "setup", text: "🧒 Finish a kid's setup", html: setup });
   if (isParentId(me) && (!hasPlan() || planIsOld())) out.push({ key: "plan", text: !hasPlan() ? "🗓️ No plan yet" : "🗓️ Things changed: plan again",

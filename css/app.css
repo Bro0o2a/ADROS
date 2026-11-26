@@ -3690,3 +3690,8 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 /* v231: 🎒 Get ready / ☕ Break strips much fainter, so the calendar looks less busy (tap or hover: clear again) */
 .k-routine.pad { opacity: .45; background: transparent; border: 1px dotted #d6d8e2; }
 .k-routine.pad:hover, .k-routine.pad:focus-visible { opacity: .95; }
+/* v231: 🙋 the kids' activities waiting for a parent's ✅ */
+.ask-card .ask-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid rgba(0, 0, 0, .06); }
+.ask-card .ask-row:first-of-type { border-top: 0; }
+.ask-card .ask-row p { margin: 0; flex: 1 1 180px; }
+.ask-card .btnrow { margin: 0; }

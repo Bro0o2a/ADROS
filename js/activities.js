@@ -200,7 +200,8 @@ document.addEventListener("click", e => {
 });
 function drawAddSections() {
   const parent = isParentId(me);
-  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="addWho"></div>`);
+  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="addAsks"></div><div id="addWho"></div>`);
+  $("addAsks").innerHTML = asksCardHtml();
   if (addWho && !data.users.some(u => u.id === addWho)) addWho = null;
   $("addWho").innerHTML = addWhoHtml() + (addWho ? addWhoListHtml(addWho) : "");
   $("scr-add").querySelector(".add-secs").hidden = !!addWho;
@@ -363,6 +364,8 @@ $("fxAdd").onclick = () => {
     return;
   }
 
+  // 🙋 v231 (Broo2a): a kid's new or changed activity waits for a parent's ✅ (see askParent)
+  if (!isParentId(me)) return askParent("fx", putHelp({ name, days, start, end, overlapWith, users, getReady, breakAfter, type }, help), old ? old.id : null, resetFixedForm);
   let id = editingFixed;
   if (old) putHelp(Object.assign(old, { name, days, start, end, overlapWith, users, getReady, breakAfter, type }), help);   // update the existing one
   else { id = newId(); data.fixed.push(putHelp({ id, name, days, start, end, overlapWith, users, getReady, breakAfter, type }, help)); } // add a new one
@@ -455,6 +458,8 @@ $("flAdd").onclick = () => {
   if (help.err) return $("flErr").textContent = help.err;
   const twice = $("flTwice").checked;   // (2️⃣ off = never twice on one day)
 
+  if (!isParentId(me)) return askParent("fl", putHelp({ name, duration, times, overlapWith, users, getReady, breakAfter, type, ...(between ? { between } : {}),
+    ...(twice ? {} : { twice: false }), ...(twiceDay ? { twiceDay: true } : {}) }, help), old ? old.id : null, resetFlexForm);   // (🙋 v231 a kid asks first)
   let id = editingFlex;
   if (old) {                                                                       // update the existing one
     putHelp(Object.assign(old, { name, duration, times, overlapWith, users, getReady, breakAfter, type }), help);
@@ -1278,3 +1283,47 @@ document.addEventListener("click", e => {
 
 // 2️⃣ v181: "Can be twice a day" ticked → "Times per week" may go up to 14
 document.addEventListener("change", e => { if (e.target && e.target.id === "flTwiceDay") $("flTimes").max = e.target.checked ? 14 : 7; });
+
+// =====================================================================
+//  🙋 v231 (Broo2a): KIDS ASK FIRST. A kid's new activity, or a change to one of theirs, isn't planned until a parent says ✅ Yes.
+//  It waits in data.asks [{ id, kind "fx" | "fl", act (the activity as the form made it), of (the activity it changes, or null), by, at }]:
+//  sent straight away (no 💾 Save needed). Parents see it in 🔔 Needs you and on ✏️ Add activities; the kid sees "Waiting".
+//  (Deleting one of their own activities doesn't ask.)
+// =====================================================================
+function askParent(kind, act, of, reset) {
+  data.asks = (data.asks || []).filter(a => !(a.by === me && of && a.of === of));   // (asked again: the newest wins)
+  data.asks.push({ id: newId(), kind, act, of: of || null, by: me, at: new Date().toISOString() });
+  reset();
+  keepNow();
+  toast(`🙋 Sent to Mum or Dad. “${act.name}” goes on your calendar when they say yes.`, 4500);
+}
+const askWhen = a => a.kind === "fx" ? `📌 ${daysText(a.act.days)} · ${clock(toMin(a.act.start), true)}–${clock(toMin(a.act.end), true)}`
+  : `🔄 ${showDuration(a.act.duration)} × ${a.act.times} a week`;
+function asksMine() { const all = data.asks || []; return isParentId(me) ? all : all.filter(a => a.by === me); }
+function asksCardHtml() {
+  const list = asksMine(), parent = isParentId(me);
+  if (!list.length) return "";
+  return `<div class="card ask-card"><h2>🙋 ${parent ? "The kids are asking" : "Waiting for Mum or Dad"}</h2>${list.map(a => `<div class="ask-row">
+    <p>${parent ? `<b>${safe(kidNameOf(a.by))}</b> ${a.of ? "wants to change" : "wants to add"}` : a.of ? "You asked to change" : "You asked to add"} <b>${safe(a.act.name)}</b><br><small>${safe(askWhen(a))}</small></p>
+    <div class="btnrow">${parent ? `<button class="primary" data-askyes="${safe(a.id)}">✅ Yes</button><button data-askno="${safe(a.id)}">❌ No</button>`
+      : `<span class="hint">⏳ Waiting…</span><button data-askno="${safe(a.id)}">✕ Cancel</button>`}</div></div>`).join("")}</div>`;
+}
+function answerAsk(id, yes) {
+  const a = (data.asks || []).find(x => x.id === id);
+  if (!a || (!isParentId(me) && a.by !== me)) return;
+  data.asks = data.asks.filter(x => x !== a);
+  if (!yes) { keepNow(); return toast(isParentId(me) ? `❌ Not added. ${kidNameOf(a.by)}'s “${a.act.name}” is taken away.` : "✕ Cancelled.", 3500); }
+  if (!isParentId(me)) return;
+  const list = a.kind === "fx" ? data.fixed : data.flexible, i = a.of ? list.findIndex(x => x.id === a.of) : -1;
+  if (i >= 0) {   // a change: the form's answers over the old activity (what the form doesn't show, like ⭐ Must-do, stays)
+    const base = { ...list[i] };
+    ["between", "twice", "twiceDay", "needsDad", "subjectId", "subjectIds", "studyMode", "helper"].forEach(k => delete base[k]);
+    list[i] = { ...base, ...a.act, id: a.of };
+  } else list.push({ ...a.act, id: newId() });
+  if (saveChanges()) toast(`✅ ${kidNameOf(a.by)}'s “${a.act.name}” is on the calendar.`, 3500);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-askyes], [data-askno]");
+  if (!b) return;
+  if (b.dataset.askyes) answerAsk(b.dataset.askyes, true); else answerAsk(b.dataset.askno, false);
+});
