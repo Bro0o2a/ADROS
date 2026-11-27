@@ -264,7 +264,7 @@ function schoolHomeHtml(s, isDad) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10) : [];
   const looseHtml = loose.length ? `<div class="card bd-card"><h2>📂 School files</h2><ul class="list">${loose.map(x => fileRowHtml(x, s, true)).join("")}</ul></div>` : "";
   // 📝 Every worksheet of the kid, all subjects, with its score (the kid's own; a parent: look-only)
-  const allWs = `<button class="ip-item" data-scgo="allws">${ico3d("paper")}<b>Worksheets</b><small>All of them</small></button>`;
+  const allWs = `<button class="ip-item" data-scgo="allws">${ico3d("k-ws")}<b>Worksheets</b><small>All of them</small></button>`;
   const tools = `<section class="ip-sec"><span class="ip-rib ip-pink">School tools <i>🎀</i></span><div class="ip-panel ip-2">${up}${allWs}</div></section>`;
   return sess + tools + goalsLineHtml(schoolKid) + (list.length ? `<section class="ip-sec"><span class="ip-rib ip-butter">My subjects <i>★</i></span><div class="ip-panel ip-3">${list.map(x => subjectTileHtml(s, x)).join("")}</div></section>${looseHtml}${edit}`
     : edit ? `<div class="card"><p class="sc-empty">No subjects yet.</p>${edit}</div>` : `<div class="card"><p class="sc-empty">No subjects yet. ${look ? `Add them in ${safe(userById(schoolKid).name)}'s 👤 profile → ⚙️ Settings.` : "Add them in 👤 My profile → ⚙️ My settings."}</p>
@@ -835,8 +835,8 @@ function schoolSubjectHtml(s, isDad, u) {
   const secs = subjectSecs(parent).filter(x => x.id !== "files" || filesOf(s, f.name).length || exOf(schoolKid, f.name).length);
   if (stSec && !secs.some(x => x.id === stSec)) stSec = null;
   if (!stSec) {
-    const upTile = `<button class="ip-item sj-go" data-stup="${safe(f.id)}">${ico3d("pin")}<b>Upload topic</b><small>From school</small></button>`;
-    const SEC_ICON = { ws: "paper", profile: "idea", curr: "milestone", topics: "read", goal: "goal", study: "study", files: "briefcase", more: "lunchbox" };
+    const upTile = `<button class="ip-item sj-go" data-stup="${safe(f.id)}">${ico3d("k-upload")}<b>Upload topic</b><small>From school</small></button>`;
+    const SEC_ICON = { ws: "k-ws", profile: "idea", curr: "milestone", topics: "k-topics", goal: "k-goal", study: "study", files: "briefcase", more: "lunchbox" };
     // 🎨 v233 (Broo2a's picture): the buddy says how it's going, This year's topics (in class now · coming next · ✏️ practise),
     // the worksheets (to do first, then the last checked), then the subject corner buttons and "In short"
     html += subjectTopHtml(s, f, c, all) + `<section class="ip-sec sj3-more"><h2 class="sj3-h">More for ${safe(f.name)}</h2><div class="ip-panel ip-3">
