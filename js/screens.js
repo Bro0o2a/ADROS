@@ -126,7 +126,7 @@ function render() {
   if (!draft && exists(me) && updateReach()) writeData("auto");   // ⚖️ when each fair score was reached (a tie: who got there first)
   maybeDecideStar();   // ⭐ the announce day + time (⚙️ Settings): the Shining Star is decided (🎁 next evening: a reminder when no gift is chosen)
   if (!draft && exists(me) && seedHall()) writeData("auto");   // 🏆 the first 3 stars, saved once
-  if (!draft) maybeShowStar();   // 📣 the announcement pop-up (once on each device)
+  if (!draft) { maybeShowStar(); maybeShowLevelUp(); }   // 📣 the announcement pop-up (once on each device)
   if (screen === "start") drawStart();
   if (screen === "points") drawPoints();
   if (screen === "home") drawHome();
@@ -285,5 +285,5 @@ window.addEventListener("popstate", e => {
 
 // ⭐ v171: the Shining Star is announced on time even when the app is just left open (checks every 30 seconds)
 setInterval(() => {
-  try { if (document.hidden || typeof data === "undefined" || !data || hasDraft()) return; maybeDecideStar(); maybeShowStar(); } catch (e) {}
+  try { if (document.hidden || typeof data === "undefined" || !data || hasDraft()) return; maybeDecideStar(); maybeShowStar(); maybeShowLevelUp(); } catch (e) {}
 }, 30000);

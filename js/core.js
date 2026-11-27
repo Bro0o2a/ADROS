@@ -1562,7 +1562,7 @@ const CHARS = [["c01", "Giggle Girl", "g"], ["c02", "Surprised Boy", "b"], ["c03
 const CHAR_DARK = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10", "c11", "c12", "c13"];   // the ones with a darker-skin version too
 // 🎭 v233: 7 more feelings (Broo2a's pictures, 26 Nov): wave (hello) · point (tips) · think (hints, making) · sad (missed) · proud (good work) · jump (all done) · confetti (big win)
 const CHAR_NEW_MOODS = ["wave", "point", "think", "sad", "proud", "jump", "confetti"];
-const CHAR_STAND = ["c01", "c02", "c03", "c05", "c06", "c07", "c08", "c09", "c11", "c13"];   // (🧍 who has a standing picture)
+const CHAR_STAND = ["c01", "c02", "c03", "c05", "c06", "c07", "c08", "c09", "c11", "c13", "mum", "dad"];   // (🧍 who has a standing picture)
 const CHAR_MOODS = ["happy", "star", "thumbs", "wow", "oops", "confused", "sleepy", "reading", ...CHAR_NEW_MOODS];
 const CHAR_NEW_DARK = { c10d: CHAR_NEW_MOODS, c12d: CHAR_NEW_MOODS, c04d: CHAR_NEW_MOODS };   // darker kids that already have new feelings (the rest: the closest old one)
 const MOOD_BACKUP = { wave: "happy", point: "thumbs", think: "confused", sad: "oops", proud: "thumbs", jump: "star", confetti: "star" };

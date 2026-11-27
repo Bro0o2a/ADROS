@@ -4541,3 +4541,22 @@ button.sp3-yay img { width: 30px; height: 30px; }
 .star-pop #kCard { isolation: isolate; }
 .sp3-stage .sp3-char { margin-bottom: -44px; }
 .sp3-stage .sp3-char { margin-bottom: -62px; } .sp3-stage { padding-bottom: 56px; }
+
+/* 🎉 v233 Level up! pop-up (maybeShowLevelUp in profile.js) */
+#kModal.lvl-pop #kCard { position: relative; overflow: hidden; text-align: center; padding: 26px 20px 20px; border-radius: 28px; background: linear-gradient(180deg, #ecfdf5, #fffaf0 60%); max-width: 360px; }
+.lu3-confetti { position: absolute; inset: 0; pointer-events: none; }
+.lu3-confetti i { position: absolute; top: -12px; left: var(--x); width: 8px; height: 14px; border-radius: 3px; background: var(--c); animation: lu3fall 2.6s var(--d) ease-in infinite; }
+@keyframes lu3fall { from { transform: translateY(0) rotate(0); opacity: 1; } to { transform: translateY(420px) rotate(320deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .lu3-confetti i { animation: none; top: auto; bottom: 10px; } }
+.lu3-char { display: block; height: 170px; max-width: 80%; object-fit: contain; margin: 0 auto -6px; position: relative; }
+.lu3-emoji { font-size: 90px; line-height: 170px; }
+.lu3-title { font: 900 34px/1.1 Nunito, sans-serif; color: #e2557a; position: relative; }
+.lu3-badge { display: inline-flex; align-items: center; gap: 8px; margin: 12px auto 8px; padding: 8px 16px 8px 8px; border-radius: 999px; background: #fff; box-shadow: 0 3px 0 #e6d8c6; position: relative; }
+.lu3-badge .lu3-ic { width: 40px; height: 40px; object-fit: contain; }
+.lu3-badge b { font: 800 17px Nunito, sans-serif; color: #3b2a1e; }
+.lu3-badge span { font: 900 15px Nunito, sans-serif; color: #fff; background: #5bb98c; border-radius: 999px; padding: 3px 10px; }
+.lu3-bar { display: flex; gap: 4px; justify-content: center; margin: 6px 0 10px; position: relative; }
+.lu3-bar i { width: 20px; height: 10px; border-radius: 5px; background: #e6e1d6; }
+.lu3-bar i.on { background: #f2c14e; }
+.lu3-msg { color: #5b4a3a; font-weight: 600; margin: 0 0 14px; position: relative; }
+.lu3-ok { width: 100% !important; box-sizing: border-box; margin: 0 !important; display: block; border-radius: 999px !important; background: #8fcf8a !important; color: #14532d !important; font: 900 18px Nunito, sans-serif; padding: 14px !important; position: relative; }

@@ -641,6 +641,34 @@ function maybeShowStar() {
   $("kModal").classList.add("star-pop");
   $("kModal").hidden = false;
 }
+// 🎉 v233 (Broo2a) Level up! When a kid's level in a subject goes up (🎚️ 1–10, see levelNow), that kid sees a small pop-up
+// once (remembered on this device; the first time a subject is seen nothing pops up), and the parents get a 🔔 News line.
+function maybeShowLevelUp() {
+  if (!exists(me) || isParentId(me) || !$("kModal").hidden || screen === "start" || typeof levelNow !== "function") return;
+  const s = schoolOf(me), learn = (s && s.learn) || {}, key = "lvlSeen:" + me;
+  let seen = {}; try { seen = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { return; }
+  let up = null;
+  Object.keys(learn).forEach(fid => {
+    const f = subjectList(s, true).find(x => x.id === fid), lv = levelNow(learn[fid]);
+    if (!f) return;
+    if (!up && seen[fid] && lv > seen[fid]) up = { f, lv };   // (one at a time: another level up shows next time)
+    if (!up || up.f.id === fid || !(seen[fid] && lv > seen[fid])) seen[fid] = lv;
+  });
+  try { localStorage.setItem(key, JSON.stringify(seen)); } catch (e) { return; }
+  if (!up) return;
+  const u = userById(me), pic = charPic(u, "jump") || charPic(u, "confetti");
+  try { addNews([newsItem("school", `🎉 ${u.name} reached ${up.f.name} Level ${up.lv}!`, `🎉 ${up.f.name} Level ${up.lv}`, me)]); } catch (e) {}
+  $("kCard").style.cssText = "--soft:#ecfdf5;--ink:#166534";
+  $("kCard").innerHTML = `<div class="lu3-confetti" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--d:${(i % 5) * .25}s;--c:${["#f2a7c3", "#f2c14e", "#8fcf8a", "#7fc4d6", "#b9a3e8"][i % 5]}"></i>`).join("")}</div>
+    ${pic ? `<img class="lu3-char" src="${pic}" alt="">` : `<div class="lu3-char lu3-emoji">${safe(u.emoji || "🎉")}</div>`}
+    <div class="lu3-title">Level up!</div>
+    <div class="lu3-badge">${ico3d(subjectIcon3d(up.f.name), "lu3-ic")}<b>${safe(up.f.name)}</b><span>Level ${up.lv}</span></div>
+    <div class="lu3-bar" aria-label="Level ${up.lv} of 10">${Array.from({ length: 10 }, (_, i) => `<i class="${i < up.lv ? "on" : ""}"></i>`).join("")}</div>
+    <p class="lu3-msg">Well done, ${safe(u.name)}! Your worksheets will be a little harder now. You can do it! 💪</p>
+    <button class="k-ok lu3-ok" id="kOk">Awesome! 🎉</button>`;
+  $("kModal").classList.add("lvl-pop");
+  $("kModal").hidden = false;
+}
 // 🎁 Choose my gift (only the ⭐ star, from Friday 6 PM): big option buttons (kids' / parents'), or ✏️ type my own (40 letters).
 // Each choice sends a 💌 message to ALL the parents right away (a "school" news line: only parents see those).
 const PRIZES_KID = ["🍦 Ice cream", "🎮 1 hour games", "🍕 Pick dinner", "🎬 Movie night pick", "🛝 Park trip", "🧸 Small toy", "🌙 Stay up 30 min", "📚 New book"];
