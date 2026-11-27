@@ -3699,83 +3699,129 @@ button.k-dayhours:hover { background: #fff; color: var(--ink, #3b2f2a); }
 .k-check.time-lock[data-at] { position: relative; overflow: visible; }
 .k-check.time-lock[data-at]::after { content: attr(data-at); position: absolute; top: calc(100% + 2px); left: 50%; transform: translateX(-50%);
   font-size: 10px; font-weight: 800; line-height: 1.1; color: #6b7280; white-space: nowrap; filter: none; }
-
 /* =====================================================================
-   🍦 v233 NEW BASE LOOK (Broo2a's pictures, 26 Nov 2026): plain cream ground, soft cream-white cards,
-   dark brown Fredoka titles on the left, pill buttons with a soft shadow, ADROS colours
-   (blue · coral · green · purple · yellow) for buttons and tiles. Sits on top of everything above.
+   🌈 v233 NEW LOOK (Broo2a's pictures, 26–27 Nov 2026): a soft rainbow ground (pink · blue · green), cream cards,
+   bright 3D pill buttons (blue Back · green Home · purple News · coral Sign out · green Calendar · yellow School),
+   a pastel title banner with gradient letters + characters on both sides, a buddy bubble, dark ribbons on sections,
+   kid colours on tabs and cards, and a strip of 3 characters at the end. Sits on top of everything above.
    ===================================================================== */
 :root {
-  --bg: #f4e8da; --card: #fffaf3; --text: #3a2a1f; --muted: #7a6656; --line: #ecdfcf;
-  --accent: #7fb2e5; --accent-dark: #5f97cf; --accent-soft: #dceaf8;
-  --a-blue: #7fb2e5; --a-coral: #ee8b80; --a-green: #9cc58c; --a-purple: #b69be0; --a-yellow: #f3c75e;
-  --t-blue: #dceaf8; --t-coral: #f8dcd6; --t-green: #dfead3; --t-purple: #ece2f8; --t-yellow: #fbeac0;
-  --coral: #ee8b80; --sage: #dfead3; --sage-dk: #5f8f4f; --butter: #f3c75e; --peach: #f8dcd6; --dusty: #dceaf8;
-  --shadow: 0 6px 16px rgba(120, 90, 60, .10);
-  --clay: 0 6px 16px rgba(120, 90, 60, .10);
-  --puff: 0 4px 0 rgba(90, 60, 40, .10), 0 6px 14px rgba(120, 90, 60, .12);
+  --bg: #f6ece2; --card: #fffaf4; --text: #3a2a1f; --muted: #7a6656; --line: #ecdfcf;
+  --a-blue: #5c9ded; --a-green: #67bd6a; --a-purple: #a98be8; --a-coral: #ef857b; --a-yellow: #f5b83d; --a-orange: #f0995a;
+  --t-blue: #e3eefc; --t-green: #e3f3dd; --t-purple: #efe7fb; --t-coral: #fde4e1; --t-yellow: #fdf1d3;
+  --coral: #ef857b; --accent: #5c9ded; --accent-dark: #4a87d4; --accent-soft: #e3eefc;
+  --shadow: 0 8px 20px rgba(120, 90, 60, .10);
+  --clay: 0 8px 20px rgba(120, 90, 60, .10);
+  --press: 0 5px 0 rgba(60, 40, 20, .16), 0 9px 16px rgba(120, 90, 60, .14);
 }
-body { background: var(--bg) !important; color: var(--text); }
-/* no more dots / waves / sky pictures behind cards */
+body { background: radial-gradient(60% 40% at 100% 0%, #fcd7e3 0, rgba(252, 215, 227, 0) 100%),
+  radial-gradient(50% 45% at 0% 45%, #d9e7fb 0, rgba(217, 231, 251, 0) 100%),
+  radial-gradient(60% 40% at 100% 100%, #def1cf 0, rgba(222, 241, 207, 0) 100%), #f6ece2 !important;
+  background-attachment: fixed !important; color: var(--text); }
 .card, .ip-panel, .pl-card, .hub-group, .kt, .pt-row, .k-day, .k-hero, .sc-tile2, #scr-me .card:nth-of-type(n), .card.sj-sum, #ptsList .pt-row, .hub-group[open] { background-image: none !important; }
-.card { background-color: var(--card); border: 0; border-radius: 28px; box-shadow: var(--shadow); }
-
-/* page titles: big dark brown words on the left, small grey line under (no puffy board) */
-.puff-banner { text-align: left !important; background: none !important; border: 0 !important; box-shadow: none !important;
-  padding: 0 !important; margin: 8px 2px 16px !important; border-radius: 0 !important; }
-.puff-banner .pb-deco, .puff-banner .pb-st, .puff-banner .pb-char { display: none !important; }
-.puff-banner .bub, .puff-banner .bub-pink, .puff-banner .bub-lilac, .pb-home .bub-pink { color: var(--text) !important; -webkit-text-stroke: 0 !important;
-  text-shadow: none !important; font: 600 34px/1.1 Fredoka, "Baloo 2", sans-serif !important; }
-.puff-banner .bub-sm { font-size: 28px !important; }
-.puff-banner .bub-pink + .bub-lilac { margin-left: .22em; }
-.puff-banner .bub-pill { display: block !important; margin: 4px 0 0 !important; padding: 0 !important; background: none !important; border: 0 !important;
-  box-shadow: none !important; color: var(--muted) !important; font: 600 16px/1.3 Nunito, sans-serif !important; white-space: normal; }
-@media (max-width: 380px) { .puff-banner .bub, .puff-banner .bub-pink, .puff-banner .bub-lilac { font-size: 30px !important; } }
+.card { background-color: var(--card); border: 0; border-radius: 30px; box-shadow: var(--shadow); }
 h1, h2, h3 { color: var(--text); }
 
-/* buttons: white pills with a soft shadow, no border */
-.pill, .bar .pill { background: #fffaf3; border: 0; box-shadow: var(--puff); color: var(--text); font-family: Nunito, sans-serif; font-weight: 700; }
-.pill:hover { background: #fff; }
-.bar .cal-btn, .cal-btn { background: var(--a-green) !important; color: #fff !important; border: 0 !important; }
-.bar .sch-btn { background: var(--a-yellow) !important; color: #4a3410 !important; border: 0 !important; }
-.cal-btn.here, .cal-btn.here:hover { background: var(--t-green) !important; color: #3d6a30 !important; }
-/* section labels ("SCHOOL TOOLS", "MY SUBJECTS"): small grey capitals, no ribbon */
-.pl-rib, .ip-rib { position: static !important; transform: none !important; display: block; width: max-content; margin: 0 0 12px 2px; padding: 0 !important; background: none !important; box-shadow: none !important;
-  color: var(--muted) !important; font: 800 14px/1.2 Nunito, sans-serif !important; letter-spacing: .14em; text-transform: uppercase; text-shadow: none !important; }
-.pl-rib::after, .ip-rib::after, .ip-rib::before { content: none !important; }
-.ip-rib i { display: none; }
-.ip-sec { margin-top: 18px; }
-.ip-panel { border: 0 !important; border-radius: 28px !important; background: var(--card) !important; box-shadow: var(--shadow) !important; }
-/* yellow notes ("3 things need you"): soft butter card, no hard line */
-.note { background: var(--t-yellow); border: 0; border-radius: 20px; box-shadow: var(--shadow); }
-.needs-line { background: var(--t-yellow) !important; border: 0 !important; border-radius: 20px !important; box-shadow: var(--shadow); }
-.k-day, .k-dbtn, .k-dayname { border-color: transparent !important; }
-#mineWeek { border-color: var(--card) !important; background: var(--card) !important; }
+/* ---- the top buttons: bright, round, a darker edge under them ---- */
+.bar .pill, .bar-right .pill { border: 0 !important; color: #fff !important; font: 800 17px/1 Fredoka, Nunito, sans-serif; box-shadow: var(--press) !important; text-shadow: 0 1px 1px rgba(0, 0, 0, .12); }
+.bar [data-navback], .bar [data-back] { background: var(--a-blue) !important; }
+.bar [data-go="home"] { background: var(--a-green) !important; }
+.bar .bell-btn { background: var(--a-purple) !important; }
+.bar [data-signout], .bar-right [data-signout] { background: var(--a-coral) !important; }
+.bar .cal-btn, .cal-btn { background: var(--a-green) !important; color: #fff !important; border: 0 !important; box-shadow: var(--press) !important; font: 800 20px/1 Fredoka, Nunito, sans-serif; }
+.bar .sch-btn { background: var(--a-yellow) !important; color: #4a3410 !important; border: 0 !important; box-shadow: var(--press) !important; font: 800 20px/1 Fredoka, Nunito, sans-serif; text-shadow: none; }
+.cal-btn.here, .cal-btn.here:hover { background: var(--a-green) !important; color: #fff !important; outline: 3px solid #fff; }
+.pill:active, .bar .pill:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(60, 40, 20, .16) !important; }
+.pill { background: #fffaf4; border: 0; box-shadow: var(--shadow); color: var(--text); font-weight: 800; }
 
-/* 🎭 v233 THE BUDDY: under each page title, the kid's own character (with the feeling of that page) + a speech bubble */
-.puff-banner { display: grid !important; grid-template-columns: auto 1fr; grid-template-areas: "t t" "c p"; column-gap: 12px; align-items: center; }
-.puff-banner .pb-t { grid-area: t; }
-.puff-banner .bub-pill { grid-area: p; justify-self: start; }
-.puff-banner .bub-pill::first-letter { text-transform: uppercase; }
-.puff-banner .pb-char { display: block !important; grid-area: c; position: static !important; width: 76px !important; height: 76px !important; margin-top: 12px;
-  border-radius: 24px !important; border: 0 !important; background: var(--card) !important; box-shadow: var(--shadow) !important; filter: none !important; object-fit: cover !important; }
-.puff-banner:not(.pb-home):has(.pb-char) .bub-pill { position: relative; margin: 12px 0 0 !important; padding: 12px 16px !important; background: var(--card) !important; border-radius: 20px !important;
-  box-shadow: var(--shadow) !important; color: var(--text) !important; font: 700 16px/1.3 Nunito, sans-serif !important; }
-.puff-banner:not(.pb-home):has(.pb-char) .bub-pill::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-left: 0; border-right-color: var(--card); }
-.pb-home .pb-char { display: none !important; }   /* (home: the big hello card already shows the character) */
-.puff-banner.pb-home { grid-template-columns: 1fr; grid-template-areas: "t" "p"; }
-.pb-home .bub-pill { background: none !important; box-shadow: none !important; padding: 0 !important; margin-top: 4px !important; color: var(--muted) !important; font-weight: 600 !important; }
-.pb-home .bub-pill::before { content: none !important; }
-@media (max-width: 380px) { .puff-banner .pb-char { width: 64px !important; height: 64px !important; } }
+/* ---- kid tabs (School, Calendar…): each kid in their colour, the chosen one solid with a white edge ---- */
+#schoolKids .chip, .kid-tab { background: var(--soft, #fff) !important; color: var(--ink, var(--text)) !important; border: 0 !important; border-radius: 22px !important;
+  min-height: 52px; padding: 6px 16px 6px 8px; font: 800 18px/1 Fredoka, Nunito, sans-serif; box-shadow: var(--press) !important; display: inline-flex; align-items: center; gap: 8px; }
+#schoolKids .chip.on { background: var(--c, var(--ink)) !important; color: #fff !important; outline: 4px solid #fff; transform: translateY(-2px) scale(1.04); }
+#schoolKids { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; margin: 6px 0 14px; }
+.chip .tab-face { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; background: #fff; flex: none; }
 
-/* 🎨 v233 a kid's own colour on the main buttons (parents: coral) */
-button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; border-color: var(--kc, var(--coral)) !important; color: #fff; }
-button.primary:hover { filter: brightness(.95); }
-.k-go { background: var(--kc, var(--coral)) !important; color: #fff !important; }
+/* ---- the title banner: pastel card, rainbow letters, my character on the left, a brother/sister on the right ---- */
+.puff-banner { position: relative; display: block !important; text-align: center !important; margin: 18px 6px 14px !important; padding: 24px 74px 22px !important;
+  background: linear-gradient(120deg, #fbe2ee 0%, #efe6fb 50%, #e1ecfb 100%) !important; border: 0 !important; border-radius: 30px !important; box-shadow: var(--shadow) !important; }
+.puff-banner .pb-t { display: block; }
+.puff-banner .bub, .puff-banner .bub-pink, .puff-banner .bub-lilac, .pb-home .bub-pink { font: 700 40px/1.08 Fredoka, "Baloo 2", sans-serif !important; -webkit-text-stroke: 0 !important; text-shadow: none !important;
+  background: linear-gradient(90deg, #e8679f, #a96be3); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.puff-banner .bub-sm { font-size: 34px !important; }
+.puff-banner .bub-pink + .bub-lilac { margin-left: .2em; }
+.puff-banner .bub-pill { display: table !important; margin: 10px auto 0 !important; padding: 7px 18px !important; background: #fff !important; border: 0 !important; border-radius: 999px !important;
+  box-shadow: 0 3px 8px rgba(120, 90, 60, .08) !important; color: var(--muted) !important; font: 700 16px/1.2 Nunito, sans-serif !important; white-space: normal; }
+.puff-banner .pb-st { display: none !important; }
+.puff-banner .pb-char { display: block !important; position: absolute !important; width: 88px !important; height: 88px !important; border-radius: 26px !important; border: 4px solid #fff !important;
+  background: #fbf3e9 !important; object-fit: cover !important; box-shadow: 0 8px 16px rgba(120, 90, 60, .18) !important; filter: none !important; -webkit-mask-image: none !important; mask-image: none !important; }
+.puff-banner .pb-l { left: -12px !important; top: auto !important; bottom: -18px !important; transform: rotate(-6deg); }
+.puff-banner .pb-rr { right: -12px !important; left: auto !important; top: auto !important; bottom: -18px !important; transform: rotate(6deg); }
+@media (max-width: 380px) {
+  .puff-banner { padding: 20px 58px 20px !important; }
+  .puff-banner .bub, .puff-banner .bub-pink, .puff-banner .bub-lilac { font-size: 32px !important; } .puff-banner .bub-sm { font-size: 28px !important; }
+  .puff-banner .pb-char { width: 72px !important; height: 72px !important; }
+}
+
+/* ---- the buddy: my character, big, with a speech bubble (yellow edge) ---- */
+.buddy-row { display: flex; align-items: center; gap: 16px; margin: 26px 2px 18px; }
+.buddy-row img { width: 130px; height: 130px; flex: none; border-radius: 34px; object-fit: cover; background: #fbf3e9; box-shadow: 0 10px 22px rgba(120, 90, 60, .16); }
+.buddy-bub { position: relative; background: #fff; border: 3px solid #fbe3a6; border-radius: 22px; padding: 14px 18px; box-shadow: 0 6px 14px rgba(120, 90, 60, .10); }
+.buddy-bub::before { content: ""; position: absolute; left: -12px; top: 50%; margin-top: -10px; border: 10px solid transparent; border-left: 0; border-right: 12px solid #fbe3a6; }
+.buddy-bub b { display: block; font: 800 19px/1.25 Nunito, sans-serif; color: var(--text); }
+.buddy-bub small { display: block; margin-top: 3px; font: 600 16px/1.3 Nunito, sans-serif; color: var(--muted); }
+@media (max-width: 380px) { .buddy-row img { width: 104px; height: 104px; border-radius: 28px; } .buddy-bub b { font-size: 17px; } .buddy-bub small { font-size: 14px; } }
+
+/* ---- the strip of 3 characters at the end of a page ---- */
+.buddy-strip { display: flex; justify-content: center; gap: 14px; margin: 26px 0 8px; padding: 18px 10px 14px; border-radius: 30px;
+  background: linear-gradient(120deg, rgba(252, 215, 227, .7), rgba(253, 241, 211, .7) 50%, rgba(217, 231, 251, .7)); }
+.buddy-strip figure { margin: 0; text-align: center; }
+.buddy-strip img { display: block; width: 96px; height: 96px; border-radius: 28px; object-fit: cover; background: #fbf3e9; box-shadow: 0 8px 16px rgba(120, 90, 60, .14); }
+.buddy-strip figure:nth-child(2) img { transform: translateY(-10px); }
+.buddy-strip figcaption { margin-top: 8px; font: 800 16px/1 Nunito, sans-serif; color: var(--muted); }
+@media (max-width: 380px) { .buddy-strip img { width: 84px; height: 84px; } }
+
+/* ---- section ribbons: dark pills sitting on the card's top edge ---- */
+.ip-sec { position: relative; margin: 38px 0 10px; }
+.ip-rib, .pl-rib { position: absolute !important; z-index: 2; top: -20px !important; left: 50% !important; transform: translateX(-50%) !important; padding: 9px 28px !important; border-radius: 999px !important;
+  color: #fff !important; font: 800 17px/1.1 Nunito, sans-serif !important; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; box-shadow: var(--press) !important; text-shadow: none !important; }
+.ip-rib::before, .ip-rib::after, .pl-rib::after { content: none !important; }
+.ip-rib i, .pl-rib i { display: none; }
+.ip-rib.ip-pink, .pl-rib-pink { background: #9b3a5d !important; } .ip-rib.ip-butter, .pl-rib-butter { background: #7a5a2c !important; }
+.ip-rib.ip-lilac, .pl-rib-lilac { background: #5b3e9e !important; } .ip-rib.ip-mint, .pl-rib-mint { background: #2f6b33 !important; } .pl-rib-blue { background: #2f5c9e !important; }
+.ip-panel { border: 0 !important; border-radius: 30px !important; background: var(--card) !important; box-shadow: var(--shadow) !important; padding: 40px 12px 16px !important; gap: 12px 8px !important; }
+/* tiles: the 3D picture in a soft coloured square with a white edge */
+button.ip-item { border-radius: 24px; }
+.ip-item .i3d { width: 96px !important; height: 96px !important; padding: 12px; border-radius: 28px; background: var(--t-blue); border: 4px solid rgba(255, 255, 255, .9);
+  box-shadow: 0 6px 0 rgba(60, 40, 20, .08), 0 8px 14px rgba(120, 90, 60, .10); filter: none !important; margin-bottom: 8px; }
+.ip-3 .ip-item:nth-child(6n+1) .i3d { background: var(--t-blue); } .ip-3 .ip-item:nth-child(6n+2) .i3d { background: var(--t-green); }
+.ip-3 .ip-item:nth-child(6n+3) .i3d { background: var(--t-yellow); } .ip-3 .ip-item:nth-child(6n+4) .i3d { background: var(--t-coral); }
+.ip-3 .ip-item:nth-child(6n+5) .i3d { background: var(--t-purple); } .ip-3 .ip-item:nth-child(6n+6) .i3d { background: #fde6d4; }
+.ip-2 .ip-item:nth-child(1) { background: var(--t-coral); } .ip-2 .ip-item:nth-child(2) { background: var(--t-blue); }
+.ip-2 .ip-item:nth-child(1) .i3d { background: #fbd3cf; } .ip-2 .ip-item:nth-child(2) .i3d { background: #d4e4fa; }
+.ip-item b { font: 700 19px/1.15 Fredoka, Nunito, sans-serif !important; color: var(--text); }
+.ip-item small { font-size: 14px !important; }
+.ip-item .ip-tag { border-radius: 999px; padding: 3px 10px; font-weight: 800; }
+@media (max-width: 380px) { .ip-item .i3d { width: 82px !important; height: 82px !important; padding: 10px; } .ip-item b { font-size: 17px !important; } }
+
+/* ---- parent home: each kid's card in their colour (a coloured top edge, ring, character, 3 bright buttons) ---- */
+.kid-card { border-top: 10px solid var(--c) !important; background: linear-gradient(180deg, var(--soft) 0%, var(--card) 55%) !important; padding-top: 14px !important; }
+.kid-card .kc-char { width: 84px; height: 84px; flex: none; border-radius: 26px; object-fit: cover; background: #fbf3e9; box-shadow: 0 6px 14px rgba(120, 90, 60, .14); }
+.kid-card .kc-open:has(.kc-char) .kc-go { display: none; }
+.kid-card .kc-btns { gap: 10px; }
+.kid-card .kc-btns button { border: 0 !important; color: #fff !important; border-radius: 999px !important; min-height: 46px; font: 800 17px/1 Fredoka, Nunito, sans-serif; box-shadow: var(--press) !important; }
+.kid-card .kc-btns [data-school] { background: var(--a-blue) !important; } .kid-card .kc-btns [data-viewcal] { background: var(--a-green) !important; }
+.kid-card .kc-btns [data-kidreport] { background: var(--a-coral) !important; }
+.needs-line, .note { border-radius: 22px !important; }
+
+/* ---- home date banner: two lines, no subtitle bubble change ---- */
+.pb-home .bub-pill { margin-top: 10px !important; }
+
+/* ---- a kid's own colour on the main buttons (parents: coral) ---- */
+button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; border-color: var(--kc, var(--coral)) !important; color: #fff; box-shadow: var(--press) !important; }
+.k-go { background: var(--kc, var(--a-green)) !important; color: #fff !important; box-shadow: var(--press) !important; }
 .toast-char { border-radius: 14px; }
 .ai-making { display: flex; align-items: center; gap: 10px; }
-/* 📅 v233 home date card (Broo2a's picture): "THURSDAY" small coral capitals · "26 November" big · a grey line */
-.puff-banner.pb-home { background: var(--card) !important; border-radius: 28px !important; box-shadow: var(--shadow) !important; padding: 18px 22px !important; }
-.puff-banner.pb-home .bub-pink { font: 800 14px/1.2 Nunito, sans-serif !important; letter-spacing: .14em; text-transform: uppercase; color: var(--a-coral) !important; }
-.puff-banner.pb-home .bub-lilac, .puff-banner.pb-home .bub-sm { font-size: 34px !important; }
-.puff-banner.pb-home .pb-t br { display: block; margin-bottom: 4px; }
+.k-day, .k-dbtn, .k-dayname { border-color: transparent !important; }
+.pb-home .bub-pink { font-size: 38px !important; }
+.pb-home .bub-lilac, .pb-home .bub-sm { font-size: 30px !important; white-space: nowrap; }
+@media (max-width: 380px) { .pb-home .bub-pink { font-size: 32px !important; } .pb-home .bub-lilac, .pb-home .bub-sm { font-size: 26px !important; } }

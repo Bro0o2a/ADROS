@@ -135,8 +135,8 @@ function drawSchool() {
   $("schoolKids").hidden = !isDad;
   $("schoolKids").innerHTML = isDad ? kids.map(x => {
     const c = colorsOf(x);
-    return `<button class="chip ${x.id === schoolKid ? "on" : ""}" data-sckid="${safe(x.id)}" style="--soft:${c.soft};--ink:${c.ink}"
-      ${x.id === schoolKid ? `aria-current="true"` : ""}><span class="e">${safe(x.emoji)}</span>${safe(x.name)}</button>`;
+    return `<button class="chip ${x.id === schoolKid ? "on" : ""}" data-sckid="${safe(x.id)}" style="--soft:${c.soft};--ink:${c.ink};--c:${c.color}"
+      ${x.id === schoolKid ? `aria-current="true"` : ""}>${charPic(x) ? `<img class="tab-face" src="${charPic(x)}" alt="">` : `<span class="e">${safe(x.emoji)}</span>`}${safe(x.name)}</button>`;   // (🌈 v233: their character's face)
   }).join("") : "";
   if (!schoolKid) {
     $("schoolTitle").textContent = "School";

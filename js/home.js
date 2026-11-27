@@ -17,8 +17,35 @@ const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, 
 // 🎭 v233: the new feelings (wave = hello · point = tips · think = help · proud = how you grow)
 const PAGE_MOODS = { home: "wave", mine: "point", school: "reading", points: "proud", me: "wave", add: "point", settings: "point", family: "wave",
   diary: "happy", report: "proud", kidswork: "think", kid: "wave", extra: "happy", setup: "point" };
-const puffDeco = mood => { const src = charPic(userById(me), mood || PAGE_MOODS[screen] || "happy");
-  return src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : ""; };
+// 🌈 v233 (Broo2a's colourful pictures): the banner shows the page's kid on the left and a brother/sister on the right
+const buddyId = () => screen === "school" && typeof schoolKid !== "undefined" && exists(schoolKid) ? schoolKid : me;
+const otherKids = id => data.users.filter(u => !isParentId(u.id) && u.id !== id && charPic(u));
+const puffDeco = mood => { const id = buddyId(), src = charPic(userById(id), mood || PAGE_MOODS[screen] || "happy"), sib = otherKids(id)[0];
+  const right = sib ? charPic(sib, ["wave", "jump", "confetti", "point"][new Date().getDate() % 4]) : "";
+  return (src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : "") + (right ? `<img class="pb-deco pb-rr pb-char" src="${right}" alt="">` : ""); };
+// 💬 the buddy under the title: [mood, big line, small line] ({n} = the kid's name)
+const BUDDY_LINES = { home: ["wave", "Hi {n}!", "Let's make today a great day"], mine: ["point", "Here is your week, {n}!", "Tap a day to see what is inside"],
+  school: ["happy", "Pick a subject, {n}!", "Every worksheet makes you stronger"], points: ["proud", "Look at your stars, {n}!", "Beat yourself, not anyone else"],
+  me: ["wave", "This is you, {n}!", "You can change your character any time"], diary: ["happy", "How was your day?", "Tell me in a few words"],
+  report: ["proud", "Look how you grow!", "Every week a little better"], kidswork: ["think", "Let's see today's work", "Who needs a little help?"],
+  add: ["point", "What is on this week?", "Add it once, the plan does the rest"], settings: ["point", "Make it just right", "Change anything, any time"],
+  family: ["wave", "Together is better", "Everyone in one place"], kid: ["wave", "All about {n}", "Scores, school and today"], extra: ["happy", "Have fun together!", ""],
+  setup: ["point", "Make the app yours", "Turn on what your family needs"] };
+// 🧒 3 characters at the end of a page: [mood, word] × 3 (me, then my brothers/sisters)
+const STRIP_WORDS = { school: [["reading", "Read"], ["jump", "Learn"], ["proud", "Grow"]], mine: [["point", "Plan"], ["think", "Do"], ["confetti", "Win"]],
+  points: [["think", "Try"], ["jump", "Shine"], ["confetti", "Win"]], home: [["wave", "Hello"], ["jump", "Play"], ["proud", "Learn"]] };
+function drawBuddies() {
+  const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
+  const id = buddyId(), u = userById(id), h = scr.querySelector("h1.page-title, .home-date");
+  const old = scr.querySelector(":scope .buddy-row"); if (old) old.remove();
+  const subj = screen === "school" && typeof schoolView !== "undefined" && schoolView === "subject" ? plainWords((h && h.dataset.puffed) || "") : "";
+  const line = subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
+  if (h && pic && screen !== "home") h.insertAdjacentHTML("afterend", `<div class="buddy-row"><img src="${pic}" alt=""><div class="buddy-bub"><b>${safe(line[1].replace("{n}", u.name))}</b>${line[2] ? `<small>${safe(line[2].replace("{n}", u.name))}</small>` : ""}</div></div>`);
+  const oldS = scr.querySelector(":scope > .buddy-strip"); if (oldS) oldS.remove();
+  const words = STRIP_WORDS[screen], kids = [u, ...otherKids(id)].filter(k => charPic(k));
+  if (words && kids.length) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
+    `<figure><img src="${charPic(kids[i % kids.length], m)}" alt=""><figcaption>${w}</figcaption></figure>`).join("")}</div>`);
+}
 const plainWords = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F⬅️➡️›‹·]/gu, "").replace(/\s+/g, " ").trim();
 function puffBannerHtml(title, pill, mood) {
   const w = plainWords(title).split(" "), last = w.pop();
@@ -29,12 +56,13 @@ function puffTitles() {
   const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
   scr.querySelectorAll("h1.page-title").forEach(h => {
     const raw = h.dataset.puffed && h.querySelector(".pb-t") ? h.dataset.puffed : h.textContent, t = plainWords(raw);
-    const who = `${me}|${userById(me).avatar || ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
+    const who = `${buddyId()}|${userById(buddyId()).avatar || ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
     if (!t || (h.dataset.puffed === raw && h.dataset.puffWho === who && h.querySelector(".pb-t"))) return;
     h.dataset.puffWho = who;
     const sub = screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
     h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub); h.dataset.puffed = raw;
   });
+  drawBuddies();   // 🌈 v233
 }
 // 🧸 v159 planner style (Broo2a's "Daily Planner" picture): 3D icons (icons/3d/<name>.png, cut from their icon set),
 //   ribbon titles, lined paper cards: ❤️ Top 3 (must-do habits first, then what's next) · 🕒 My schedule (+ a sticky note) · 💧 Habit tracker · a kind quote
@@ -229,7 +257,7 @@ function kidCardHtml(k) {
     <div class="kc-top"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="${safe(k.name)}'s score: see it through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button>
     <button class="kc-open" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">
       <span class="kc-text"><b>${faceHtml(k)} ${safe(k.name)}${e && moodFace(e.mood) ? ` <span class="kc-mood" title="Today's mood">${moodFace(e.mood)}</span>` : ""}${kidCardTags(k.id)}</b>
-        <small>${safe(kidTodayLine(k.id))}</small><small class="kc-cheer">${safe(kidCheerShort(k.id))}</small></span><span class="kc-go" aria-hidden="true">›</span></button></div>
+        <small>${safe(kidTodayLine(k.id))}</small><small class="kc-cheer">${safe(kidCheerShort(k.id))}</small></span>${charPic(k) ? `<img class="kc-char" src="${charPic(k, "happy")}" alt="">` : ""}<span class="kc-go" aria-hidden="true">›</span></button></div>
     <div class="kc-btns"><button data-school="${safe(k.id)}">School</button><button data-viewcal="${safe(k.id)}">Calendar</button><button data-kidreport="${safe(k.id)}">Report</button></div></div>`;
 }
 // v155: the parent's home ends with ONE clear list in 4 groups (no hidden menus): Plan the week · The kids · Family · Settings.
