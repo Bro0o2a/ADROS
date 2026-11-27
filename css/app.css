@@ -4497,3 +4497,35 @@ button.lg3-signin { background: #dbe9fb; color: #1f4f8a; box-shadow: 0 4px 0 #b9
 .lg3-prow b { display: block; font: 900 18px Nunito, sans-serif; color: #3b2a1e; } .lg3-prow small { font: 600 13px Nunito, sans-serif; color: #7a6656; }
 .lg3-box { padding: 0 !important; height: auto !important; min-height: 0 !important; font-size: 20px !important; line-height: 1 !important; }
 .lg3-card { background: #fbf5ec; box-shadow: 0 3px 0 rgba(0,0,0,.05); } .lg3-box { background: #fff; }
+
+/* 🎨 v233 Shining Star pop-up (Broo2a's picture) */
+.star-pop #kCard { background: #f6ecdf !important; text-align: center; border-radius: 30px; padding: 0 16px 18px; overflow: hidden; }
+.sp3-bunting { display: flex; justify-content: space-between; padding: 0 10px; border-top: 3px solid #e6d8c6; margin: 14px -4px 0; }
+.sp3-bunting i { width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 20px solid var(--b); }
+.sp3-star { width: 96px; height: 96px; margin: 10px auto 8px; border-radius: 26px; background: #fffaf0; display: grid; place-items: center; box-shadow: 0 0 0 14px rgba(242,193,78,.18), 0 0 0 30px rgba(242,193,78,.08), 0 5px 0 #e6d8c6; }
+.sp3-star img { width: 76px; height: 76px; object-fit: contain; }
+.sp3-title { font: 900 28px/1.15 Nunito, sans-serif; color: #3b2a1e; margin-top: 18px; }
+.sp3-hip { margin: 4px 0 6px; font: 800 15px Nunito, sans-serif; color: #e0685f; }
+.sp3-stage { position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 4px; padding-bottom: 46px; margin-top: 6px; }
+.sp3-char { height: 230px; max-width: 70%; object-fit: contain; position: relative; z-index: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.15)); }
+.sp3-podium { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 170px; height: 58px; border-radius: 12px 12px 16px 16px; background: #f2c14e; box-shadow: 0 5px 0 #d9a632; color: #fff; font: 900 30px/58px Nunito, sans-serif; }
+.sp3-podium.solo { position: static; transform: none; margin: 10px auto; }
+.sp3-name { font: 900 42px/1.1 Nunito, sans-serif; color: #b8325a; margin-top: 12px; overflow-wrap: anywhere; }
+.sp3-sub { margin: 4px 0 12px; font: 800 16px Nunito, sans-serif; color: #e0685f; }
+.sp3-board { background: #fff; border-radius: 24px; padding: 4px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); text-align: left; }
+.sp3-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; } .sp3-row + .sp3-row { border-top: 2px solid #f3ebe2; }
+.sp3-n { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 900 14px Nunito, sans-serif; background: #c9bfb2; }
+.sp3-n.n1 { background: #e1a832; } .sp3-n.n2 { background: #aab4c3; } .sp3-n.n3 { background: #c98a5e; }
+.sp3-face { width: 46px; height: 46px; flex: none; border-radius: 50%; background: #f6efe4; overflow: hidden; display: grid; place-items: center; font-size: 26px; }
+.sp3-face img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.sp3-nm { flex: 1; font: 900 16px Nunito, sans-serif; color: #3b2a1e; } .sp3-s { font: 900 18px Nunito, sans-serif; color: #8a6a1e; }
+.sp3-note { margin: 12px 4px; font: 700 14px/1.4 Nunito, sans-serif; color: #7a6656; }
+button.sp3-yay { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; border: 0; border-radius: 28px; background: #eea6c0; color: #7a1f45; font: 900 20px Nunito, sans-serif; box-shadow: 0 4px 0 #d684a2; }
+button.sp3-yay img { width: 30px; height: 30px; }
+.star-pop #kCard { border-radius: 0; padding: 0 18px 22px; }
+.star-pop #kCard > .sp3-bunting, .star-pop #kCard > .sp3-board, .star-pop #kCard > .sp3-stage { align-self: stretch; width: auto; max-width: 460px; margin-left: auto; margin-right: auto; }
+.star-pop #kCard > .sp3-bunting { width: 100%; margin-top: 0; }
+.star-pop #kCard > .sp3-board, .star-pop #kCard > .sp3-yay { width: 100%; max-width: 460px; }
+.sp3-char { height: 260px; }
+.sp3-stage { width: 100%; padding-bottom: 40px; }
+.sp3-stage .sp3-char { margin-bottom: -14px; }

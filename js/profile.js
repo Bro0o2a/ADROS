@@ -624,18 +624,20 @@ function maybeShowStar() {
   let seen = ""; try { seen = localStorage.getItem("starSeen") || ""; } catch (e) {}
   if (seen === w) return;
   try { localStorage.setItem("starSeen", w); } catch (e) { return; }   // (no storage: never pop up again and again)
-  const win = stars(w), medal = i => ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
-  const rows = rec.board.filter(x => exists(x.id)).map((x, i) => { const u = userById(x.id);
-    return `<div class="sp-row${win.includes(x.id) ? " win" : ""}"><span>${medal(i)} ${charPic(u) ? `<img class="sp-face" src="${charPic(u, win.includes(x.id) ? "confetti" : "happy")}" alt="">` : safe(u.emoji)} ${safe(u.name)}</span><b>${x.s}</b></div>`; }).join("");
-  // 📣 v171: one BIG full-screen message, the same for every parent and kid
+  // 🎨 v233 (Broo2a's picture): bunting, the big star, the winner on the gold "1" podium, the name, the top 3, a pink Yay!
+  const win = stars(w), board = rec.board.filter(x => exists(x.id)).slice(0, Math.max(3, win.length));
+  const rows = board.map((x, i) => { const u = userById(x.id);
+    return `<div class="sp3-row${win.includes(x.id) ? " win" : ""}"><span class="sp3-n n${Math.min(i + 1, 4)}">${i + 1}</span><span class="sp3-face">${charPic(u) ? `<img src="${charPic(u, win.includes(x.id) ? "confetti" : "happy")}" alt="">` : safe(u.emoji)}</span><b class="sp3-nm">${safe(u.name)}</b><b class="sp3-s">${x.s}</b></div>`; }).join("");
+  const pics = win.map(id => charPic(userById(id), "confetti")).filter(Boolean);
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
-  $("kCard").innerHTML = `<div class="sp-confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>
-    ${(pics => pics.length ? `<div class="sp-chars">${pics.join("")}</div>` : `<div class="sp-star" aria-hidden="true">🌟</div>`)(win.map(id => charPic(userById(id), "full")).filter(Boolean).map(src => `<img class="sp-char" src="${src}" alt="">`))}
-    <div class="sp-title">Shining Star of the Week!</div>
-    <div class="sp-names">${win.map(id => `<div>${charPic(userById(id)) ? "" : safe(userById(id).emoji) + " "}${safe(userById(id).name)}</div>`).join("")}</div>
-    <div class="sp-board">${rows}</div>
-    <p class="sp-note">Well done everyone! A new week starts at midnight. Good luck! 💪${win.includes(me) ? "<br><b>🎁 Choose your gift in ⭐ Points!</b>" : ""}</p>
-    <button class="k-ok" id="kOk">Yay! 🎉</button>`;
+  $("kCard").innerHTML = `<div class="sp3-bunting" aria-hidden="true">${["#f2a7c3", "#f2c14e", "#8fcf8a", "#b9a3e8", "#7fc4d6", "#ee8a7d", "#f2c14e"].map(c => `<i style="--b:${c}"></i>`).join("")}</div>
+    <div class="sp3-star" aria-hidden="true"><img src="icons/3d/k-stars.png" alt=""></div>
+    <div class="sp3-title">Shining Star<br>of the Week!</div><p class="sp3-hip">Hip hip hooray!</p>
+    ${pics.length ? `<div class="sp3-stage">${pics.map(src => `<img class="sp3-char" src="${src}" alt="">`).join("")}<div class="sp3-podium">1</div></div>` : `<div class="sp3-podium solo">1</div>`}
+    <div class="sp3-name">${win.map(id => safe(userById(id).name)).join(" & ")}</div><p class="sp3-sub">${win.length > 1 ? "Our superstars!" : "Our superstar!"}</p>
+    <div class="sp3-board">${rows}</div>
+    <p class="sp3-note">Well done everyone! A new week starts at midnight. Good luck!${win.includes(me) ? "<br><b>🎁 Choose your gift in My Stars!</b>" : ""}</p>
+    <button class="k-ok sp3-yay" id="kOk"><img src="icons/3d/k-stars.png" alt=""> Yay!</button>`;
   $("kModal").classList.add("star-pop");
   $("kModal").hidden = false;
 }
