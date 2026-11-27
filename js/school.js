@@ -755,7 +755,7 @@ function briefNode(kid, b) {
 }
 // 🧸 v159: a 3D icon for each subject (icons/3d)
 const subjectIcon3d = n => [[/math/i, "practice"], [/science|physics|chem|bio/i, "research"], [/english|phonics/i, "class"], [/arabic|french|urdu/i, "lesson"],
-  [/islam|quran|religio/i, "read"], [/ssa|social|humanit|history|geo/i, "milestone"], [/art|design/i, "palette"], [/music/i, "music"], [/comput|ict|coding/i, "focus"]].find(([re]) => re.test(n || ""))?.[1] || "homework";
+  [/islam|quran|religio/i, "read"], [/humanit|history/i, "map"], [/ssa|social|geo/i, "milestone"], [/spell/i, "homework"], [/art|design/i, "palette"], [/music/i, "music"], [/comput|ict|coding/i, "focus"]].find(([re]) => re.test(n || ""))?.[1] || "homework";
 function subjectTileHtml(s, x) {
   const avg = avgPct(checkedOf(schoolKid, x.name)), level = (s.profile.subjects[x.id] || {}).level, k = wsPickOf(schoolKid, x.name);
   return `<button class="ip-item sc-tile2" data-scgo="subject|${safe(x.id)}">${ico3d(subjectIcon3d(x.name))}<b>${safe(x.name)}</b>
