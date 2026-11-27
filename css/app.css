@@ -3856,3 +3856,11 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
   .gl-act { width: 34px; height: 34px; border-radius: 12px; } .gl-ic { width: 24px; height: 24px; } .gl-cell { min-height: 84px; border-radius: 18px; }
   .gl-side { font-size: 11px; }
 }
+
+/* v233: calendar top — buttons + people row in the middle (user 27 Nov) */
+.mine-top #mineActions .cal-main-btns { justify-content: center; }
+.mine-top #minePeople { justify-content: center; }
+.mine-top:has(.cal-big + .cal-big) { align-items: center; }
+.mine-top:has(.cal-big + .cal-big) #minePeople { width: 100%; }
+.mine-top #minePeople > :first-child { margin-left: auto; }
+.mine-top #minePeople > :last-child { margin-right: auto; }
