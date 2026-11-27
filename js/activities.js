@@ -31,7 +31,7 @@ function drawWho(p, selected) {
   box.innerHTML = data.users.map(u => {
     const c = colorsOf(u);
     return `<label><input type="checkbox" value="${safe(u.id)}" ${selected.includes(u.id) ? "checked" : ""}>
-      <span class="chip" style="--soft:${c.soft};--ink:${c.ink}"><span class="e">${safe(u.emoji)}</span>${safe(u.name)}</span></label>`;
+      <span class="chip" style="--soft:${c.soft};--ink:${c.ink}">${charPic(u, "happy") ? `<img class="who3-pic" src="${charPic(u, "happy")}" alt="">` : `<span class="e">${safe(u.emoji)}</span>`}${safe(u.name)}</span></label>`;
   }).join("");
   if ($(p + "DadLine")) drawStudy(p);   // (routines have no 🤝 helper)
 }
@@ -134,7 +134,18 @@ function drawAdd() {
   // Routines: parents only
   if (isParentId(me)) { if (!$("rtForm").hidden) drawWho("rt"); drawRoutineList(); }
   drawAddSections();
+  typeTiles("fx"); typeTiles("fl");
 }
+// 🎨 v233 (Broo2a's picture): the type as big picture tiles (the select stays, hidden, and keeps the value)
+function typeTiles(k) {
+  const sel = $(k + "Type"); if (!sel) return;
+  let box = $(k + "TypeTiles");
+  if (!box) { (sel.closest(".row") || sel).insertAdjacentHTML("afterend", `<div class="ty3-grid" id="${k}TypeTiles" role="group" aria-label="Activity type"></div>`); box = $(k + "TypeTiles"); }
+  box.innerHTML = allActTypes().map(([key, e, w]) => `<button type="button" class="ty3-tile${sel.value === key ? " on" : ""}" data-ty3="${k}|${safe(key)}" aria-pressed="${sel.value === key}">
+    <span class="ty3-ic">${actIcon3d("", key, "ty3-img")}</span><b>${safe(w)}</b></button>`).join("");
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-ty3]"); if (!b) return;
+  const [k, key] = b.dataset.ty3.split("|"), sel = $(k + "Type"); sel.value = key; typeTouched[k] = true; sel.dispatchEvent(new Event("change", { bubbles: true })); typeTiles(k); });
 // ---------- ✏️ ADD PAGE: closed and simple, three big buttons with counts, each opens its list (accordion) ----------
 // A list's "➕ New …" or a tap on a row opens the form (the forms are hidden otherwise). Opening the page: all closed.
 let addOpen = { fx: false, fl: false, rt: false, ty: false };
@@ -318,7 +329,7 @@ function fillTypeSelect(k) {   // (🏷️ v213 the family's own types too)
   fillTypeSelect(k);
   $(k + "Type").value = "activity";
   $(k + "Type").addEventListener("change", () => { typeTouched[k] = true; });
-  $(k + "Name").addEventListener("input", () => { if (!typeTouched[k]) $(k + "Type").value = defaultActType({ name: $(k + "Name").value }); });
+  $(k + "Name").addEventListener("input", () => { if (!typeTouched[k]) { $(k + "Type").value = defaultActType({ name: $(k + "Name").value }); typeTiles(k); } });
 });
 const pickedType = k => ACT_TYPE_KEYS.includes($(k + "Type").value) ? $(k + "Type").value : "activity";
 
@@ -382,7 +393,7 @@ function startEditFixed(id) {
   if (!f || !canEdit(f)) return;
   editingFixed = id;
   $("fxName").value = f.name;
-  $("fxType").value = actTypeOf(f); typeTouched.fx = true;
+  $("fxType").value = actTypeOf(f); typeTouched.fx = true; typeTiles("fx");
   $("fxDays").querySelectorAll("input").forEach(c => c.checked = f.days.includes(Number(c.value)));
   $("fxStart").value = f.start;
   $("fxEnd").value = f.end;
@@ -404,7 +415,7 @@ function startEditFixed(id) {
 function resetFixedForm() {
   editingFixed = null;
   $("fxName").value = "";
-  $("fxType").value = "activity"; typeTouched.fx = false;
+  $("fxType").value = "activity"; typeTouched.fx = false; typeTiles("fx");
   $("fxDays").querySelectorAll("input").forEach(c => c.checked = Number(c.value) < 5); // Mon–Fri
   $("fxStart").value = "07:30";
   $("fxEnd").value = "14:00";
@@ -482,7 +493,7 @@ function startEditFlex(id) {
   if (!f || !canEdit(f)) return;
   editingFlex = id;
   $("flName").value = f.name;
-  $("flType").value = actTypeOf(f); typeTouched.fl = true;
+  $("flType").value = actTypeOf(f); typeTouched.fl = true; typeTiles("fl");
   $("flDur").value = f.duration;
   $("flTimes").value = f.times;
   $("flTwice").checked = f.twice !== false;
@@ -506,7 +517,7 @@ function startEditFlex(id) {
 function resetFlexForm() {
   editingFlex = null;
   $("flName").value = "";
-  $("flType").value = "activity"; typeTouched.fl = false;
+  $("flType").value = "activity"; typeTouched.fl = false; typeTiles("fl");
   $("flDur").value = 45;
   $("flTimes").value = 3;
   $("flTwice").checked = true;
