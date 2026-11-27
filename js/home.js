@@ -114,8 +114,8 @@ function drawKidHome(u) {
   $("homeBig").innerHTML = `<div class="kh3-top"><h1>Hi ${safe(u.name)}!</h1><span>${dz({ weekday: "long" })}<br>${dz({ day: "numeric", month: "long" })}</span></div>
     <div class="kh3-hero" style="--soft:${c.soft};--c:${c.color}">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
       <div class="kh3-bub"><b>${safe(head)}</b><small>${safe(sub)}</small></div>
-      ${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
-      ${feat("buddy") && hasSpark(u.id) ? `<button class="kh3-bar kh3-spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}"><span>✨ SPARK Lv ${L}</span><i><em style="width:${pct}%"></em></i><b>${pct}%</b></button>` : ""}
+      <div class="kh3-stats">${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
+      ${feat("buddy") && hasSpark(u.id) ? `<button class="kh3-spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}">${buddyRingSvg(pct)}<span class="ks-in"><small>✨ Spark</small><b>Lv ${L}</b><small>${pct}%</small></span></button>` : ""}</div>
       <div class="kh3-say">${sayBoxHtml(u)}</div></div>
     ${comingCardHtml(comingUp(u.id), false)}
     <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("k-study"), "Study", "My school")}
