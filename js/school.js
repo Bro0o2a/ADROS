@@ -258,7 +258,7 @@ function schoolHomeHtml(s, isDad) {
   const sess = "";   // (📚 v154: study sessions are only on 📅 the calendar now)
   // ⬆️ Upload a school file (a newsletter, a school review …): its topics go into every subject (see STUDY TOPICS)
   // 🎀 v159 (Broo2a's icon set picture): ribbon titles with a bow over cream panels of 3D icons with their names
-  const up = feat("coach") && list.length ? `<button class="ip-item" data-stup="">${ico3d("pin")}<b>Upload topic</b><small>From school</small></button>` : "";
+  const up = feat("coach") && list.length ? `<button class="ip-item" data-stup="">${ico3d("k-upload")}<b>Upload topic</b><small>From school</small></button>` : "";
   // 👨‍👩‍👧 the kid's files that aren't in a subject (newsletters, reviews …)
   const loose = isParentDevice() ? Object.entries(s.files).map(([id, x]) => ({ id, ...x })).filter(x => !x.subject && !x.worksheet && x.kind !== "link")
     .sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10) : [];
