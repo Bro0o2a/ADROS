@@ -4144,7 +4144,7 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
 .fam-collage img:nth-child(3) { left: -4%; bottom: 2%; } .fam-collage img:nth-child(4) { left: 25%; bottom: -2%; width: 52%; height: 52%; } .fam-collage img:nth-child(5) { right: -4%; bottom: 2%; }
 .fam-collage.n2 img { top: 25% !important; } .fam-collage.n3 img:nth-child(3) { left: 25%; }
 #mineActions .cal-big, .mine-top #mineActions .cal-big { background: #fdf1cf !important; color: #7a5a12 !important; border: 0 !important; border-radius: 999px !important; box-shadow: 0 4px 0 #ecdcae !important; font: 800 15px/1 Fredoka, Nunito, sans-serif !important; }
-@media (max-width: 420px) { #minePeople .chip .e { width: 52px !important; height: 52px !important; } #minePeople .chip { min-width: 60px !important; } }
+@media (max-width: 420px) { #minePeople .chip .e { width: 70px !important; height: 70px !important; } #minePeople .chip { min-width: 76px !important; } }
 #minePeople .chip .e .fam-collage img { position: absolute !important; width: 54% !important; height: 54% !important; object-fit: contain !important; border-radius: 0 !important; }
 #minePeople .chip .e .fam-collage img:nth-child(4) { width: 56% !important; height: 56% !important; }
 
@@ -4660,3 +4660,6 @@ button.qa3-pill.on { background: #dff0d6; border-color: #6cc070; }
 .qa3-err ul { margin: 4px 0; padding-left: 18px; }
 button.qa3-save { display: block; width: 100%; margin-top: 14px; min-height: 54px; border-radius: 999px; border: 0; background: #6cc070; color: #fff; font: 800 18px/1 Nunito, sans-serif; box-shadow: 0 4px 0 #4f9a54; }
 button.qa3-more { display: block; margin: 10px auto 0; background: none; border: 0; box-shadow: none; color: #7a6656; text-decoration: underline; font-weight: 700; min-height: 0; }
+/* v236 calendar people (Broo2a's picture): big circles, big cream "+ Activities" pill */
+#minePeople .chip { font-size: 16px !important; }
+.mine-top .cal-big[data-go="add"] { min-height: 52px; padding: 10px 22px !important; border-radius: 999px !important; background: #fbf0d4 !important; color: #7a5a14 !important; font: 800 17px/1 Fredoka, Nunito, sans-serif !important; box-shadow: 0 4px 0 #e6d6b4 !important; border: 0 !important; }
