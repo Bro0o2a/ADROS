@@ -17,11 +17,13 @@ const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, 
 // 🎭 v233: the new feelings (wave = hello · point = tips · think = help · proud = how you grow)
 const PAGE_MOODS = { home: "wave", mine: "point", school: "reading", points: "proud", me: "wave", add: "point", settings: "point", family: "wave",
   diary: "happy", report: "proud", kidswork: "think", kid: "wave", extra: "happy", setup: "point" };
-// 🌈 v233 (Broo2a's colourful pictures): the banner shows the page's kid on the left and a brother/sister on the right
+// 🌈 v233 (Broo2a's colourful pictures): the banner shows the page's kid on the left and again on the right (another feeling); home: a brother/sister
+const RIGHT_MOODS = { mine: "jump", school: "jump", points: "confetti", me: "proud", report: "jump", kid: "jump", diary: "wave" };
 const buddyId = () => screen === "school" && typeof schoolKid !== "undefined" && exists(schoolKid) ? schoolKid : me;
 const otherKids = id => data.users.filter(u => !isParentId(u.id) && u.id !== id && charPic(u));
 const puffDeco = mood => { const id = buddyId(), src = charPic(userById(id), mood || PAGE_MOODS[screen] || "happy"), sib = otherKids(id)[0];
-  const right = sib ? charPic(sib, ["wave", "jump", "confetti", "point"][new Date().getDate() % 4]) : "";
+  // (Broo2a 27 Nov: a kid's pages show ONLY that kid's character, in 2 feelings; the home page may show the whole family)
+  const right = screen === "home" ? (sib ? charPic(sib, "wave") : "") : charPic(userById(id), RIGHT_MOODS[screen] || "jump");
   return (src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : "") + (right ? `<img class="pb-deco pb-rr pb-char" src="${right}" alt="">` : ""); };
 // 💬 the buddy under the title: [mood, big line, small line] ({n} = the kid's name)
 const BUDDY_LINES = { home: ["wave", "Hi {n}!", "Let's make today a great day"], mine: ["point", "Here is your week, {n}!", "Tap a day to see what is inside"],
@@ -31,7 +33,7 @@ const BUDDY_LINES = { home: ["wave", "Hi {n}!", "Let's make today a great day"],
   add: ["point", "What is on this week?", "Add it once, the plan does the rest"], settings: ["point", "Make it just right", "Change anything, any time"],
   family: ["wave", "Together is better", "Everyone in one place"], kid: ["wave", "All about {n}", "Scores, school and today"], extra: ["happy", "Have fun together!", ""],
   setup: ["point", "Make the app yours", "Turn on what your family needs"] };
-// 🧒 3 characters at the end of a page: [mood, word] × 3 (me, then my brothers/sisters)
+// 🧒 3 characters at the end of a page: [mood, word] × 3 (me in 3 feelings; on home: me, then my brothers/sisters)
 const STRIP_WORDS = { school: [["reading", "Read"], ["jump", "Learn"], ["proud", "Grow"]], mine: [["point", "Plan"], ["think", "Do"], ["confetti", "Win"]],
   points: [["think", "Try"], ["jump", "Shine"], ["confetti", "Win"]], home: [["wave", "Hello"], ["jump", "Play"], ["proud", "Learn"]] };
 function drawBuddies() {
@@ -42,7 +44,7 @@ function drawBuddies() {
   const line = subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
   if (h && pic && screen !== "home") h.insertAdjacentHTML("afterend", `<div class="buddy-row"><img src="${pic}" alt=""><div class="buddy-bub"><b>${safe(line[1].replace("{n}", u.name))}</b>${line[2] ? `<small>${safe(line[2].replace("{n}", u.name))}</small>` : ""}</div></div>`);
   const oldS = scr.querySelector(":scope > .buddy-strip"); if (oldS) oldS.remove();
-  const words = STRIP_WORDS[screen], kids = [u, ...otherKids(id)].filter(k => charPic(k));
+  const words = STRIP_WORDS[screen], kids = (screen === "home" ? [u, ...otherKids(id)] : [u]).filter(k => charPic(k));   // (only my character, except on home)
   if (words && kids.length) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
     `<figure><img src="${charPic(kids[i % kids.length], m)}" alt=""><figcaption>${w}</figcaption></figure>`).join("")}</div>`);
 }
