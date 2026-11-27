@@ -1560,7 +1560,7 @@ const CHAR_DARK = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09"
 // 🎭 v233: 7 more feelings (Broo2a's pictures, 26 Nov): wave (hello) · point (tips) · think (hints, making) · sad (missed) · proud (good work) · jump (all done) · confetti (big win)
 const CHAR_NEW_MOODS = ["wave", "point", "think", "sad", "proud", "jump", "confetti"];
 const CHAR_MOODS = ["happy", "star", "thumbs", "wow", "oops", "confused", "sleepy", "reading", ...CHAR_NEW_MOODS];
-const CHAR_NEW_DARK = { c10d: CHAR_NEW_MOODS, c12d: CHAR_NEW_MOODS, c04d: ["wave", "point"] };   // darker kids that already have new feelings (the rest: the closest old one)
+const CHAR_NEW_DARK = { c10d: CHAR_NEW_MOODS, c12d: CHAR_NEW_MOODS, c04d: CHAR_NEW_MOODS };   // darker kids that already have new feelings (the rest: the closest old one)
 const MOOD_BACKUP = { wave: "happy", point: "thumbs", think: "confused", sad: "oops", proud: "thumbs", jump: "star", confetti: "star" };
 const OLD_AVATARS = ["boy-1", "boy-2", "boy-3", "boy-4", "boy-5", "girl-1", "girl-2", "girl-3", "girl-4", "girl-5", "girl-6", "parent-1", "parent-2"];   // v158 pictures (still shown if picked before)
 const AVATARS = { boys: CHARS.filter(c => c[2] === "b").map(c => c[0]), girls: CHARS.filter(c => c[2] === "g").map(c => c[0]), parents: ["mum", "dad"] };
