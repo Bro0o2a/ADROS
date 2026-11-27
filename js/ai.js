@@ -92,22 +92,42 @@ const aiFailFor = key => aiFail && aiFail.key === key && Date.now() - aiFail.at 
 // 🤖 Before the AI helper is used the first time, a parent says OK for the family (the stores ask for this):
 // what goes to Anthropic, that it isn't kept or used to train. Kids' devices can't say OK: they're asked to get a parent.
 const aiOkNow = () => !!(data && data.aiOk && data.aiOk.at);
+// 🔐 Parent gate: signed in to the cloud → the parent types their password (a child can't guess it). "This device only" has no password.
+const aiGateNeeded = () => !!(cloud.fb && cloud.user && cloud.user.email);
 function askAiOk() {
-  const parent = isParentDevice();
+  const parent = isParentDevice(), gate = parent && aiGateNeeded();
+  $("aiGateIn").value = "";
+  $("aiGateErr").textContent = "";
   $("aiOkText").hidden = false;
   $("aiOkKid").hidden = parent;
+  $("aiGate").hidden = !gate;
   $("aiOkYes").hidden = !parent;
+  $("aiOkYes").disabled = false;
   $("aiOkModal").hidden = false;
-  (parent ? $("aiOkYes") : $("aiOkNo")).focus();
+  (gate ? $("aiGateIn") : parent ? $("aiOkYes") : $("aiOkNo")).focus();
 }
-$("aiOkYes").onclick = () => {
+$("aiOkYes").onclick = async () => {
   if (!isParentDevice()) return;
+  if (aiGateNeeded()) {
+    const pass = $("aiGateIn").value;
+    if (!pass) { $("aiGateErr").textContent = "Please type your password."; return $("aiGateIn").focus(); }
+    if (!navigator.onLine) return $("aiGateErr").textContent = "🔌 This needs the internet.";
+    $("aiOkYes").disabled = true; $("aiGateErr").textContent = "One moment…";
+    try { await cloud.fb.reauthenticateWithCredential(cloud.user, cloud.fb.EmailAuthProvider.credential(cloud.user.email, pass)); }
+    catch (err) {
+      $("aiOkYes").disabled = false;
+      $("aiGateErr").textContent = /wrong-password|invalid-credential|invalid-login/.test(err.code || "") ? "That password isn't right." : loginError(err);
+      return $("aiGateIn").focus();
+    }
+    $("aiOkYes").disabled = false; $("aiGateIn").value = ""; $("aiGateErr").textContent = "";
+  }
   data.aiOk = { by: me || "", at: new Date().toISOString() };
   writeData("auto");
   $("aiOkModal").hidden = true;
   toast("🤖 AI helper turned on. Tap the button again.", 3500);
 };
 $("aiOkNo").onclick = () => { $("aiOkModal").hidden = true; };
+$("aiGateIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("aiOkYes").click(); } });
 $("aiOkModal").addEventListener("click", e => { if (e.target === $("aiOkModal")) $("aiOkModal").hidden = true; });
 async function callAi(action, body, key, auto = false) {
   if (!aiOkNow()) { if (!auto) askAiOk(); return null; }   // (🤖 no OK yet: nothing is sent)
