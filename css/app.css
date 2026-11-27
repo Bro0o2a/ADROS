@@ -4335,3 +4335,31 @@ button.me3-save { width: 100%; min-height: 56px; margin-top: 14px; border: 0; bo
 .gd3-chip { padding: 4px 7px; font-size: 12px; }
 #scr-mine.gd-open .buddy-row, #scr-mine.gd-open .free-ask, #scr-mine.gd-open .pb-char { display: none !important; }
 .gd3-chip { flex: 1 1 0; min-width: 0; padding: 4px 2px; font-size: 11.5px; }
+
+/* 🎨 v233 subject page (Broo2a's picture): icon + big name, buddy bubble, This year's topics (now green · next yellow · coral Practise), worksheets card, then More */
+.bd-folder-head.sj3-head { display: flex; align-items: center; gap: 12px; background: none; border: 0; box-shadow: none; padding: 4px 2px; margin: 4px 0 8px; }
+.sj3-ic { width: 64px; height: 64px; flex: none; border-radius: 18px; background: var(--soft); display: grid; place-items: center; }
+.sj3-ic .i3d { width: 46px; height: 46px; }
+.sj3-t { flex: 1; min-width: 0; } .sj3-t h2 { margin: 0; font: 900 30px/1.1 Nunito, sans-serif; color: var(--ink); }
+.sj3-t small { display: block; font: 700 14px Nunito, sans-serif; color: #7a6656; }
+#scr-school:has(.sj3-buddy) .buddy-row { display: none !important; }
+.sj3-buddy { display: flex; align-items: center; gap: 12px; background: var(--soft, #dbe9fb); border-radius: 26px; padding: 12px 14px; margin: 10px 0 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.sj3-buddy img { width: 88px; height: 88px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); } .sj3-e { font-size: 50px; }
+.sj3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 11px 13px; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.sj3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.sj3-buddy b { display: block; font: 800 16px/1.3 Nunito, sans-serif; color: #3b2a1e; } .sj3-buddy small { display: block; margin-top: 3px; font: 600 13px/1.35 Nunito, sans-serif; color: #7a6656; }
+.sj3-hrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 2px 8px; }
+.sj3-h { margin: 0; font: 900 21px Nunito, sans-serif; color: #3b2a1e; }
+.sj3-n { background: #e3eefc; color: #1f4f8a; border-radius: 999px; padding: 4px 12px; font: 800 13px Nunito, sans-serif; white-space: nowrap; }
+.sj3-now, .sj3-next { border-radius: 22px; padding: 12px 16px; margin-bottom: 10px; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.sj3-now { background: #dff0da; color: #2f5a2a; } .sj3-next { background: #fbf1d6; color: #7a5a12; }
+.sj3-now span, .sj3-next span { display: block; font: 900 12px Nunito, sans-serif; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+.sj3-now b, .sj3-next b { font: 800 16px/1.35 Nunito, sans-serif; }
+button.sj3-go { width: 100%; min-height: 54px; border: 0; border-radius: 26px; background: #ee8a7d; color: #7a1f17; font: 900 16px Nunito, sans-serif; box-shadow: 0 4px 0 #d06a5e; }
+.sj3-ws { background: #fff; border-radius: 26px; padding: 10px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.sj3-ws .wsg-list { margin: 0; } .sj3-ws .wsg-row { background: #f8f1e8; border-radius: 20px; margin: 0 0 8px; border: 0; }
+button.sj3-all { width: 100%; min-height: 44px; border: 0; border-radius: 18px; background: #f3ebe2; color: #5a4636; font: 800 14px Nunito, sans-serif; box-shadow: none; }
+.sj3-more { margin-top: 18px; } .sj3-more .sj3-h { margin: 0 2px 8px; }
+#scr-school .bd-folder-head.sj3-head { display: flex !important; }
+#scr-school .bd-folder-head.sj3-head h2 { display: block; }
+#scr-school:has(.sj3-head) > .puff-banner, #scr-school:has(.sj3-head) > h1 { display: none !important; }

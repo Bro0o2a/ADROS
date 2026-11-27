@@ -823,8 +823,8 @@ let scMakeOpen = false;     // ✏️ worksheets → ➕ Make a new one: the top
 function schoolSubjectHtml(s, isDad, u) {
   const f = { id: schoolSubject, ...s.subjects[schoolSubject] }, c = subjectColors(f), parent = isParentDevice();
   const editing = isDad && schoolEdit === "subject" && schoolEditId === schoolSubject;
-  let html = `<div class="bd-folder-head" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><span class="e">${safe(f.emoji)}</span>
-      <h2>${safe(f.name)}</h2>${isDad && !editing ? `<span class="bd-head-btns">${itemBtns("subject", schoolSubject)}</span>` : ""}</div>`;
+  let html = `<div class="bd-folder-head sj3-head" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><span class="sj3-ic">${ico3d(subjectIcon3d(f.name))}</span>
+      <span class="sj3-t"><h2>${safe(f.name)}</h2><small>${safe(u.name)} · practice makes perfect!</small></span>${isDad && !editing ? `<span class="bd-head-btns">${itemBtns("subject", schoolSubject)}</span>` : ""}</div>`;
   if (editing) html += subjectFormHtml(f);
   // ⚙️ School coach off: just the files and the older records (no 🤖 worksheets, %, strong / weak points)
   if (!feat("coach")) return html + subjectFilesHtml(s, f, `📁 ${u.name}'s uploaded files`) + subjectOlderHtml(s, f, c, isDad);
@@ -837,8 +837,9 @@ function schoolSubjectHtml(s, isDad, u) {
   if (!stSec) {
     const upTile = `<button class="ip-item sj-go" data-stup="${safe(f.id)}">${ico3d("pin")}<b>Upload topic</b><small>From school</small></button>`;
     const SEC_ICON = { ws: "paper", profile: "idea", curr: "milestone", topics: "read", goal: "goal", study: "study", files: "briefcase", more: "lunchbox" };
-    // (v160: the subject corner buttons first, "In short" under them)
-    html += `<section class="ip-sec"><span class="ip-rib ip-lilac">${safe(f.name)} corner <i>🎀</i></span><div class="ip-panel ip-3">
+    // 🎨 v233 (Broo2a's picture): the buddy says how it's going, This year's topics (in class now · coming next · ✏️ practise),
+    // the worksheets (to do first, then the last checked), then the subject corner buttons and "In short"
+    html += subjectTopHtml(s, f, c, all) + `<section class="ip-sec sj3-more"><h2 class="sj3-h">More for ${safe(f.name)}</h2><div class="ip-panel ip-3">
       ${secs.map((x, i) => (i === 1 ? upTile : "") + `<button class="ip-item" data-stsec="${x.id}">${ico3d(SEC_ICON[x.id] || "homework")}<b>${x.label}</b><small>${safe(subjectSecLine(x.id, s, f, all, todo))}</small>${
         x.id === "ws" && todo ? `<span class="sc-badge">${todo}</span>` : ""}</button>`).join("")}${secs.length < 2 ? upTile : ""}</div></section>
       <div class="card sj-sum" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><div class="ks-head"><h2>In short</h2>
@@ -867,6 +868,27 @@ function schoolSubjectHtml(s, isDad, u) {
     <button class="pill" data-scprof="${safe(schoolKid)}|info">🏫 School info</button><button class="pill" data-scprof="${safe(schoolKid)}">👤 Profile</button></div>`;
   if (isDad && !isKidDevice() && checked.length) html += aiMount(() => parentExtrasNode(s, checked));   // (🦉 the coach's tip, "By part")
   return html + subjectOlderHtml(s, f, c, isDad);
+}
+// 🎨 v233 the top of a subject (Broo2a's picture): buddy bubble · This year's topics · Worksheets
+function subjectTopHtml(s, f, c, all) {
+  const u = userById(schoolKid), B = curBriefData(schoolKid, f), has = w => w.answers.some(x => s.files[x]);
+  const todoL = all.filter(w => !w.check), done = all.filter(w => w.check).sort((a, b) => String(b.check.at || b.date || "").localeCompare(String(a.check.at || a.date || "")));
+  const last = done[0], lastPct = last ? wsPct(last) : null;
+  const head = B && B.matched.length ? `${B.matched.length >= B.off.length / 2 ? `${f.name} is going great` : `Good start in ${f.name}`}, ${u.name}!`
+    : lastPct != null ? (lastPct >= 80 ? `Great marks in ${f.name}, ${u.name}!` : `Let's practise ${f.name}, ${u.name}!`) : `Let's practise ${f.name}, ${u.name}!`;
+  const sub = B ? `${B.matched.length} of ${B.off.length} topics done.${B.next3[0] ? ` ${B.next3[0].title} is next.` : ""}`
+    : todoL.length ? `${todoL.length} ${todoL.length === 1 ? "worksheet" : "worksheets"} to do.` : "A little every day makes it easy.";
+  const pic = charPic(u, lastPct != null && lastPct >= 80 ? "proud" : "think");
+  const buddy = `<div class="sj3-buddy" style="--soft:${c.soft}">${pic ? `<img src="${pic}" alt="">` : `<span class="sj3-e">${safe(u.emoji)}</span>`}<p><b>${safe(head)}</b><small>${safe(sub)}</small></p></div>`;
+  const topics = B ? `<div class="sj3-hrow"><h2 class="sj3-h">This year's topics</h2><span class="sj3-n">${B.matched.length} of ${B.off.length}</span></div>
+    ${B.nowList.length ? `<div class="sj3-now"><span>📍 In class now</span><b>${safe(B.nowList.map(t => t.title).join(", "))}</b></div>` : ""}
+    ${B.next3.length ? `<div class="sj3-next"><span>Coming next</span><b>${safe(B.next3.map(t => t.title).join(" · "))}</b></div>` : ""}
+    ${B.toDo.length ? `<button class="sj3-go cur-go" data-stnotdone="${safe(f.id)}" data-stnotdonet="${safe(B.toDo.map(encodeURIComponent).join("|"))}" data-aiwait="mapmake">✏️ Practise what's not done yet${B.toDo.length > 1 ? ` (${B.toDo.length})` : ""}</button>` : ""}` : "";
+  const show = [...todoL.filter(w => !has(w)).map(w => [w, "todo"]), ...todoL.filter(has).map(w => [w, "wait"]), ...done.slice(0, 2).map(w => [w, "done"])];
+  const ws = all.length ? `<div class="sj3-hrow"><h2 class="sj3-h">Worksheets</h2><span class="sj3-n">${todoL.length ? `${todoL.length} to do` : `${done.length} checked`}</span></div>
+    <div class="sj3-ws">${aiMount(() => h("ul", { class: "wsg-list" }, show.map(([w, k]) => wsNiceNode(s, w, k))))}
+      ${all.length > show.length ? `<button class="sj3-all" data-stsec="ws">See all ${all.length} worksheets ›</button>` : ""}</div>` : "";
+  return buddy + topics + ws;
 }
 // 🎒 The subject's big buttons (the kid: worksheets, topics, goal; parents: all)
 let stSec = null;

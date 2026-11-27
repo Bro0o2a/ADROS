@@ -890,9 +890,9 @@ function curMatchOf(kid, sid, title) {
   return curBestOf(title, m.list);
 }
 // 🌍 The brief: ✅ done and matched · ⏭️ the next lesson · ⚠️ the risks (behind / weak) · 🔜 coming later · ➕ extra (not in the curriculum)
-function curBriefHtml(kid, f) {
+function curBriefData(kid, f) {
   const s = schoolOf(kid), m = s.map[f.id];
-  if (!m || !m.list.length) return "";
+  if (!m || !m.list.length) return null;
   const rows = topicRows(kid, s, f), done = r => r.info.results.length > 0;
   const bestOf = new Map(rows.map(r => [r.id, curBestOf(r.title, m.list)]));   // (🔧 v217 each school topic counts for ONE official topic, its best match)
   const off = m.list.map((t, i) => { const mine = rows.filter(r => bestOf.get(r.id) === t), tried = mine.filter(done);
@@ -911,6 +911,12 @@ function curBriefHtml(kid, f) {
   // (v162: one simple screen: the bar, where the class is, what's not done yet + ONE button; the rest folded)
   const notDone = [...behind, ...inSchool, ...nowList.filter(t => !t.practised && !behind.includes(t) && !inSchool.includes(t))];
   const toDo = (notDone.length ? notDone : next3).slice(0, 4).map(t => t.title);
+  return { off, matched, behind, later, weak, inSchool, nowList, next3, extra, pctAll, notDone, toDo };
+}
+function curBriefHtml(kid, f) {
+  const B = curBriefData(kid, f);
+  if (!B) return "";
+  const { off, matched, weak, nowList, next3, extra, pctAll, notDone, toDo } = B;
   const li = (t, extra) => `<li><b>${safe(t.title)}</b>${extra || t.term ? `<small>${safe([String(extra || "").replace(/^ · /, ""), t.term].filter(Boolean).join(" · "))}</small>` : ""}</li>`;
   const block = (cls, title, list, fn, empty) => `<div class="cur-block ${cls}"><h3>${title} <span class="wsg-n">${list.length}</span></h3>${list.length ? `<ul>${list.map(fn).join("")}</ul>` : `<p class="hint">${empty}</p>`}</div>`;
   const fold = (cls, title, list, fn) => list.length ? `<details class="cur-fold ${cls}"><summary>${title} <span class="wsg-n">${list.length}</span></summary><ul>${list.map(fn).join("")}</ul></details>` : "";
