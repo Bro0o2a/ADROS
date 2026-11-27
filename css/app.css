@@ -4083,3 +4083,16 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
   .puff-banner:not(.pb-home) .pb-char { width: 48px !important; height: 48px !important; }
 }
 #scr-mine #mineTitle.puff-banner .bub { font-size: 27px !important; } #scr-mine #mineTitle.puff-banner { padding: 12px 24px !important; }
+
+/* ✏️ v233 (Broo2a: "remove the purple one, add the first style"): page titles = plain words on the page, left side, in the kid's
+   colour (coral when no kid), a small grey line under them. No banner box, no buddies in it. */
+.puff-banner:not(.pb-home), #scr-mine #mineTitle.puff-banner { background: none !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
+  padding: 0 !important; margin: 14px 4px 10px !important; text-align: left !important; }
+.puff-banner:not(.pb-home) .pb-char { display: none !important; }
+.puff-banner:not(.pb-home) .bub, .puff-banner:not(.pb-home) .bub-pink, .puff-banner:not(.pb-home) .bub-lilac, #scr-mine #mineTitle.puff-banner .bub {
+  background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: var(--kc, #e0685f) !important;
+  font: 700 30px/1.1 Fredoka, "Baloo 2", sans-serif !important; }
+.puff-banner:not(.pb-home) .bub-pill { display: block !important; margin: 4px 0 0 !important; padding: 0 !important; background: none !important; box-shadow: none !important;
+  font: 700 14px/1.3 Nunito, sans-serif !important; color: #7a6656 !important; }
+.puff-banner:not(.pb-home) br { display: none; }
+@media (max-width: 380px) { .puff-banner:not(.pb-home) .bub, .puff-banner:not(.pb-home) .bub-pink, .puff-banner:not(.pb-home) .bub-lilac, #scr-mine #mineTitle.puff-banner .bub { font-size: 26px !important; } }
