@@ -709,6 +709,7 @@ function mergeBuddies(into, from) {
       if (typeof o.focusAt === "string") u.focusAt = o.focusAt; else delete u.focusAt;
       changed = true;
     }
+    if (o.say && typeof o.say.at === "string" && (!u.say || o.say.at > (u.say.at || ""))) { u.say = { ...o.say }; changed = true; }   // 💬 v233 the newer line wins
     if (o.toured === true && u.toured !== true) { u.toured = true; changed = true; }
     if (o.setupAsked === true && u.setupAsked !== true) { u.setupAsked = true; changed = true; }   // 🧒 once true, stays true
     if (typeof o.sparkName === "string" && o.sparkName && !u.sparkName) { u.sparkName = o.sparkName; changed = true; }   // ✨

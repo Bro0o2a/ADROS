@@ -548,6 +548,7 @@ function emptyData() {
 // Cleans up data that comes from storage or from a backup file:
 // keeps every valid activity, fixes small problems, and fills in anything missing.
 // It never throws away good data.
+const SAY_MAX = 60;   // 💬 v233 the longest speech line on the home screen
 function cleanData(d) {
   const clean = emptyData();
   if (!d || typeof d !== "object") return clean;
@@ -583,6 +584,8 @@ function cleanData(d) {
                    ...(u.loves && typeof u.loves === "object" ? { loves: Object.fromEntries(LOVES.map(([k]) => [k, typeof u.loves[k] === "string" ? u.loves[k].trim().slice(0, 30) : ""]).filter(([, v]) => v)) } : {}),
                    // ✨ the Spark's own name (shown as "Spark"; the stored field stays "buddy")
                    ...(typeof u.sparkName === "string" && u.sparkName.trim() ? { sparkName: u.sparkName.trim().slice(0, 12) } : {}),
+                   // 💬 v233 their own speech line on the home screen ({t: text (empty = cleared), at: when, by: who wrote it})
+                   ...(u.say && typeof u.say === "object" && typeof u.say.t === "string" && typeof u.say.at === "string" ? { say: { t: u.say.t.slice(0, SAY_MAX), at: u.say.at.slice(0, 30), by: typeof u.say.by === "string" ? u.say.by.slice(0, 40) : "" } } : {}),
                    // 🧸 v158: their 3D avatar picture (one of AVATAR_IDS; older data: none → their emoji)
                    ...(typeof u.avatar === "string" && /^((boy|girl|parent)-\d{1,2}|c\d{2}d?|mum|dad)$/.test(u.avatar) ? { avatar: u.avatar } : {}),
                    // 🖼️ a parent's picture: a small square JPEG photo (about 160×160) instead of their emoji (newer: older data has none)

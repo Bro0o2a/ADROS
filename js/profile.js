@@ -459,9 +459,29 @@ function setupSignOutButtons() {
     (bell && bell.parentElement !== bar ? bell.parentElement : bar).appendChild(b);   // (the last one on the right)
   });
 }
+// 🌈 v233 (Broo2a's picture): the top buttons sit in ONE white bar · ⬅ Back square · Home + School pills · the rest = round
+// buttons with their name under them (Calendar, News, Sign out, Print …). Done once per button (rb-done).
+function tidyBars() {
+  document.querySelectorAll(".screen .bar").forEach(bar => {
+    bar.classList.add("bar3");
+    bar.querySelectorAll("button.pill").forEach(b => {
+      if (b.classList.contains("rb-done") || b.hasAttribute("data-navback") || b.classList.contains("sch-btn")) return;
+      b.classList.add("rb-done");
+      const keep = [...b.querySelectorAll(".bell-num, .bu-badge")];
+      const txt = [...b.childNodes].filter(n => !keep.includes(n)).map(n => n.textContent).join("").replace(/\s+/g, " ").trim();
+      const m = txt.match(/^(\S+)\s+(.+)$/);
+      if (!m) return;
+      b.classList.add(b.getAttribute("data-go") === "home" ? "rb-home" : "rb");
+      b.innerHTML = `<span class="rb-ic" aria-hidden="true">${m[1]}</span><span class="rb-l">${m[2]}</span>`;
+      keep.forEach(k => b.appendChild(k));
+      if (!b.getAttribute("aria-label")) b.setAttribute("aria-label", m[2]);
+    });
+  });
+}
 function updateBuddyBadges() {
   setupBuddyBadges();
   setupSignOutButtons();
+  tidyBars();
   const u = exists(me) && userById(me);
   const show = !!u && hasSpark(me) && !["start", "setup"].includes(screen) && $("loginScreen").hidden;   // (✨ no Spark badge for a parent)
   const badges = document.querySelectorAll(".bu-badge");
@@ -938,7 +958,13 @@ function drawHome() {
   $("homeDate").className = "home-date" + (isParentDevice() ? "" : " kid");
   // 🫧 v159: the date in the middle, in the puffy banner: "Thursday" (pink) · "5 November" (purple) · a soft pill
   $("homeDate").className += " puff-banner pb-home";
-  $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
+  $("homeSay").innerHTML = exists(me) && isParentDevice() ? sayBoxHtml(u) : "";   // 💬 v233 my own line for the family
+  $("scr-home").classList.toggle("p-home3", isParentDevice());
+  if (isParentDevice()) {   // 🌈 v233 (Broo2a's picture): a white date card with the ADROS badge · my character waving, big
+    $("homeDate").className = "home-date hd3";
+    $("homeDate").innerHTML = `<img class="hd-logo" src="icons/icon-192.png" alt=""><span class="hd-wd">${dz({ weekday: "long" })}</span><span class="hd-d">${dz({ day: "numeric", month: "long" })}</span>`;
+    if (charPic(u)) $("homeFace").innerHTML = `<img class="hello-char" src="${charPic(u, "wave")}" alt="">` + starBadge(me);
+  } else $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
     <span class="bub-pill">${PUFF_PILLS.home}</span>`;
   const myPoints = pointsByUser()[me], myFair = scoreText(scoreOf(me));
   $("homePoints").textContent = (stars().includes(me) ? `🌟 Shining Star of the Week · ⭐ Score ${myFair} · ${myPoints} points` : `⭐ Score ${myFair} · ${myPoints} points this week`)

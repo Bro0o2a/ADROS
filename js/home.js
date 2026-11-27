@@ -103,10 +103,10 @@ function drawKidHome(u) {
   // 🧒 v227 the hero: my character, happy · 👍 when today is all done · 😴 after my bedtime · no character yet → my emoji + "Choose your character"
   const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "jump" : "wave";   // (🎭 v233: all done = jump, else wave)
   $("homeBig").innerHTML = `<div class="k-hero">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
-      <div class="k-hero-text"><h2>${hi}</h2>${scoredUsers().some(x => x.id === u.id) ? `<p class="k-cheer">${safe(kidCheerShort(u.id))}</p>` : ""}<p>${!today.length ? "Nothing planned today. Enjoy!" : left ? `${left} ${left === 1 ? "thing" : "things"} left today. You can do it!` : "All done today. Amazing!"}</p>
+      <div class="k-hero-text"><h2>${hi}</h2>${sayBoxHtml(u)}${scoredUsers().some(x => x.id === u.id) ? `<p class="k-cheer">${safe(kidCheerShort(u.id))}</p>` : ""}<p>${!today.length ? "Nothing planned today. Enjoy!" : left ? `${left} ${left === 1 ? "thing" : "things"} left today. You can do it!` : "All done today. Amazing!"}</p>
       ${next ? `<button class="k-go" data-kidcal>▶ ${safe(next.name.length > 18 ? next.name.slice(0, 17) + "…" : next.name)}</button>` : `<button class="k-go" data-kidcal>📅 My day</button>`}</div>
       <svg class="k-plant" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 100V45" stroke="#5e8f5a" stroke-width="5" fill="none"/><path d="M60 70C35 70 22 52 20 34c22 0 36 14 40 36z" fill="#7fae6e"/><path d="M60 60C85 60 98 42 100 22c-22 0-36 14-40 38z" fill="#8fbb7c"/><path d="M60 50C48 36 46 20 54 6c10 10 12 26 6 44z" fill="#9ec68a"/><path d="M28 96h64l-8 40H36z" fill="#ead7bd"/><rect x="24" y="90" width="72" height="14" rx="7" fill="#f3e4cf"/></svg></div>
-    ${comingCardHtml(comingUp(u.id), false)}<div class="kt-grid">${tile("kt-study", `data-school="${safe(u.id)}"`, ico3d("study"), "Study", "My school", `${study} study points`)}
+    ${comingCardHtml(comingUp(u.id), false)}${familySaysHtml(u.id)}<div class="kt-grid">${tile("kt-study", `data-school="${safe(u.id)}"`, ico3d("study"), "Study", "My school", `${study} study points`)}
       ${tile("kt-cal", "data-kidcal", ico3d("calendar"), "Calendar", `${doneToday} of ${today.length}`, "done today")}
       ${tile("kt-habits", `data-kidpanel="habits"`, ico3d("goal"), "Good habits", hb.all ? `${hb.done} of ${hb.all}` : "–", "today")}
       ${tile("kt-score kt-beat", `data-sdpop="${safe(u.id)}"`, scoreRingHtml(scoreOf(u.id).overall, colorsOf(u).color, lastWeekScore(u.id)), "Score this week", `${scoreOf(u.id).overall} ${ringTrendHtml(u.id)}`, `of ${scoreOf(u.id).max} · tap for the day`)}</div>
@@ -254,14 +254,50 @@ const kidCardTags = id => (stars().includes(id) ? ` <span class="kc-tag kc-star"
   (leaders().includes(id) ? ` <span class="kc-tag kc-lead">🔥 Leading</span>` : "");
 // ONE CARD PER KID: the score ring, name + today's mood, today's line, 🎒 School · 📅 Calendar · 📊 Report. The card itself → the Kid page
 function kidCardHtml(k) {
-  const c = colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null;
-  return `<div class="card kid-card" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-    <div class="kc-top"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="${safe(k.name)}'s score: see it through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button>
-    <button class="kc-open" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">
-      <span class="kc-text"><b>${faceHtml(k)} ${safe(k.name)}${e && moodFace(e.mood) ? ` <span class="kc-mood" title="Today's mood">${moodFace(e.mood)}</span>` : ""}${kidCardTags(k.id)}</b>
-        <small>${safe(kidTodayLine(k.id))}</small><small class="kc-cheer">${safe(kidCheerShort(k.id))}</small></span>${charPic(k) ? `<img class="kc-char" src="${charPic(k, "happy")}" alt="">` : ""}<span class="kc-go" aria-hidden="true">›</span></button></div>
+  const c = colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);
+  const [main, rest] = line.split(" · "), allDone = /^All finished/.test(line);
+  const pic = charPic(k, allDone ? "proud" : "point");
+  return `<div class="card kid-card kc3" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
+    <div class="kc-head"><button class="kc-name" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">${faceHtml(k)}<b>${safe(k.name)}</b>${e && moodFace(e.mood) ? `<span class="kc-mood" title="Today's mood">${moodFace(e.mood)}</span>` : ""}${kidCardTags(k.id)}</button>
+      <button class="kc-pts" data-sdpop="${safe(k.id)}" aria-label="${safe(k.name)}'s score this week: ${sc.overall}"><b>${sc.overall}</b><small>score</small></button></div>
+    <div class="kc-mid">${pic ? `<img class="kc-big" src="${pic}" alt="">` : `<span class="kc-big kc-bigface">${faceHtml(k)}</span>`}
+      <div class="kc-bub"><button class="kc-bubtxt" data-kidpage="${safe(k.id)}"><b>${safe(main)}</b><small>${safe(rest ? `Next: ${rest.replace(/^next /, "")}` : kidCheerShort(k.id))}</small></button>${sayLineHtml(k)}</div></div>
     <div class="kc-btns"><button data-school="${safe(k.id)}">School</button><button data-viewcal="${safe(k.id)}">Calendar</button><button data-kidreport="${safe(k.id)}">Report</button></div></div>`;
 }
+// ---------- 💬 v233 SPEECH LINES (Broo2a): everyone writes a short line next to their name; the family sees it on the home screen.
+// You change your own · a parent can delete a kid's line (not nice). Stored as u.say {t, at, by}; the newer one wins when phones meet. ----------
+let sayEditing = null;   // whose line is being typed now (a person id)
+const sayOf = id => { const u = userById(id); return u && u.say && u.say.t ? u.say.t : ""; };
+const canClearSay = id => id === me || (isParentId(me) && isParentDevice());
+function setSay(id, text) {
+  const u = userById(id); if (!u) return;
+  u.say = { t: String(text || "").replace(/\s+/g, " ").trim().slice(0, SAY_MAX), at: new Date().toISOString(), by: me || "" };
+  keepNow();
+}
+// a kid's line on a card (look only; a parent gets ✕ to delete it)
+const sayLineHtml = u => sayOf(u.id) ? `<span class="say-line">“${safe(sayOf(u.id))}”${canClearSay(u.id) ? `<button class="say-x" data-sayclear="${safe(u.id)}" aria-label="Delete ${safe(u.name)}'s line" title="Delete">✕</button>` : ""}</span>` : "";
+// MY line, in the hello: a dashed box with ✏️ (tap → type it)
+function sayBoxHtml(u) {
+  if (sayEditing === u.id) return `<div class="say-box editing"><input id="sayInput" maxlength="${SAY_MAX}" value="${safe(sayOf(u.id))}" placeholder="Say something to your family…" aria-label="Your line">
+    <button class="say-ok" data-saysave="${safe(u.id)}" aria-label="Save">✓</button>${sayOf(u.id) ? `<button class="say-x" data-sayclear="${safe(u.id)}" aria-label="Delete my line">✕</button>` : ""}</div>`;
+  const t = sayOf(u.id);
+  return `<button class="say-box ${t ? "" : "empty"}" data-sayedit="${safe(u.id)}"><span>${t ? safe(t) : "Say something to your family…"}</span><i aria-hidden="true">✏️</i></button>`;
+}
+// 🧒 a kid's home: what everyone else in the family says
+function familySaysHtml(meId) {
+  const list = data.users.filter(u => u.id !== meId && sayOf(u.id));
+  if (!list.length) return "";
+  return `<div class="card fam-says"><h3>💬 What my family says</h3>${list.map(u => `<div class="fs-row" style="--c:${colorsOf(u).color};--soft:${colorsOf(u).soft}">
+      ${charPic(u) ? `<img class="fs-pic" src="${charPic(u, "wave")}" alt="">` : `<span class="fs-pic">${faceHtml(u)}</span>`}<div class="fs-bub"><b>${safe(u.name)}</b>${sayLineHtml(u)}</div></div>`).join("")}</div>`;
+}
+document.addEventListener("click", e => {
+  const ed = e.target.closest && e.target.closest("[data-sayedit]"), sv = e.target.closest && e.target.closest("[data-saysave]"), cl = e.target.closest && e.target.closest("[data-sayclear]");
+  if (ed && ed.dataset.sayedit === me) { sayEditing = me; render(); const i = $("sayInput"); if (i) { i.focus(); i.select(); } return; }
+  if (sv && sv.dataset.saysave === me) { const i = $("sayInput"); sayEditing = null; setSay(me, i ? i.value : ""); toast("💬 Your family can see it now", 2000); return; }
+  if (cl && canClearSay(cl.dataset.sayclear)) { e.stopPropagation(); sayEditing = null; setSay(cl.dataset.sayclear, ""); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target && e.target.id === "sayInput") { e.preventDefault(); sayEditing = null; setSay(me, e.target.value); }
+  if (e.key === "Escape" && e.target && e.target.id === "sayInput") { sayEditing = null; render(); } });
 // v155: the parent's home ends with ONE clear list in 4 groups (no hidden menus): Plan the week · The kids · Family · Settings.
 //   Each row = a title + one short line + ›. No pictures (Broo2a: simpler and more professional).
 const hubAttr = t => t.attr ? t.attr : t.plan ? "data-plan" : t.extra ? `data-extra="${t.extra}"` : t.tour ? "data-tour"
