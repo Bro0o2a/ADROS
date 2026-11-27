@@ -1367,9 +1367,13 @@ function drawMine() {
   const chip = (id, face, label, c) => `<button class="chip ${calWho === id ? "on" : ""}" data-calwho="${safe(id)}" style="--soft:${c.soft};--ink:${c.ink}"
     ${calWho === id ? `aria-current="true"` : ""}><span class="e">${face}</span>${safe(label)}</button>`;
   // (👨‍👩‍👧 v182 Broo2a: 👨‍👩‍👧 Everyone first, then the family in order: father, mother, kids oldest first; "Me" sits in its own place)
-  $("minePeople").innerHTML = chip("all", "👨‍👩‍👧", "Everyone", { soft: "#fef3c7", ink: "var(--text)" })
-    + (parent ? familyOrder(data.users).map(x => chip(x.id, faceHtml(x), x.id === me ? "Me" : x.name, colorsOf(x))).join("")
-       : chip(me, "🙋", "Me", colorsOf(userById(me))));
+  // 🌈 v233 (Broo2a's picture): Everyone = the whole family's characters together in one circle · each person = their character
+  const fam = familyOrder(data.users), pics = fam.filter(x => charPic(x)).slice(0, 5);
+  const allFace = pics.length >= 2 ? `<span class="fam-collage n${pics.length}">${pics.map(x => `<img src="${charPic(x, "happy")}" alt="">`).join("")}</span>` : "👨‍👩‍👧";
+  const pFace = x => charPic(x) ? `<img class="cw-char" src="${charPic(x, "happy")}" alt="">` : faceHtml(x);
+  $("minePeople").innerHTML = chip("all", allFace, "Everyone", { soft: "#fde0e4", ink: "#9b2f3a" })
+    + (parent ? fam.map(x => chip(x.id, pFace(x), x.id === me ? "Me" : x.name, colorsOf(x))).join("")
+       : chip(me, charPic(userById(me)) ? pFace(userById(me)) : "🙋", "Me", colorsOf(userById(me))));
   $("mineTitle").textContent = all ? "Everyone's Week" : mine ? "My Week" : `${u.name}'s Week`;   // (🫧 the puffy banner: see puffTitles)
   $("mineSub").textContent = !mine && !parent && !all ? `Just looking 👀 Only ${u.name} or ${dadName()} can tick these.` : "";   // (v154: short)
   document.querySelector("#scr-mine .bar .cal-btn").classList.toggle("here", calWho === (parent ? "all" : me));

@@ -2099,6 +2099,8 @@ function wsDayDraftOf(kid) {
   return { per: false, n, list };
 }
 const wsDaySum = d => Object.values(d.list).reduce((a, b) => a + b, 0);
+let ssAddOpen = false;   // ➕ Add a subject: the list is open
+document.addEventListener("click", e => { if (!e.target.closest || !e.target.closest("[data-ssaddopen]")) return; ssAddOpen = !ssAddOpen; redrawSchoolSet(); });
 function schSetHtml() {
   const edit = isParentDevice(), kids = edit ? kidsList() : kidsList().filter(k => k.id === me);
   if (!kids.length) return `<p class="hint">Add a kid first in 👨‍👩‍👧 Family members.</p>`;
@@ -2127,18 +2129,18 @@ function schSetHtml() {
   const COMMON = ["Math", "English", "Science", "Arabic", "Islamic", "French", "Social Studies", "Humanities", "Computing", "Spelling", "Reading", "History", "Geography"];
   const have = n => all.some(f => sameSubject(f.name, n)) || d.add.some(x => sameSubject(x, n));
   const studyHtml = edit
-    ? `<div class="chips ss-subs">${all.map(f => `<button type="button" class="chip ${d.show[f.id] ? "on" : ""}" data-sssub="${safe(f.id)}" aria-pressed="${!!d.show[f.id]}">${d.show[f.id] ? "✅" : "⬜"} ${safe(f.emoji)} ${safe(f.name)}</button>`).join("")}${
-        d.add.map((n, i) => `<button type="button" class="chip on" data-ssunadd="${i}" aria-pressed="true">✅ 🆕 ${safe(n)}</button>`).join("")}</div>
+    ? `<div class="ss-subs3">${all.map(f => `<button type="button" class="ss-sub3 ${d.show[f.id] ? "on" : ""}" data-sssub="${safe(f.id)}" aria-pressed="${!!d.show[f.id]}"><span class="ss-tick" aria-hidden="true">${d.show[f.id] ? "✓" : ""}</span>${ico3d(subjectIcon3d(f.name), "ss-si")}<b>${safe(f.name)}</b></button>`).join("")}${
+        d.add.map((n, i) => `<button type="button" class="ss-sub3 on" data-ssunadd="${i}" aria-pressed="true"><span class="ss-tick" aria-hidden="true">✓</span>${ico3d(subjectIcon3d(n), "ss-si")}<b>${safe(n)}</b></button>`).join("")}</div>
        <p class="hint">${onN} ${onN === 1 ? "subject" : "subjects"} on. Tap one to turn it on or off (its work is kept).</p>
-       <label class="small" for="ssNewSub">➕ Add a subject</label>
-       <div class="chips ss-common">${COMMON.filter(n => !have(n)).map(n => `<button type="button" class="chip" data-ssnew="${safe(n)}">➕ ${safe(n)}</button>`).join("")}</div>
-       <div class="ss-addrow"><input type="text" id="ssNewSub" maxlength="30" placeholder="Or type one: Music, Drama…"><button type="button" class="pill" data-ssaddtyped>➕ Add</button></div>`
+       <button type="button" class="ss-addbtn" data-ssaddopen aria-expanded="${ssAddOpen}">＋ Add a subject</button>
+       <div class="ss-addbox" ${ssAddOpen ? "" : "hidden"}><div class="chips ss-common">${COMMON.filter(n => !have(n)).map(n => `<button type="button" class="chip" data-ssnew="${safe(n)}">➕ ${safe(n)}</button>`).join("")}</div>
+       <div class="ss-addrow"><input type="text" id="ssNewSub" maxlength="30" placeholder="Or type one: Music, Drama…"><button type="button" class="pill" data-ssaddtyped>➕ Add</button></div></div>`
     : `<ul class="me-list">${all.filter(f => !f.hidden).map(f => `<li><span>${safe(f.emoji)} ${safe(f.name)}</span></li>`).join("") || `<li>None yet</li>`}</ul>`;
   return `<div class="ss-box">${chips}${edit ? "" : `<p class="me-lock">🔒 Only Mum or Dad can change these.</p>`}
-    <section class="ss-sec"><h3>🎒 About school</h3>${school}</section>
-    <section class="ss-sec"><h3>📚 Subjects to study</h3>${studyHtml}</section>
-    <section class="ss-sec"><h3>📝 Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
-    <section class="ss-sec"><h3>📊 Compare my topics with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
+    <section class="ss-sec"><h3>${ico3d("school", "ss-hi")}About school</h3>${school}</section>
+    <section class="ss-sec"><h3>${ico3d("study", "ss-hi")}Subjects to study</h3>${studyHtml}</section>
+    <section class="ss-sec"><h3>${ico3d("homework", "ss-hi")}Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
+    <section class="ss-sec"><h3>${ico3d("research", "ss-hi")}Compare with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
     ${edit ? `<div class="btnrow"><button type="button" class="primary" data-sssave>💾 Save</button></div>` : ""}</div>`;
 }
 function openSchoolSet(kid) {

@@ -4096,3 +4096,48 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
   font: 700 14px/1.3 Nunito, sans-serif !important; color: #7a6656 !important; }
 .puff-banner:not(.pb-home) br { display: none; }
 @media (max-width: 380px) { .puff-banner:not(.pb-home) .bub, .puff-banner:not(.pb-home) .bub-pink, .puff-banner:not(.pb-home) .bub-lilac, #scr-mine #mineTitle.puff-banner .bub { font-size: 26px !important; } }
+
+/* 🏫 v233 SCHOOL SETTINGS (Broo2a's picture): big kid tabs, white cards with 3D icons, cream rounded fields, subjects 2 per row */
+.ss-popcard { background: #f6ece2 !important; }
+.ss-kids { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.ss-kids .chip { justify-content: center; min-height: 50px; border-radius: 999px !important; background: #fffdf9 !important; border: 3px solid transparent !important; font: 800 18px/1 Fredoka, Nunito, sans-serif; color: #6b5a4a !important; box-shadow: 0 4px 0 #eadbc8 !important; }
+.ss-kids .chip.on { background: #dcefd8 !important; border-color: #78c070 !important; color: #2c5a2a !important; }
+.ss-sec { background: #fffdf9; border-radius: 26px; padding: 16px; margin-bottom: 12px; box-shadow: 0 5px 0 #eadbc8, 0 8px 16px rgba(120, 90, 60, .08); }
+.ss-sec h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font: 800 20px/1.2 Fredoka, Nunito, sans-serif; color: #3b2a1e; }
+.ss-hi { width: 32px !important; height: 32px !important; flex: none; }
+.ss-sec input[type=text], .ss-sec select { background: #fbf1e6 !important; border: 2px solid #efdcc6 !important; border-radius: 22px !important; min-height: 52px; padding: 10px 16px !important; font: 700 16px Nunito, sans-serif; color: #3b2a1e; }
+.ss-sec label.small { font-weight: 800; color: #7a6656; }
+.ss-subs3 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ss-sub3 { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 6px 12px; border-radius: 22px; border: 2px solid #efdcc6; background: #fbf1e6; text-align: left; cursor: pointer; box-shadow: none; color: #3b2a1e; min-width: 0; }
+.ss-sub3 b { font: 800 16px/1.15 Nunito, sans-serif; overflow-wrap: anywhere; }
+.ss-tick { flex: none; width: 30px; height: 30px; border-radius: 10px; border: 3px solid #b9b0a6; background: #fff; display: grid; place-items: center; font-weight: 900; color: #2e7a35; }
+.ss-sub3.on .ss-tick { border-color: #78c070; background: #e6f4e3; }
+.ss-sub3:not(.on) { opacity: .7; }
+.ss-si { width: 28px !important; height: 28px !important; flex: none; }
+.ss-addbtn { width: 100%; min-height: 54px; margin-top: 10px; border: 3px dashed #e6cfb4; border-radius: 999px; background: rgba(255, 253, 249, .6); font: 800 18px/1 Fredoka, Nunito, sans-serif; color: #6b5a4a; cursor: pointer; box-shadow: none; }
+.ss-addbox { margin-top: 10px; }
+@media (max-width: 380px) { .ss-sub3 b { font-size: 14.5px; } .ss-sub3 { gap: 6px; padding: 6px 8px; } }
+.ss-popcard { padding-left: 12px !important; padding-right: 12px !important; }
+.ss-sec { padding: 14px 12px; }
+.ss-subs3 { gap: 8px; }
+.ss-sub3 { gap: 6px; padding: 6px 8px; }
+.ss-sub3 b { overflow-wrap: normal; word-break: normal; font-size: 15px; }
+.ss-tick { width: 26px; height: 26px; border-radius: 9px; }
+.ss-si { width: 24px !important; height: 24px !important; }
+
+/* 🌈 v233 calendar people (Broo2a's picture): big round faces, the family together in "Everyone", soft yellow ➕ Activities */
+#minePeople .chip .e { width: 64px !important; height: 64px !important; background: #fff !important; border: 0 !important; box-shadow: 0 0 0 4px #efe2d2, 0 5px 0 4px #e3d2bf !important; overflow: hidden; }
+#minePeople .chip.on .e { background: #fde0e4 !important; box-shadow: 0 0 0 4px #ef8f8f, 0 5px 0 4px #e3b5b0 !important; }
+#minePeople .chip b, #minePeople .chip { font: 800 14px/1.1 Fredoka, Nunito, sans-serif; color: #4a3a2e; }
+#minePeople .chip.on { color: #9b2f3a !important; }
+#minePeople .chip { min-width: 74px !important; gap: 6px !important; }
+#minePeople .cw-char { width: 100%; height: 100%; object-fit: contain; transform: translateY(4px) scale(1.1); border-radius: 0 !important; }
+.fam-collage { position: relative; width: 100%; height: 100%; display: block; }
+.fam-collage img { position: absolute; width: 50%; height: 50%; object-fit: contain; border-radius: 0 !important; }
+.fam-collage img:nth-child(1) { left: 2%; top: 4%; } .fam-collage img:nth-child(2) { right: 2%; top: 4%; }
+.fam-collage img:nth-child(3) { left: -4%; bottom: 2%; } .fam-collage img:nth-child(4) { left: 25%; bottom: -2%; width: 52%; height: 52%; } .fam-collage img:nth-child(5) { right: -4%; bottom: 2%; }
+.fam-collage.n2 img { top: 25% !important; } .fam-collage.n3 img:nth-child(3) { left: 25%; }
+#mineActions .cal-big, .mine-top #mineActions .cal-big { background: #fdf1cf !important; color: #7a5a12 !important; border: 0 !important; border-radius: 999px !important; box-shadow: 0 4px 0 #ecdcae !important; font: 800 15px/1 Fredoka, Nunito, sans-serif !important; }
+@media (max-width: 420px) { #minePeople .chip .e { width: 52px !important; height: 52px !important; } #minePeople .chip { min-width: 60px !important; } }
+#minePeople .chip .e .fam-collage img { position: absolute !important; width: 54% !important; height: 54% !important; object-fit: contain !important; border-radius: 0 !important; }
+#minePeople .chip .e .fam-collage img:nth-child(4) { width: 56% !important; height: 56% !important; }
