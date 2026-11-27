@@ -4382,3 +4382,26 @@ button.fam3-row { display: flex; align-items: center; gap: 12px; width: 100%; mi
 .fam3-more { padding: 0 14px 14px; }
 button.fam3-addbtn { width: 100%; min-height: 58px; margin-top: 12px; border: 3px dashed #e3d6c6; border-radius: 26px; background: rgba(255,255,255,.5); color: #7a6656; font: 800 17px Nunito, sans-serif; box-shadow: none; }
 .fam3-add { margin-top: 12px; }
+
+/* 🎨 v233 Settings (Broo2a's picture): a short menu; every card folds into one row with a 3D icon, a tap opens it */
+#scr-settings > h1.page-title, #scr-settings > .puff-banner, #scr-settings .buddy-row { display: none !important; }
+.set3-top h2 { margin: 6px 2px 0; font: 900 30px/1.1 Nunito, sans-serif; color: #3b2a1e; } .set3-top small { display: block; margin: 2px 2px 10px; font: 700 15px Nunito, sans-serif; color: #8a7666; }
+.set3-buddy { display: flex; align-items: center; gap: 12px; background: #dbe9fb; border-radius: 26px; padding: 12px 14px; margin-bottom: 8px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.set3-buddy img { width: 80px; height: 80px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.set3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 12px 14px; font: 800 15px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.set3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.set3-group { margin: 16px 4px 8px; font: 900 15px Nunito, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7666; }
+#scr-settings .card.set3 { margin: 0 0 10px !important; padding: 0; border-radius: 24px; background: #fff; border: 0; box-shadow: 0 4px 0 rgba(0,0,0,.06); overflow: hidden; }
+#scr-settings .card.set3 > h2 { display: none; }
+#scr-settings .card.set3:not(.open) > :not(.set3-row) { display: none !important; }
+#scr-settings .card.set3.open { padding: 0 14px 14px; } #scr-settings .card.set3.open > .set3-row { margin: 0 -14px 6px; width: calc(100% + 28px); }
+button.set3-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 0; padding: 12px 14px; border: 0; background: none; box-shadow: none; text-align: left; color: inherit; }
+.set3-ic { width: 50px; height: 50px; flex: none; border-radius: 16px; background: #f6efe4; display: grid; place-items: center; } .set3-ic .i3d { width: 34px; height: 34px; }
+.set3-t { flex: 1; min-width: 0; } .set3-t b { display: block; font: 900 17px Nunito, sans-serif; color: #3b2a1e; } .set3-t small { font: 600 13px Nunito, sans-serif; color: #7a6656; }
+.set3-go { font: 900 22px Nunito, sans-serif; color: #b9a896; transition: transform .2s; } .set3.open .set3-go { transform: rotate(90deg); }
+.set3-app { background: #fff; border-radius: 24px; box-shadow: 0 4px 0 rgba(0,0,0,.06); overflow: hidden; margin-top: 6px; }
+.set3-app .set3-row + .set3-row { border-top: 2px solid #f3ebe2; }
+button.set3-out { width: 100%; min-height: 56px; margin-top: 14px; border: 0; border-radius: 26px; background: #fbdcdc; color: #9a2a22; font: 900 18px Nunito, sans-serif; box-shadow: 0 4px 0 #ebbcbc; }
+.set3-foot { text-align: center; font: 700 13px Nunito, sans-serif; color: #b9a896; margin: 12px 0 4px; }
+#scr-settings .two-col { gap: 0; }
+.set3-row .bell-num { position: static; margin-left: auto; }

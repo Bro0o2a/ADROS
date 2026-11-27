@@ -25,7 +25,45 @@ function drawSettings() {
   $("signOutBtn").hidden = !cloud.user;
   $("delAcctBtn").hidden = !cloud.user || !cloud.user.email || isKidDevice();   // (🗑️ parents with an email login only)
   $("setNotify").innerHTML = notifyHtml();
+  settingsMenu();
 }
+// 🎨 v233 (Broo2a's picture): Settings = a short menu. Each card folds into one row (3D icon, title, short line, ›); a tap opens it.
+// Groups "PLAN" · "FAMILY AND APP", a buddy bubble on top, and News · Help · Privacy · a big Sign out at the end. (The cards are the same.)
+const SET_ROWS = [["featCard", "idea", "Features", "Pick what the app shows"], ["bed-set", "time", "Calendar setup", "Week, weekend, bedtimes, school hours"],
+  ["dayHours", "milestone", "My day", "When each day starts and ends"], ["maxTogether", "study", "Planning", "How many things at once"],
+  ["starCard", "achieve", "Shining Star and extras", "Day, time, extra worksheets"], ["prMine", "pin", "Prayer times", "City and times"],
+  ["kidHabitsCard", "goal", "Kids' habits", "The daily checklist"], ["userList", "heart", "People", "Names, emoji, colours"],
+  ["exportBtn", "briefcase", "Backup", "Save or bring back a copy"], ["acctInfo", "consistency", "Family account", "Sign-in and account"],
+  ["setNotify", "paper", "Notifications", "On this device"]];
+const setOpen = new Set();
+function settingsMenu() {
+  const scr = $("scr-settings");
+  const cardOf = key => { const el = $(key) || scr.querySelector("." + key); return el && (el.classList.contains("card") ? el : el.closest(".card")); };
+  SET_ROWS.forEach(([key, ic, title, sub]) => {
+    const card = cardOf(key);
+    if (!card) return;
+    card.classList.add("set3"); card.dataset.setkey = key; card.classList.toggle("open", setOpen.has(key));
+    if (card.querySelector(":scope > .set3-row")) return;
+    card.insertAdjacentHTML("afterbegin", `<button type="button" class="set3-row" data-setrow="${key}"><span class="set3-ic">${ico3d(ic)}</span><span class="set3-t"><b>${title}</b><small>${sub}</small></span><span class="set3-go" aria-hidden="true">›</span></button>`);
+  });
+  const hab = $("kidHabitsCard"), col1 = scr.querySelector(".two-col > div");
+  if (hab && col1 && hab.parentNode !== col1) col1.appendChild(hab);
+  if (!scr.querySelector(".set3-top")) {
+    scr.querySelector("h1.page-title").insertAdjacentHTML("afterend", `<div class="set3-top"><h2>Settings</h2><small>plan, backup, privacy, help, sign out</small></div><div class="set3-buddy" id="set3Buddy"></div>`);
+    const f = $("featCard"); if (f) f.insertAdjacentHTML("beforebegin", `<p class="set3-group">Plan</p>`);
+    const c2 = scr.querySelectorAll(".two-col > div")[1]; if (c2) c2.insertAdjacentHTML("afterbegin", `<p class="set3-group">Family and app</p>`);
+    scr.querySelector(".savebar").insertAdjacentHTML("beforebegin", `<div class="set3-app">
+      <button type="button" class="set3-row set3-link" data-bell><span class="set3-ic">${ico3d("paper")}</span><span class="set3-t"><b>News and updates</b><small>What is new in ADROS</small></span><span class="bell-num" hidden></span><span class="set3-go">›</span></button>
+      <button type="button" class="set3-row set3-link" data-askus><span class="set3-ic">${ico3d("idea")}</span><span class="set3-t"><b>Help</b><small>Ask us anything</small></span><span class="set3-go">›</span></button>
+      <button type="button" class="set3-row set3-link" data-privacy><span class="set3-ic">${ico3d("consistency")}</span><span class="set3-t"><b>Privacy</b><small>Your data stays in the family</small></span><span class="set3-go">›</span></button></div>
+      <button type="button" class="set3-out" data-signout>Sign out</button><p class="set3-foot">ADROS · made with love for families</p>`);
+  }
+  const u = userById(me), pic = charPic(u, "wave");
+  $("set3Buddy").innerHTML = `${pic ? `<img src="${pic}" alt="">` : ""}<p>Everything about your family's plan lives here, ${safe(u ? u.name : "")}.</p>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-setrow]"); if (!b) return;
+  const k = b.dataset.setrow; if (setOpen.has(k)) setOpen.delete(k); else setOpen.add(k);
+  const card = b.closest(".set3"); if (card) card.classList.toggle("open", setOpen.has(k)); });
 
 // ---------- My day ----------
 // Puts the saved "My day" hours into the boxes: "Day starts at" / "Day ends at" for each day, Monday … Sunday.
