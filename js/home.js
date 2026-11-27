@@ -268,8 +268,21 @@ function kidCheerShort(id) {
 const kidCardTags = id => (stars().includes(id) ? ` <span class="kc-tag kc-star">🌟 Star</span>` : "") +
   (leaders().includes(id) ? ` <span class="kc-tag kc-lead">🔥 Leading</span>` : "");
 // ONE CARD PER KID: the score ring, name + today's mood, today's line, 🎒 School · 📅 Calendar · 📊 Report. The card itself → the Kid page
+// 🎨 v237 (Broo2a): two kids whose colours look alike (yellow + orange, pink + red …) get clearly different cards on the parent home:
+// a kid keeps their own colour unless it is close to a card above; then the first ADROS colour that isn't close to any of them.
+const CARD_ORDER = ["blue", "pink", "yellow", "green", "purple", "teal", "orange", "red"];
+function kidCardColors() {
+  const hue = h => { const [r, g, b] = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255), mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+    if (!d) return 0; const x = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (x * 60 + 360) % 360; };
+  const near = (a, b) => { const d = Math.abs(hue(a) - hue(b)); return Math.min(d, 360 - d) < 30; };   // (by the strong colour's hue)
+  const used = [], out = {};
+  kidsList().forEach(k => { const own = colorsOf(k);
+    const c = !used.some(u => near(u.color, own.color)) ? own : (CARD_ORDER.map(n => PALETTE[n]).find(p => !used.some(u => near(u.color, p.color))) || own);
+    used.push(c); out[k.id] = c; });
+  return out;
+}
 function kidCardHtml(k) {
-  const c = colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);
+  const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);
   const [main, rest] = line.split(" · "), allDone = /^All finished/.test(line);
   const pic = charPic(k, allDone ? "proud" : "point");
   return `<div class="card kid-card kc3" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
