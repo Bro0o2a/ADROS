@@ -563,16 +563,22 @@ function learnAdvice(kid, subject) {
   if (!last.length) return { text: `No checked worksheets yet. The level also moves by itself after each check.`, to: 0 };
   const avg = avgPct(last), why = last[0].check.level_reason ? ` 🤖 ${last[0].check.level_reason}` : "";
   const now = `${who} is on level ${lv}/10 (${BAND_NAME[levelBand(lv)]}). The last ${last.length === 1 ? "worksheet" : last.length + " worksheets"}: ${avg}%.`;
-  if (avg >= 85 && lv < 10) return { text: `${now} 💡 Doing great: ready for harder work. Try level ${lv + 1}.${why}`, to: lv + 1 };
-  if (avg < 50 && lv > 1) return { text: `${now} 💡 This looks too hard right now. Try level ${lv - 1} for a while.${why}`, to: lv - 1 };
-  return { text: `${now} 👍 This level looks right.${why}`, to: 0 };
+  const head = `Last ${last.length === 1 ? "worksheet" : last.length + " worksheets"}: ${avg}%`, aiWhy = last[0].check.level_reason || "";   // (🎨 v236 the tidy card shows them apart)
+  if (avg >= 85 && lv < 10) return { text: `${now} 💡 Doing great: ready for harder work. Try level ${lv + 1}.${why}`, to: lv + 1, head, tip: `Doing great! Ready for harder work: try level ${lv + 1}.`, why: aiWhy, mood: "proud" };
+  if (avg < 50 && lv > 1) return { text: `${now} 💡 This looks too hard right now. Try level ${lv - 1} for a while.${why}`, to: lv - 1, head, tip: `This looks too hard right now. Try level ${lv - 1} for a while.`, why: aiWhy, mood: "think" };
+  return { text: `${now} 👍 This level looks right.${why}`, to: 0, head, tip: "This level looks right. Keep going!", why: aiWhy, mood: "thumbs" };
 }
 const wsLevelHtml = (kid, subject) => { if (!isParentDevice() || !learnRead(kid, subject)) return "";
+  // 🎨 v236 (Broo2a: "more organized", like the Marked homework page): a ring with the level · the slider · the buddy's tip · one button
   const lv = levelNow(learnRead(kid, subject)), ad = learnAdvice(kid, subject), id = `${safe(kid)}|${safe(encodeURIComponent(subject))}`;
-  return `<div class="ws-lv"><div class="ws-lv-top"><b>🎚️ Worksheet level</b><span class="ws-lv-n"><b data-wslvn="${id}">${lv}</b>/10 <small data-wslvb="${id}">${BAND_NAME[levelBand(lv)]}</small></span></div>
+  const u = userById(kid), pic = u && charPic(u, ad.mood || "point");
+  return `<div class="ws-lv lv3"><div class="lv3-top"><div class="ws-ring lv3-ring" style="--p:${lv * 10};--rc:#5b9be0" data-wslvr="${id}"><b><span data-wslvn="${id}">${lv}</span><small>/10</small></b></div>
+      <div class="lv3-t"><b>Worksheet level</b><small><span data-wslvb="${id}">${BAND_NAME[levelBand(lv)]}</span> · 5 = school year</small></div></div>
     <input type="range" min="1" max="10" step="1" value="${lv}" data-wslv="${id}" aria-label="Worksheet level, 1 to 10">
-    <div class="ws-lv-ends"><span>◀ Easier</span><span>5 = school year</span><span>Harder ▶</span></div>
-    <p class="hint ws-lv-now">${safe(ad.text)}</p>${ad.to ? `<div class="btnrow"><button type="button" class="pill" data-wslvto="${id}|${ad.to}">Move to level ${ad.to}</button></div>` : ""}</div>`; };
+    <div class="ws-lv-ends"><span>Easier</span><span>Harder</span></div>
+    <div class="lv3-tip">${pic ? `<img src="${pic}" alt="">` : ""}<p>${ad.head ? `<b>${safe(ad.head)}</b>` : ""}<span>${safe(ad.tip || ad.text)}</span></p></div>
+    ${ad.why ? `<details class="lv3-why"><summary>Why? (the AI's note)</summary><p>${safe(ad.why)}</p></details>` : ""}
+    ${ad.to ? `<button type="button" class="lv3-go" data-wslvto="${id}|${ad.to}">Move to level ${ad.to}</button>` : ""}</div>`; };
 const wsPickHtml = wsLevelHtml;
 function setWsLevel(kid, subject, v) {
   const L = learnFor(kid, subject), lv = Math.max(1, Math.min(10, Math.round(Number(v)) || 5));
@@ -589,6 +595,7 @@ document.addEventListener("input", e => {
   const id = e.target.dataset.wslv, v = Number(e.target.value);
   document.querySelectorAll(`[data-wslvn="${CSS.escape(id)}"]`).forEach(x => x.textContent = v);
   document.querySelectorAll(`[data-wslvb="${CSS.escape(id)}"]`).forEach(x => x.textContent = BAND_NAME[levelBand(v)]);
+  document.querySelectorAll(`[data-wslvr="${CSS.escape(id)}"]`).forEach(x => x.style.setProperty("--p", v * 10));
 });
 document.addEventListener("change", e => {
   if (!e.target.matches || !e.target.matches("[data-wslv]")) return;
@@ -961,7 +968,7 @@ const setTranslate = (kid, on) => { try { localStorage.setItem(TR_KEY + kid, on 
 const langBody = (kid, subject) => isArabicSubject(subject) ? { lang: "ar" } : translateOn(kid) ? { translate: true } : {};
 // The toggle (not for an Arabic / Islamic subject: those are all in Arabic)
 const translateToggleHtml = (kid, subject) => isArabicSubject(subject) ? "" :
-  `<label class="checkline tr-toggle"><input type="checkbox" data-translate="${safe(kid)}" ${translateOn(kid) ? "checked" : ""}> 🌐 Arabic translation of questions</label>`;
+  `<label class="checkline tr-toggle"><input type="checkbox" data-translate="${safe(kid)}" ${translateOn(kid) ? "checked" : ""}> <span>🌐 Arabic translation of questions</span></label>`;
 document.addEventListener("change", e => {
   if (!e.target.matches || !e.target.matches("[data-translate]")) return;
   setTranslate(e.target.dataset.translate, e.target.checked);

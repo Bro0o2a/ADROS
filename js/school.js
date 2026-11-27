@@ -850,7 +850,8 @@ function schoolSubjectHtml(s, isDad, u) {
   }
   const t = secs.find(x => x.id === stSec);
   html += `<div class="ks-top" style="--ink:${c.ink}"><button class="pill" data-stsec="">⬅️ All about ${safe(f.name)}</button><h1 class="ks-title">${t.label}</h1></div>`;
-  if (stSec === "ws") return html + wsPickHtml(schoolKid, f.name) + wsWordsHtml(schoolKid, f.name) + translateToggleHtml(schoolKid, f.name) + wsGroupedHtml(s, all);
+  if (stSec === "ws") { const opts = wsWordsHtml(schoolKid, f.name) + translateToggleHtml(schoolKid, f.name);   // (🎨 v236 the options in one tidy card)
+    return html + wsPickHtml(schoolKid, f.name) + (opts ? `<div class="ws-opts3"><h3>Worksheet options</h3>${opts}</div>` : "") + wsGroupedHtml(s, all); }
   if (stSec === "topics") return html + topicsCardHtml(s, f, parent) + (parent ? "" : learnKidLine(schoolKid, f));
   if (stSec === "goal") return html + goalCardHtml(schoolKid, f);
   if (stSec === "study") return html + `<div class="card bd-card">${studyTableHtml(schoolKid, f.name)}</div>`;
@@ -933,7 +934,8 @@ function wsNiceNode(s, w, k) {
     : [h("button", { data: { wsrow: "answers|" + w.id } }, answersOpen(w) ? "🔑 Answers" : "🔒 Answers")];
   return h("li", { class: "wsg-row" },
     h("button", { class: "wsg-main", data: { aiopen: "worksheet|" + w.id } }, h("span", { class: "e" }, emoji),
-      h("span", { class: "what" }, h("b", null, w.title), h("small", null, [shortDate(w.date), label, wsTopicsLine(w, s), madeByParent(w)].filter(Boolean).join(" · "))), badge),
+      h("span", { class: "what" }, h("b", null, w.title), h("small", null, [shortDate(w.date), label, madeByParent(w)].filter(Boolean).join(" · ")),
+        wsTopicsLine(w, s) ? h("small", { class: "tp" }, wsTopicsLine(w, s)) : null), badge),   // (🎨 v236 the topics on their own short line)
     h("div", { class: "wsg-btns" }, ...act));
 }
 document.addEventListener("click", e => {

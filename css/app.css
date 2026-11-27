@@ -4566,3 +4566,47 @@ button.sp3-yay img { width: 30px; height: 30px; }
 .lu3-bar i.on { background: #f2c14e; }
 .lu3-msg { color: #5b4a3a; font-weight: 600; margin: 0 0 14px; position: relative; }
 .lu3-ok { width: 100% !important; box-sizing: border-box; margin: 0 !important; display: block; border-radius: 999px !important; background: #8fcf8a !important; color: #14532d !important; font: 900 18px Nunito, sans-serif; padding: 14px !important; position: relative; }
+
+/* 🎨 v236 (Broo2a: "more organized", like Marked homework) worksheets page: level ring card · options card · flat list rows */
+#scr-school .ws-lv.lv3 { background: #fff; border: 0; border-radius: 26px; padding: 16px; box-shadow: 0 4px 0 rgba(0,0,0,.06); margin: 10px 0 14px; }
+.lv3-top { display: flex; align-items: center; gap: 14px; }
+.lv3-ring { width: 72px; height: 72px; }
+.lv3-ring b { width: 56px; height: 56px; font: 900 22px Nunito, sans-serif; color: #2d5d9a; display: flex !important; align-items: baseline; justify-content: center; padding-top: 14px; box-sizing: border-box; }
+.lv3-ring b small { font-size: 12px; color: #7a8aa0; font-weight: 800; }
+.lv3-t b { display: block; font: 900 19px Nunito, sans-serif; color: #3b2a1e; }
+.lv3-t small { display: block; font: 600 14px Nunito, sans-serif; color: #7a6656; }
+.lv3 input[type="range"] { accent-color: #5b9be0; margin-top: 12px !important; }
+.lv3 .ws-lv-ends { font-weight: 700; color: #8a7868; opacity: 1; }
+.lv3-tip { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.lv3-tip img { width: 56px; height: 56px; object-fit: contain; flex: none; }
+.lv3-tip p { margin: 0; flex: 1; background: #f6f1ea; border-radius: 18px 18px 18px 4px; padding: 10px 14px; }
+.lv3-tip b { display: block; font: 900 15px Nunito, sans-serif; color: #3b2a1e; }
+.lv3-tip span { display: block; font: 600 14px/1.35 Nunito, sans-serif; color: #5b4a3a; }
+.lv3-why { margin: 8px 0 0; font-size: 13px; color: #7a6656; }
+.lv3-why summary { cursor: pointer; font-weight: 800; color: #4a7fc0; list-style: none; }
+.lv3-why summary::-webkit-details-marker { display: none; }
+.lv3-why p { margin: 6px 0 0; line-height: 1.4; }
+.lv3-go { display: block; width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 999px; background: #dbeafe; color: #1e40af; font: 900 16px Nunito, sans-serif; cursor: pointer; }
+.ws-opts3 { background: #fff; border-radius: 22px; padding: 6px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); margin: 0 0 14px; }
+.ws-opts3 h3 { margin: 8px 0 2px; font: 900 15px Nunito, sans-serif; color: #8a7868; text-transform: uppercase; letter-spacing: .04em; }
+.ws-opts3 .ws-words, .ws-opts3 .tr-toggle { margin: 0; padding: 10px 0; border-top: 1px solid #f0e8dc; }
+.ws-opts3 > h3 + .ws-words, .ws-opts3 > h3 + .tr-toggle { border-top: 0; }
+.ws-opts3 .tr-toggle { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.ws-opts3 .tr-toggle input { width: 20px; height: 20px; accent-color: #5bb98c; }
+#scr-school .wsg { border-left: 0 !important; border-radius: 24px; padding: 12px 12px 4px; }
+#scr-school .wsg .wsg-head h2 { font: 900 19px Nunito, sans-serif; }
+#scr-school .wsg-list { gap: 0; }
+#scr-school .wsg .wsg-row { border: 0; border-top: 1px solid #f0e8dc; border-radius: 0; background: none; padding: 12px 2px; gap: 6px; margin: 0; }
+#scr-school .wsg .wsg-row:first-child { border-top: 0; }
+#scr-school .wsg-main { align-items: flex-start; }
+#scr-school .wsg-main .e { width: 40px; height: 40px; border-radius: 12px; background: #f6f1ea; display: grid; place-items: center; font-size: 22px; }
+#scr-school .wsg-main .what b { font: 900 16px Nunito, sans-serif; color: #3b2a1e; -webkit-line-clamp: 1; }
+#scr-school .wsg-main .what small { font: 700 12.5px Nunito, sans-serif; color: #8a7868; opacity: 1; }
+#scr-school .wsg-main .what small.tp { font-weight: 600; color: #6b5a4a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#scr-school .wsg-score { border-radius: 16px; font-size: 18px; min-width: 54px; }
+#scr-school .wsg .wsg-btns { padding-left: 50px; justify-content: flex-start; }
+#scr-school .wsg .wsg-btns button { min-height: 34px; padding: 4px 14px; font-size: 13.5px; background: #f6f1ea; border: 0; box-shadow: none; }
+#scr-school .wsg .wsg-btns button.primary { background: #f08a7d; color: #fff; }
+#scr-school .wsg .wsg-main { background: none !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; border-radius: 0; }
+.ws-opts3 .ws-words summary { display: block; line-height: 1.4; }
+.ws-opts3 .ws-words summary::before { display: inline-block; vertical-align: -4px; margin-right: 10px; }
