@@ -4474,3 +4474,26 @@ button.ty3-tile.on { border-color: #6cc070; background: #f3faf0; }
 #scr-add .daypick input:checked + span { border-color: #6cc070; background: #dff0da; color: #2f5a2a; }
 #scr-add #fxAdd, #scr-add #flAdd { min-height: 54px; flex: 1 1 100%; border: 0; border-radius: 26px; background: #6cc070; color: #1f4a1c; font: 900 18px Nunito, sans-serif; box-shadow: 0 4px 0 #4e9a52; }
 #scr-add .row:has(> div > .type-pick) > div:has(.type-pick) { display: none; } #scr-add .row:has(> div > .type-pick) > div:first-child { flex: 1 1 100%; }
+
+/* 🎨 v233 sign-in (Broo2a's picture): buddy bubble, "I am a kid" card with 6 code boxes + Join my family, OR, parent card + Sign in */
+.lg3 { text-align: left; }
+.lg3-buddy { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px; }
+.lg3-buddy img { width: 84px; height: 84px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.lg3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 11px 13px; font: 800 15px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.lg3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.lg3-hint { text-align: center; margin: 4px 0 8px; }
+.lg3-card { background: #fff; border-radius: 26px; padding: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.lg3-h { display: flex; align-items: center; gap: 8px; font: 900 17px Nunito, sans-serif; color: #3b2a1e; } .lg3-h .i3d { width: 30px; height: 30px; }
+.lg3-code { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 12px 0; }
+.lg3-box { width: 100%; min-width: 0; aspect-ratio: 5 / 6; padding: 0; text-align: center; border-radius: 14px; border: 3px solid transparent; background: #f6efe4; font: 900 24px Nunito, sans-serif; color: #3b2a1e; text-transform: uppercase; }
+.lg3-box:focus { outline: none; border-color: #f2c14e; background: #fdf3d6; }
+button.lg3-join, button.lg3-signin { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; border: 0; border-radius: 26px; font: 900 18px Nunito, sans-serif; }
+button.lg3-join { background: #dff0da; color: #2f5a2a; box-shadow: 0 4px 0 #b9dcb1; } button.lg3-join .i3d { width: 28px; height: 28px; }
+button.lg3-signin { background: #dbe9fb; color: #1f4f8a; box-shadow: 0 4px 0 #b9d0ee; margin-top: 10px; }
+.lg3-small { display: block; margin: 8px auto 0; font-size: 13px; }
+.lg3-or { display: flex; align-items: center; gap: 10px; margin: 12px 4px; color: #b9a896; font: 900 13px Nunito, sans-serif; letter-spacing: 1.5px; }
+.lg3-or::before, .lg3-or::after { content: ""; flex: 1; height: 2px; background: #e8dccd; }
+.lg3-prow { display: flex; align-items: center; gap: 12px; } .lg3-prow img { width: 62px; height: 62px; object-fit: contain; flex: none; }
+.lg3-prow b { display: block; font: 900 18px Nunito, sans-serif; color: #3b2a1e; } .lg3-prow small { font: 600 13px Nunito, sans-serif; color: #7a6656; }
+.lg3-box { padding: 0 !important; height: auto !important; min-height: 0 !important; font-size: 20px !important; line-height: 1 !important; }
+.lg3-card { background: #fbf5ec; box-shadow: 0 3px 0 rgba(0,0,0,.05); } .lg3-box { background: #fff; }

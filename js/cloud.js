@@ -856,3 +856,22 @@ async function clearAppErrors() {
   try { localStorage.removeItem(ERR_KEY); } catch (e) {}
   try { if (cloud.fb && cloud.db && cloud.familyId) await cloud.fb.setDoc(errRef(), { items: {} }); } catch (e) {}
 }
+// 🎨 v233 the 6 code boxes on the first screen: a letter → the next box · ⌫ on an empty box → the one before · paste fills them all;
+// "Join my family" puts the code in the kid form and sends it (that step shows, so a wrong code says why)
+(() => {
+  const boxes = () => [...document.querySelectorAll(".lg3-box")];
+  const fill = (from, text) => { const bs = boxes(); [...text.toUpperCase().replace(/[^A-Z0-9]/g, "")].slice(0, 6 - from).forEach((ch, i) => bs[from + i].value = ch);
+    const next = bs.find(x => !x.value); (next || bs[5]).focus(); };
+  document.addEventListener("input", e => { const bs = boxes(), i = bs.indexOf(e.target); if (i < 0) return;
+    const v = e.target.value; e.target.value = ""; fill(i, v); });
+  document.addEventListener("keydown", e => { const bs = boxes(), i = bs.indexOf(e.target); if (i < 0) return;
+    if (e.key === "Backspace" && !e.target.value && i > 0) { bs[i - 1].value = ""; bs[i - 1].focus(); e.preventDefault(); }
+    if (e.key === "Enter") document.querySelector("[data-lgjoin]").click(); });
+  document.addEventListener("paste", e => { const bs = boxes(), i = bs.indexOf(e.target); if (i < 0) return;
+    e.preventDefault(); fill(i, (e.clipboardData || window.clipboardData).getData("text")); });
+  document.addEventListener("click", e => { if (!(e.target.closest && e.target.closest("[data-lgjoin]"))) return;
+    const code = boxes().map(x => x.value).join("");
+    loginStep("kid"); $("kidCode").value = code;
+    if (code.length === 6) $("kidForm").requestSubmit(); else $("kidErr").textContent = "Type all 6 letters of your code.";
+  });
+})();
