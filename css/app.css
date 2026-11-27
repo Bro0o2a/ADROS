@@ -4663,3 +4663,20 @@ button.qa3-more { display: block; margin: 10px auto 0; background: none; border:
 /* v236 calendar people (Broo2a's picture): big circles, big cream "+ Activities" pill */
 #minePeople .chip { font-size: 16px !important; }
 .mine-top .cal-big[data-go="add"] { min-height: 52px; padding: 10px 22px !important; border-radius: 999px !important; background: #fbf0d4 !important; color: #7a5a14 !important; font: 800 17px/1 Fredoka, Nunito, sans-serif !important; box-shadow: 0 4px 0 #e6d6b4 !important; border: 0 !important; }
+/* v236 Settings (Broo2a's 2nd picture): one white box per group, rows with thin lines between, line icons in soft squares */
+.set3-grp { background: #fff; border-radius: 26px; box-shadow: 0 4px 0 rgba(0,0,0,.06); overflow: hidden; margin-bottom: 6px; }
+.set3-grp[hidden], .set3-group[hidden] { display: none !important; }
+#scr-settings .set3-grp > .card.set3 { margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important; }
+#scr-settings .set3-grp > * + * { border-top: 2px solid #f3ebe2 !important; }
+#scr-settings .set3-grp > .card.set3.open { background: #fffaf4 !important; }
+.set3-group { text-transform: none !important; letter-spacing: .5px !important; font: 900 19px Fredoka, Nunito, sans-serif !important; color: #8a7666; }
+.set3-group { font-variant: all-small-caps; font-size: 22px !important; }
+.set3-ic { width: 52px !important; height: 52px !important; border-radius: 18px !important; }
+.set3-ic svg { width: 28px; height: 28px; }
+.set3-t b { font-family: Fredoka, Nunito, sans-serif !important; font-weight: 700 !important; }
+.set3-chip { flex: none; padding: 6px 12px; border-radius: 999px; background: #e3f1dc; color: #2f6a2b; font: 800 14px Nunito, sans-serif; }
+.set3-chip.on { background: #6cc070; color: #fff; }
+button.set3-out { display: flex; align-items: center; justify-content: center; gap: 10px; }
+button.set3-out svg { width: 26px; height: 26px; }
+#scr-settings .two-col:not(:has(.card)) { display: none; }
+.set3-app button.set3-row, .set3-grp button.set3-row { border-radius: 0 !important; box-shadow: none !important; background: none !important; }

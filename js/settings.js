@@ -27,37 +27,71 @@ function drawSettings() {
   $("setNotify").innerHTML = notifyHtml();
   settingsMenu();
 }
-// 🎨 v233 (Broo2a's picture): Settings = a short menu. Each card folds into one row (3D icon, title, short line, ›); a tap opens it.
-// Groups "PLAN" · "FAMILY AND APP", a buddy bubble on top, and News · Help · Privacy · a big Sign out at the end. (The cards are the same.)
-const SET_ROWS = [["featCard", "idea", "Features", "Pick what the app shows"], ["bed-set", "time", "Calendar setup", "Week, weekend, bedtimes, school hours"],
-  ["dayHours", "milestone", "My day", "When each day starts and ends"], ["maxTogether", "study", "Planning", "How many things at once"],
-  ["starCard", "achieve", "Shining Star and extras", "Day, time, extra worksheets"], ["prMine", "pin", "Prayer times", "City and times"],
-  ["kidHabitsCard", "goal", "Kids' habits", "The daily checklist"], ["userList", "heart", "People", "Names, emoji, colours"],
-  ["exportBtn", "briefcase", "Backup", "Save or bring back a copy"], ["acctInfo", "consistency", "Family account", "Sign-in and account"],
-  ["setNotify", "paper", "Notifications", "On this device"]];
+// 🎨 v233 (Broo2a's picture): Settings = a short menu. Each card folds into one row (icon, title, short line, ›); a tap opens it.
+// v236 (Broo2a's 2nd picture): the rows sit together in one white box per group: "PLAN and BACKUP" · "MORE SETTINGS" · "APP",
+// line icons in soft coloured squares (3D for family, school, week), and a live line on some rows (sync On/Off, how many people …).
+const SET_SVG = {
+  sync: '<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16"/><path d="M20 21v-5h-5"/>',
+  save: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7"/><path d="M12 17h.01"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  check: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/>' };
+// [key, icon (3D name, or "svg:name"), colour of the square, title, short line (or a function)]
+const SET_GROUPS = [
+  ["Plan and backup", [["acctInfo", "svg:sync", "#dff0d6", "Backup and sync", () => cloud.user ? "On · everyone's phones share it" : "This device only · turn on sync to share"],
+    ["userList", "heart", "#fde3ea", "Family members", () => { const n = data.users.length; return `${n} ${n === 1 ? "person" : "people"} in the plan`; }],
+    ["@school", "school", "#e1ecfa", "School settings", "Curriculum, year, subjects"],
+    ["bed-set", "k-calendar", "#fbf0d4", "Week settings", () => data.bedAll && data.bedAll.wd ? `Bedtime ${clock(toMin(data.bedAll.wd), true)} · weekend, school hours` : "Week, weekend, bedtimes, school hours"],
+    ["exportBtn", "svg:save", "#efe6fb", "Save a copy", "Save or bring back a backup file"]]],
+  ["More settings", [["dayHours", "svg:sun", "#fdeacc", "My day", "When each day starts and ends"], ["maxTogether", "svg:list", "#e1ecfa", "Planning", "How many things at once"],
+    ["starCard", "svg:star", "#fbf0d4", "Shining Star and extras", "Day, time, extra worksheets"], ["prMine", "svg:moon", "#e3e0f7", "Prayer times", "City and times"],
+    ["kidHabitsCard", "svg:check", "#dff0d6", "Kids' habits", "The daily checklist"], ["featCard", "svg:sliders", "#fde3ea", "Features", "Pick what the app shows"],
+    ["setNotify", "svg:phone", "#f3ebe2", "Notifications", "On this device"]]]];
+const SET_INK = { "#dff0d6": "#3f7d3a", "#fde3ea": "#b1455c", "#e1ecfa": "#3d6aa6", "#fbf0d4": "#9a6b12", "#efe6fb": "#6f4fa8", "#fdeacc": "#b0661c", "#e3e0f7": "#5b4fa0", "#f3ebe2": "#7a6656" };
+const setIcon = (ic, bg) => `<span class="set3-ic" style="background:${bg};color:${SET_INK[bg] || "#5c422b"}">${ic.startsWith("svg:")
+  ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SET_SVG[ic.slice(4)]}</svg>` : ico3d(ic)}</span>`;
+const setRowInner = (ic, bg, title, sub, extra = "") => `${setIcon(ic, bg)}<span class="set3-t"><b>${title}</b><small>${safe(sub)}</small></span>${extra}<span class="set3-go" aria-hidden="true">›</span>`;
 const setOpen = new Set();
 function settingsMenu() {
   const scr = $("scr-settings");
   const cardOf = key => { const el = $(key) || scr.querySelector("." + key); return el && (el.classList.contains("card") ? el : el.closest(".card")); };
-  SET_ROWS.forEach(([key, ic, title, sub]) => {
-    const card = cardOf(key);
-    if (!card) return;
-    card.classList.add("set3"); card.dataset.setkey = key; card.classList.toggle("open", setOpen.has(key));
-    if (card.querySelector(":scope > .set3-row")) return;
-    card.insertAdjacentHTML("afterbegin", `<button type="button" class="set3-row" data-setrow="${key}"><span class="set3-ic">${ico3d(ic)}</span><span class="set3-t"><b>${title}</b><small>${sub}</small></span><span class="set3-go" aria-hidden="true">›</span></button>`);
-  });
-  const hab = $("kidHabitsCard"), col1 = scr.querySelector(".two-col > div");
-  if (hab && col1 && hab.parentNode !== col1) col1.appendChild(hab);
   if (!scr.querySelector(".set3-top")) {
-    scr.querySelector("h1.page-title").insertAdjacentHTML("afterend", `<div class="set3-top"><h2>Settings</h2><small>plan, backup, privacy, help, sign out</small></div><div class="set3-buddy" id="set3Buddy"></div>`);
-    const f = $("featCard"); if (f) f.insertAdjacentHTML("beforebegin", `<p class="set3-group">Plan</p>`);
-    const c2 = scr.querySelectorAll(".two-col > div")[1]; if (c2) c2.insertAdjacentHTML("afterbegin", `<p class="set3-group">Family and app</p>`);
-    scr.querySelector(".savebar").insertAdjacentHTML("beforebegin", `<div class="set3-app">
-      <button type="button" class="set3-row set3-link" data-bell><span class="set3-ic">${ico3d("paper")}</span><span class="set3-t"><b>News and updates</b><small>What is new in ADROS</small></span><span class="bell-num" hidden></span><span class="set3-go">›</span></button>
-      <button type="button" class="set3-row set3-link" data-askus><span class="set3-ic">${ico3d("idea")}</span><span class="set3-t"><b>Help</b><small>Ask us anything</small></span><span class="set3-go">›</span></button>
-      <button type="button" class="set3-row set3-link" data-privacy><span class="set3-ic">${ico3d("consistency")}</span><span class="set3-t"><b>Privacy</b><small>Your data stays in the family</small></span><span class="set3-go">›</span></button></div>
-      <button type="button" class="set3-out" data-signout>Sign out</button><p class="set3-foot">ADROS · made with love for families</p>`);
+    scr.querySelector("h1.page-title").insertAdjacentHTML("afterend", `<div class="set3-top"><h2>Settings</h2><small>backup, privacy, help, sign out</small></div><div class="set3-buddy" id="set3Buddy"></div>`
+      + SET_GROUPS.map(([g], i) => `<p class="set3-group" id="set3L${i}">${g.replace(" and ", " <span>and</span> ")}</p><div class="set3-grp" id="set3G${i}"></div>`).join("")
+      + `<p class="set3-group">App</p><div class="set3-app">
+      <button type="button" class="set3-row set3-link" data-bell>${setRowInner("svg:bell", "#fde3ea", "News and updates", "What is new in ADROS", `<span class="bell-num" hidden></span>`)}</button>
+      <button type="button" class="set3-row set3-link" data-askus>${setRowInner("svg:help", "#fbf0d4", "Help", "Guides and ask us anything")}</button>
+      <button type="button" class="set3-row set3-link" data-privacy>${setRowInner("svg:lock", "#e1ecfa", "Privacy", "Your data stays in the family")}</button></div>
+      <button type="button" class="set3-out" data-signout><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M14 8l4 4-4 4M18 12H9"/></svg>Sign out</button><p class="set3-foot">ADROS · made with love for families</p>`);
   }
+  const parent = isParentDevice();
+  SET_GROUPS.forEach(([, rows], gi) => {
+    const box = $("set3G" + gi);
+    rows.forEach(([key, ic, bg, title, sub]) => {
+      const line = typeof sub === "function" ? sub() : sub;
+      if (key === "@school") {   // (a link: the 🏫 School settings pop-up, parents only)
+        let b = box.querySelector("[data-schoolset]");
+        if (!b) { box.insertAdjacentHTML("beforeend", `<button type="button" class="set3-row set3-link set3-solo" data-schoolset="">${setRowInner(ic, bg, title, line)}</button>`); b = box.lastElementChild; }
+        b.hidden = !parent; return;
+      }
+      const card = cardOf(key); if (!card) return;
+      if (card.parentNode !== box) box.appendChild(card);
+      card.classList.add("set3"); card.dataset.setkey = key; card.classList.toggle("open", setOpen.has(key));
+      const extra = key === "acctInfo" ? `<span class="set3-chip${cloud.user ? " on" : ""}">${cloud.user ? "On" : "Off"}</span>` : "";
+      const row = card.querySelector(":scope > .set3-row");
+      if (row) row.innerHTML = setRowInner(ic, bg, title, line, extra);
+      else card.insertAdjacentHTML("afterbegin", `<button type="button" class="set3-row" data-setrow="${key}">${setRowInner(ic, bg, title, line, extra)}</button>`);
+    });
+    const any = [...box.children].some(c => !c.hidden && getComputedStyle(c).display !== "none");
+    box.hidden = $("set3L" + gi).hidden = !any;
+  });
   const u = userById(me), pic = charPic(u, "wave");
   $("set3Buddy").innerHTML = `${pic ? `<img src="${pic}" alt="">` : ""}<p>Everything about your family's plan lives here, ${safe(u ? u.name : "")}.</p>`;
 }
