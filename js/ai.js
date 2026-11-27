@@ -92,23 +92,35 @@ const aiFailFor = key => aiFail && aiFail.key === key && Date.now() - aiFail.at 
 // 🤖 Before the AI helper is used the first time, a parent says OK for the family (the stores ask for this):
 // what goes to Anthropic, that it isn't kept or used to train. Kids' devices can't say OK: they're asked to get a parent.
 const aiOkNow = () => !!(data && data.aiOk && data.aiOk.at);
-let aiGateAns = 0;   // (🔐 the answer to the grown-ups-only sum)
+// 🔐 Parent gate: signed in to the cloud → the parent types their password (a child can't guess it). "This device only" has no password.
+const aiGateNeeded = () => !!(cloud.fb && cloud.user && cloud.user.email);
 function askAiOk() {
-  const parent = isParentDevice(), a = 12 + Math.floor(Math.random() * 8), b = 3 + Math.floor(Math.random() * 7);
-  aiGateAns = a * b;
-  $("aiGateQ").textContent = a + " × " + b;
+  const parent = isParentDevice(), gate = parent && aiGateNeeded();
   $("aiGateIn").value = "";
   $("aiGateErr").textContent = "";
   $("aiOkText").hidden = false;
   $("aiOkKid").hidden = parent;
-  $("aiGate").hidden = !parent;
+  $("aiGate").hidden = !gate;
   $("aiOkYes").hidden = !parent;
+  $("aiOkYes").disabled = false;
   $("aiOkModal").hidden = false;
-  (parent ? $("aiGateIn") : $("aiOkNo")).focus();
+  (gate ? $("aiGateIn") : parent ? $("aiOkYes") : $("aiOkNo")).focus();
 }
-$("aiOkYes").onclick = () => {
+$("aiOkYes").onclick = async () => {
   if (!isParentDevice()) return;
-  if (Number($("aiGateIn").value.trim()) !== aiGateAns) { $("aiGateErr").textContent = "That answer isn't right. Please try again."; return $("aiGateIn").focus(); }
+  if (aiGateNeeded()) {
+    const pass = $("aiGateIn").value;
+    if (!pass) { $("aiGateErr").textContent = "Please type your password."; return $("aiGateIn").focus(); }
+    if (!navigator.onLine) return $("aiGateErr").textContent = "🔌 This needs the internet.";
+    $("aiOkYes").disabled = true; $("aiGateErr").textContent = "One moment…";
+    try { await cloud.fb.reauthenticateWithCredential(cloud.user, cloud.fb.EmailAuthProvider.credential(cloud.user.email, pass)); }
+    catch (err) {
+      $("aiOkYes").disabled = false;
+      $("aiGateErr").textContent = /wrong-password|invalid-credential|invalid-login/.test(err.code || "") ? "That password isn't right." : loginError(err);
+      return $("aiGateIn").focus();
+    }
+    $("aiOkYes").disabled = false; $("aiGateIn").value = ""; $("aiGateErr").textContent = "";
+  }
   data.aiOk = { by: me || "", at: new Date().toISOString() };
   writeData("auto");
   $("aiOkModal").hidden = true;

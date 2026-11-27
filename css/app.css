@@ -2313,7 +2313,7 @@
   .lg-adult a { color: inherit; font-weight: 700; }
   .lg-adult input { width: 24px; height: 24px; min-height: 0; margin: 0; flex: none; accent-color: #c98a4b; }
   .ai-gate { margin: 10px 20px 0; text-align: center; }
-  .ai-gate input { width: 120px; font-size: 22px; text-align: center; }
+  .ai-gate input { width: 100%; max-width: 280px; }
   .lg-codelabel { font-size: 20px; text-align: center; margin-top: 6px; }
   .code-input { text-transform: uppercase; letter-spacing: .25em; font-size: 26px !important; font-weight: 800; text-align: center; font-family: ui-monospace, Menlo, Consolas, monospace; }
   .code-big { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 24px; font-weight: 800; letter-spacing: .15em; }

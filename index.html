@@ -834,9 +834,9 @@
     <div class="print-title" id="aokTitle">🤖 Turn on the AI helper?</div>
     <p class="print-hint" id="aiOkText">To make worksheets, explain lessons and check answers, the app sends the school work (photos, files and answers) and the child's first name, year and school to Anthropic, the AI company. It is used only to make the answer and is never used to train AI.</p>
     <p class="print-hint" id="aiOkKid" hidden>👨‍👩‍👧 Ask your parent to turn on the AI helper on their phone.</p>
-    <!-- 🔐 Grown-ups only: a sum a young child can't easily do (a "parent gate", asked by the stores for kids' apps) -->
-    <div class="ai-gate" id="aiGate"><label class="small" for="aiGateIn">Grown-ups only: what is <b id="aiGateQ"></b>?</label>
-      <input type="text" id="aiGateIn" inputmode="numeric" autocomplete="off" maxlength="4"><div class="err" id="aiGateErr" role="alert"></div></div>
+    <!-- 🔐 Grown-ups only: the parent types their ADROS password (a "parent gate" for kids' apps; only when signed in to the cloud) -->
+    <div class="ai-gate" id="aiGate"><label class="small" for="aiGateIn">🔐 Type your ADROS password to turn it on</label>
+      <input type="password" id="aiGateIn" autocomplete="current-password"><div class="err" id="aiGateErr" role="alert"></div></div>
     <div class="btnrow"><button class="primary" id="aiOkYes">I agree</button><button id="aiOkNo">Not now</button></div>
   </div>
 </div>

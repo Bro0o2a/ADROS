@@ -278,14 +278,19 @@ try {
     data.aiOk = null;
     const r = await callAi("check", { title: "test" }, "check|test");
     const shown = !document.getElementById("aiOkModal").hidden;
-    // 🔐 Grown-ups-only sum: a wrong answer keeps it off, the right one turns it on
-    document.getElementById("aiGateIn").value = "1";
-    document.getElementById("aiOkYes").click();
+    // 🔐 Pretend a signed-in parent: no password keeps it off; a password checked by (pretend) Firebase turns it on
+    const realCloud = { fb: cloud.fb, user: cloud.user };
+    let checked = "";
+    cloud.fb = { EmailAuthProvider: { credential: (e, p) => ({ e, p }) }, reauthenticateWithCredential: async (u, c) => { checked = c.p; } };
+    cloud.user = { email: "mum@example.com" };
+    askAiOk();
+    const gateShown = !document.getElementById("aiGate").hidden;
+    await $("aiOkYes").onclick();
     const stillOff = !data.aiOk && !document.getElementById("aiOkModal").hidden;
-    const [x, y] = document.getElementById("aiGateQ").textContent.split("×").map(Number);
-    document.getElementById("aiGateIn").value = String(x * y);
-    document.getElementById("aiOkYes").click();
-    return r === null && shown && stillOff && !!data.aiOk && document.getElementById("aiOkModal").hidden;
+    document.getElementById("aiGateIn").value = "secret12";
+    await $("aiOkYes").onclick();
+    cloud.fb = realCloud.fb; cloud.user = realCloud.user;
+    return r === null && shown && gateShown && stillOff && checked === "secret12" && !!data.aiOk && document.getElementById("aiOkModal").hidden;
   });
   if (asked === false) errors.push("[AI OK] the AI helper did not ask the parent first, or the OK was not saved");
 
