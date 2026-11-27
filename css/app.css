@@ -4695,3 +4695,10 @@ button.set3-out svg { width: 26px; height: 26px; }
 .rp3-kid .kc-big { width: 124px !important; height: 140px !important; }
 @media (max-width: 380px) { .rp3-kid .kc-big { width: 108px !important; height: 124px !important; } }
 .rp3-kid .kc-big:not(.kc-bigface) { transform: scale(1.18); transform-origin: 50% 100%; }
+/* v236 parent home (Broo2a 28 Nov): my character big and free (no box), like the kids' cards */
+.p-home3 .hello { grid-template-columns: 150px 1fr !important; gap: 8px !important; align-items: end !important; }
+.p-home3 .hello-face { width: 150px !important; height: 170px !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; }
+.p-home3 .hello-char { object-fit: contain !important; object-position: bottom; filter: drop-shadow(0 6px 8px rgba(120, 90, 60, .18)); }
+.p-home3 .hello > div { padding-bottom: 14px; }
+@media (max-width: 380px) { .p-home3 .hello { grid-template-columns: 130px 1fr !important; } .p-home3 .hello-face { width: 130px !important; height: 150px !important; } }
+.p-home3 .hello-face { border: 0 !important; }
