@@ -4706,3 +4706,6 @@ button.set3-out svg { width: 26px; height: 26px; }
 .kh3-spark span { color: #8a5cc4 !important; filter: none !important; white-space: nowrap; }
 .kh3-spark em { background: linear-gradient(90deg, #c9a6f2, #8a5cc4) !important; }
 .kh3-spark b { color: #8a5cc4 !important; filter: none !important; font-size: 15px !important; }
+/* v236 (Broo2a): the ADROS logo big inside the date card (not a small badge on top) */
+.home-date.hd3 { margin-top: 10px !important; padding-top: 10px !important; }
+.home-date.hd3 .hd-logo { position: static !important; transform: none !important; width: min(300px, 86%) !important; height: auto !important; aspect-ratio: 640 / 283; object-fit: contain !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: none !important; margin: 0 auto 6px; }

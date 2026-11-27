@@ -1048,7 +1048,7 @@ function drawHome() {
   $("scr-home").classList.toggle("p-home3", isParentDevice());
   if (isParentDevice()) {   // 🌈 v233 (Broo2a's picture): a white date card with the ADROS badge · my character waving, big
     $("homeDate").className = "home-date hd3";
-    $("homeDate").innerHTML = `<img class="hd-logo" src="icons/icon-192.png" alt=""><span class="hd-wd">${dz({ weekday: "long" })}</span><span class="hd-d">${dz({ day: "numeric", month: "long" })}</span>`;
+    $("homeDate").innerHTML = `<img class="hd-logo" src="icons/logo-adros.webp" alt="ADROS"><span class="hd-wd">${dz({ weekday: "long" })}</span><span class="hd-d">${dz({ day: "numeric", month: "long" })}</span>`;
     if (charPic(u)) $("homeFace").innerHTML = `<img class="hello-char" src="${charPic(u, "wave")}" alt="">` + starBadge(me);
   } else $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
     <span class="bub-pill">${PUFF_PILLS.home}</span>`;
