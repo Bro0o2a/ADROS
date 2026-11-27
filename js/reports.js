@@ -30,7 +30,7 @@ function reportData(kid, r) {
   const subjects = subjectList(s).map(f => {
     const all = checkedOf(kid, f.name), last = all[0], inside = all.filter(w => sheets.includes(w));
     const typed = typedMarksIn(kid, r.from, r.to, f.name);
-    return { id: f.id, emoji: f.emoji, name: f.name, level: (s.profile.subjects[f.id] || {}).level || 0, avg: avgPct(inside), avgAll: avgPct(all),
+    return { id: f.id, emoji: f.emoji, name: f.name, sheetsN: inside.length, level: (s.profile.subjects[f.id] || {}).level || 0, avg: avgPct(inside), avgAll: avgPct(all),
              typed: typed.length ? { n: typed.length, avg: avgOf(typed) } : null,
              strong: last ? (last.check.strong_points || []).slice(0, 3) : [], weak: last ? (last.check.weak_points || []).slice(0, 3) : [] };
   });
@@ -79,18 +79,56 @@ function reportCardsHtml(kid, forPdf) {
     ${lines.best || lines.help ? `<div class="card rp-card rp-lines">${lines.best ? `<p>🌟 <b>Best ${rpRange === "week" ? "this week" : "this month"}:</b> ${safe(lines.best)}</p>` : ""}${lines.help ? `<p>👀 <b>Needs help:</b> ${safe(lines.help)}</p>` : ""}</div>` : ""}
     ${briefNow ? `<div class="card rp-card"><h2>🤖 Coach summary</h2><p>${safe(b.summary)}</p>${b.home_tips.length ? `<ul>${b.home_tips.map(t => `<li>${safe(t)}</li>`).join("")}</ul>` : ""}</div>` : ""}`;
 }
+// 🌈 v233 (Broo2a's picture): the report opens with a short, friendly summary: the kid + score · their character saying how
+// today is going · 📅 This week (a circle per day: ✓ all done · 3/4 today · empty ahead) · 📚 Subjects (study sessions this week)
+// · Full report (everything below, as before) · Share with family (the 📄 PDF).
+let rpFull = false;
+const RP_DAY_COLS = ["#6fa6e0", "#86bb74", "#ef857b", "#a98be8", "#f5b83d", "#62b3aa", "#e8837a"];
+function rpSummaryHtml(kid) {
+  const u = userById(kid), c = colorsOf(u), sc = scoreOf(kid), today = todayYmd();
+  const mine = d => planDay(d).items.filter(it => it.people.includes(kid) && !it.gone);
+  const dayN = d => { const l = mine(d); return { all: l.length, done: l.filter(it => isDone(d, it.actId, kid)).length, list: l }; };
+  const t = dayN(today), left = t.all - t.done, nowM = dubaiMinutes();
+  const next = t.list.find(it => !isDone(today, it.actId, kid) && it.end > nowM);
+  const head = !t.all ? "Nothing planned today" : !left ? `All ${t.all} done today! 🎉` : `${t.done} of ${t.all} done today${t.done ? "!" : ""}`;
+  const sub = [!t.all ? "A free day to rest and play." : !left ? "A perfect day. Well done!" : left === 1 ? "One more tick and it is a perfect day." : `${left} more to go today.`,
+    next ? `${next.name} is next at ${clock(next.start, true)}.` : ""].filter(Boolean).join(" ");
+  const days = weekDates(), wk = days.map(d => ({ d, ...dayN(d) }));
+  const wAll = wk.reduce((n, x) => n + x.all, 0), wDone = wk.reduce((n, x) => n + x.done, 0);
+  const circle = (x, i) => { const L = DAYS[weekdayOf(x.d)][0], col = RP_DAY_COLS[i % 7];
+    const st = x.d > today ? "" : x.all && x.done === x.all ? "full" : x.d === today && x.all ? "part" : x.all ? "miss" : "free";
+    return `<span class="rpw-day ${x.d === today ? "today" : ""}"><span class="rpw-c ${st}" style="--col:${col}" title="${safe(dayHead(x.d))}: ${x.done} of ${x.all}">${
+      st === "full" ? "✓" : st === "part" || st === "miss" ? `${x.done}/${x.all}` : ""}</span><small>${L}</small></span>`; };
+  const subs = subjectList(schoolOf(kid)).map((f, i) => {
+    const study = wk.flatMap(x => x.list.filter(it => it.type === "study" && (sameSubject(it.name, f.name) || String(it.name).toLowerCase().includes(String(f.name).toLowerCase()))).map(it => isDone(x.d, it.actId, kid)));
+    const x = reportData(kid, reportRange()).subjects.find(y => y.id === f.id) || {};
+    const pct = study.length ? Math.round(study.filter(Boolean).length / study.length * 100) : x.avg != null ? x.avg : 0;
+    const line = [study.length ? `${study.filter(Boolean).length} of ${study.length} sessions` : "", x.sheetsN ? `${x.sheetsN} worksheet${x.sheetsN === 1 ? "" : "s"}${x.avg != null ? ` · ${x.avg}%` : ""}` : ""].filter(Boolean).join(" · ") || "Nothing yet this week";
+    const col = RP_DAY_COLS[i % 7];
+    return `<button class="rps-row" data-rpsub="${safe(f.id)}"><span class="rps-ic" style="--col:${col}">${ico3d(subjectIcon3d(f.name), "rps-i")}</span>
+      <span class="rps-t"><b>${safe(f.name)}</b><small>${safe(line)}</small></span><span class="rps-bar" style="--col:${col}"><i style="width:${pct}%"></i><small>${pct}%</small></span></button>`; }).join("");
+  const pic = charPic(u, !t.all || !left ? "proud" : "point");
+  return `<div class="rp3-title"><h2>${safe(u.name)}'s report</h2><small>${safe(dayHead(today))}</small></div>
+    <div class="card kid-card kc3 rp3-kid" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
+      <div class="kc-head"><span class="kc-name">${faceHtml(u)}<b>${safe(u.name)}</b></span><button class="kc-pts" data-sdpop="${safe(kid)}"><b>${sc.overall}</b><small>score</small></button></div>
+      <div class="kc-mid">${pic ? `<img class="kc-big" src="${pic}" alt="">` : `<span class="kc-big kc-bigface">${faceHtml(u)}</span>`}<div class="kc-bub"><span class="kc-bubtxt"><b>${safe(head)}</b><small>${safe(sub)}</small></span></div></div></div>
+    <div class="card rp3-week"><div class="rp3-h">${ico3d("calendar", "rp3-ic")}<b>This week</b><small>${wDone} of ${wAll} done</small></div><div class="rpw-row">${wk.map(circle).join("")}</div></div>
+    ${subs ? `<div class="card rp3-subs"><div class="rp3-h">${ico3d("study", "rp3-ic")}<b>Subjects</b><small>this week</small></div>${subs}</div>` : ""}
+    <div class="rp3-btns"><button class="rp3-full" data-rpfull aria-expanded="${rpFull}">${ico3d("excellent", "rp3-bi")}${rpFull ? "Hide full report" : "Full report"}</button>
+      <button class="rp3-share" data-rppdf>${ico3d("rainbow", "rp3-bi")}Share with family</button></div>`;
+}
 function drawReport() {
   if (!isParentDevice()) return go("home");
   const kids = kidsList();
   if (!kids.some(k => k.id === rpKid)) rpKid = (kids[0] || {}).id || null;
   if (!rpKid) { $("reportBody").innerHTML = `<div class="card"><p class="sc-empty">No kids yet. Add one in ☰ More → 👨‍👩‍👧 Family.</p></div>`; return; }
   const b = schoolOf(rpKid).brief, briefNow = b && b.date >= data.points.week;
-  $("reportBody").innerHTML = `${fsButtonsHtml()}<div class="chips rp-kids">${kids.map(k => { const c = colorsOf(k); return `<button class="chip ${k.id === rpKid ? "on" : ""}" data-rpkid="${safe(k.id)}"
-      style="--soft:${c.soft};--ink:${c.ink}"><span class="e">${safe(k.emoji)}</span>${safe(k.name)}</button>`; }).join("")}</div>
-    <div class="seg rp-range" role="group" aria-label="Period"><button class="${rpRange === "week" ? "on" : ""}" data-rprange="week" aria-pressed="${rpRange === "week"}">This week</button>
+  $("reportBody").innerHTML = `<div class="chips rp-kids">${kids.map(k => { const c = colorsOf(k); return `<button class="chip ${k.id === rpKid ? "on" : ""}" data-rpkid="${safe(k.id)}"
+      style="--soft:${c.soft};--ink:${c.ink};--c:${c.color}">${charPic(k) ? `<img class="tab-face" src="${charPic(k)}" alt="">` : `<span class="e">${safe(k.emoji)}</span>`}${safe(k.name)}</button>`; }).join("")}</div>
+    ${rpSummaryHtml(rpKid)}${rpFull ? `<div class="rp-fullbox">${fsButtonsHtml()}<div class="seg rp-range" role="group" aria-label="Period"><button class="${rpRange === "week" ? "on" : ""}" data-rprange="week" aria-pressed="${rpRange === "week"}">This week</button>
       <button class="${rpRange === "month" ? "on" : ""}" data-rprange="month" aria-pressed="${rpRange === "month"}">This month</button></div>
     ${reportCardsHtml(rpKid, false)}
-    <div class="btnrow rp-btns">${briefNow ? "" : `<button data-rpbrief data-aiwait="brief">🤖 Coach summary</button>`}<button class="primary" data-rppdf>📄 PDF</button></div>`;   // (📄 Family summary: at the top since v223)
+    <div class="btnrow rp-btns">${briefNow ? "" : `<button data-rpbrief data-aiwait="brief">🤖 Coach summary</button>`}<button class="primary" data-rppdf>📄 PDF</button></div></div>` : ""}`;   // (📄 Family summary: at the top since v223)
   showAiWait();
 }
 // =====================================================================
@@ -224,6 +262,7 @@ document.addEventListener("click", e => {
   if (!b) return;
   const ds = b.dataset;
   if (ds.rpkid) { rpKid = ds.rpkid; return render(); }
+  if ("rpfull" in ds) { rpFull = !rpFull; return render(); }
   if (ds.rprange) { rpRange = ds.rprange === "month" ? "month" : "week"; return render(); }
   if (ds.rpsub) { const kid = rpKid; openSchool(kid); return goSchool("subject", ds.rpsub); }   // 👀 that kid's subject (look only)
   if ("rpbrief" in ds) return makeBrief(rpKid, false).then(() => { if (screen === "report") render(); });

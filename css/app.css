@@ -4026,3 +4026,45 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
 .bar.bar3 .bell-btn { background: #b9a3ec !important; }
 .bar.bar3 [data-signout] { background: #f19a90 !important; }
 .bar.bar3 .rb:not([data-signout]):not(.bell-btn):not(.cal-btn) { background: #9dc0f0 !important; }
+
+/* 🫧 v233 (Broo2a 27 Nov): buddies float free, no box behind them (the pictures are cut out now: .webp with a see-through ground).
+   (The hello picture on the parent's home keeps its card, like the picture.) */
+.kc3 .kc-big, .kid-card .kc-char, .buddy-row img, .buddy-strip img, .puff-banner .pb-char, .gp-buddy, .k-hero-pic:not(.k-hero-emoji), .fs-pic:is(img) {
+  background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; outline: 0 !important; object-fit: contain !important;
+  filter: drop-shadow(0 6px 8px rgba(90, 60, 30, .18)); }
+.buddy-strip figure, .buddy-row .buddy-pic { background: transparent !important; box-shadow: none !important; }
+.kc3 .kc-mid { grid-template-columns: 112px 1fr; }
+.kc3 .kc-big { width: 112px; height: 112px; }
+.gp-buddy { width: 104px; height: 104px; }
+
+/* 🌈 v233 REPORT SUMMARY (Broo2a's picture) */
+#scr-report .page-title { display: none; }
+#scr-report .rp-kids .chip { background: var(--soft) !important; color: var(--ink) !important; border: 0 !important; border-radius: 22px !important; font: 800 16px/1 Fredoka, Nunito, sans-serif; padding: 6px 14px 6px 6px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 0 rgba(60,40,20,.1) !important; }
+#scr-report .rp-kids .chip.on { background: var(--c) !important; color: #fff !important; outline: 3px solid #fff; }
+#scr-report .rp-kids .tab-face { width: 32px; height: 32px; object-fit: contain; }
+.rp3-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 14px 4px 10px; }
+.rp3-title h2 { margin: 0; font: 800 28px/1.1 Fredoka, Nunito, sans-serif; } .rp3-title small { font-weight: 800; color: #7a6656; font-size: 15px; }
+.rp3-kid .kc-name { cursor: default; }
+.rp3-week, .rp3-subs { border-radius: 30px !important; padding: 16px !important; margin-top: 14px; box-shadow: 0 5px 0 #eadbc8, 0 10px 20px rgba(120, 90, 60, .1) !important; }
+.rp3-week { background: #e4eefb !important; } .rp3-subs { background: #fffdf9 !important; }
+.rp3-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; } .rp3-h b { font: 800 21px/1 Fredoka, Nunito, sans-serif; flex: 1; } .rp3-h small { font-weight: 800; color: #6b5a4a; }
+.rp3-ic { width: 32px !important; height: 32px !important; }
+.rpw-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.rpw-day { display: flex; flex-direction: column; align-items: center; gap: 6px; } .rpw-day small { font-weight: 800; color: #6b5a4a; } .rpw-day.today small { color: #c0453b; }
+.rpw-c { width: 40px; height: 40px; border-radius: 50%; background: #fff; display: grid; place-items: center; font: 800 13px/1 Fredoka, Nunito, sans-serif; color: #6b5a4a; box-shadow: 0 3px 0 rgba(0,0,0,.06); }
+.rpw-c.full { background: var(--col); color: #fff; font-size: 20px; } .rpw-c.part { background: #fff; color: #c0453b; box-shadow: 0 0 0 3px #ef857b; }
+.rpw-c.miss { background: #fbe9e6; color: #a8323a; } .rpw-c.free { background: rgba(255,255,255,.6); }
+.rps-row { display: grid; grid-template-columns: 52px 1fr 96px; gap: 12px; align-items: center; width: 100%; background: none; border: 0; box-shadow: none; padding: 6px 0; text-align: left; min-height: 0; cursor: pointer; color: #3b2a1e; }
+.rps-ic { width: 52px; height: 52px; border-radius: 16px; background: color-mix(in srgb, var(--col) 22%, #fff); display: grid; place-items: center; }
+.rps-ic .rps-i { width: 36px !important; height: 36px !important; }
+.rps-t b { display: block; font: 800 18px/1.2 Nunito, sans-serif; } .rps-t small { color: #7a6656; font-weight: 700; font-size: 13.5px; }
+.rps-bar { position: relative; display: block; height: 12px; border-radius: 999px; background: #efe6dc; margin-bottom: 16px; }
+.rps-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--col); }
+.rps-bar small { position: absolute; right: 0; top: 16px; font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--col) 70%, #222); }
+.rp3-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+.rp3-btns button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; border: 0; border-radius: 999px; font: 800 17px/1 Fredoka, Nunito, sans-serif; box-shadow: 0 4px 0 rgba(60,40,20,.12); cursor: pointer; }
+.rp3-full { background: #d6e6fa; color: #1f4f8f; } .rp3-share { background: #fbdde6; color: #b03a63; }
+.rp3-bi { width: 26px !important; height: 26px !important; }
+.rp-fullbox { margin-top: 6px; }
+@media (max-width: 380px) { .rpw-c { width: 34px; height: 34px; font-size: 11.5px; } .rps-row { grid-template-columns: 46px 1fr 80px; gap: 8px; } .rp3-btns button { font-size: 15px; } }
+#scr-report > .puff-banner, #scr-report > h1, #scr-report .buddy-row { display: none !important; }

@@ -1576,7 +1576,7 @@ function avatarSrc(id, mood = "happy") {
   if (mood !== "full" && !CHAR_MOODS.includes(mood)) mood = "happy";
   if (/d$/.test(id) && CHAR_NEW_MOODS.includes(mood) && !(CHAR_NEW_DARK[id] || []).includes(mood)) mood = MOOD_BACKUP[mood];   // (not drawn yet)
   if ((id === "mum" || id === "dad") && !["happy", "thumbs", "full", ...CHAR_NEW_MOODS].includes(mood)) mood = mood === "star" ? "full" : (MOOD_BACKUP[mood] === "thumbs" ? "thumbs" : "happy");
-  return `icons/chars/${id}/${mood}.jpg`;
+  return `icons/chars/${id}/${mood}.webp`;   // (🫧 v233: cut out, no ground behind them: they float free)
 }
 // a person's character picture in a mood ("" when they haven't picked a character)
 const charPic = (u, mood) => u && isCharId(u.avatar) ? avatarSrc(u.avatar, mood) : "";
