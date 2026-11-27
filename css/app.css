@@ -4405,3 +4405,4 @@ button.set3-out { width: 100%; min-height: 56px; margin-top: 14px; border: 0; bo
 .set3-foot { text-align: center; font: 700 13px Nunito, sans-serif; color: #b9a896; margin: 12px 0 4px; }
 #scr-settings .two-col { gap: 0; }
 .set3-row .bell-num { position: static; margin-left: auto; }
+.kt3-ic { width: 76px; height: 76px; border-radius: 22px; background: rgba(255,255,255,.8); } .kt3-ic .i3d, .kt3-ic img { width: 64px !important; height: 64px !important; object-fit: contain; }

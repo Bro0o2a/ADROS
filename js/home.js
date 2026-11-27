@@ -117,10 +117,10 @@ function drawKidHome(u) {
       ${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
       <div class="kh3-say">${sayBoxHtml(u)}</div></div>
     ${comingCardHtml(comingUp(u.id), false)}
-    <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("study"), "Study", "My school")}
-      ${tile3("kt3-yellow", "data-kidcal", ico3d("calendar"), "Calendar", "Today's plan")}
-      ${tile3("kt3-pink", `data-kidpanel="habits"`, ico3d("heart"), "Good habits", hb.all ? `${hb.done} of ${hb.all} done` : "None today")}
-      ${tile3("kt3-green", `data-go="points"`, ico3d("achieve"), "My stars", `${pointsByUser()[u.id] || 0} this week`)}</div>
+    <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("k-study"), "Study", "My school")}
+      ${tile3("kt3-yellow", "data-kidcal", ico3d("k-calendar"), "Calendar", "Today's plan")}
+      ${tile3("kt3-pink", `data-kidpanel="habits"`, ico3d("k-habits"), "Good habits", hb.all ? `${hb.done} of ${hb.all} done` : "None today")}
+      ${tile3("kt3-green", `data-go="points"`, ico3d("k-stars"), "My stars", `${pointsByUser()[u.id] || 0} this week`)}</div>
     ${familySaysHtml(u.id)}
     ${today.length || bedM != null ? `<div class="kd3-card"><div class="kd3-head">Today · ${safe(dayHead(d0))}</div>${today.slice(0, 8).map(row).join("")}${today.length > 8 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}
       ${bedM != null ? `<div class="kd3-bed"><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : ""}
