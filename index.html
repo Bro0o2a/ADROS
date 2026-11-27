@@ -20,7 +20,7 @@
      This section only controls colors, sizes and spacing.
      ============================================================ -->
 <!-- THE LOOK (all the CSS) is in css/app.css -->
-<link rel="stylesheet" href="css/app.css?v=232">
+<link rel="stylesheet" href="css/app.css?v=233">
 </head>
 <body>
 <!-- ============================================================
@@ -772,6 +772,9 @@
       <input type="password" id="loginPass" autocomplete="current-password" placeholder="At least 6 letters or numbers">
       <div id="lgCodeRow"><label class="small" for="lgPCode">Parent code</label>
         <input type="text" id="lgPCode" class="code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC234"></div>
+      <!-- 👨‍👩‍👧 New account only: the person signing up says they are the parent and 18+ (kids' privacy rules, COPPA) -->
+      <label class="lg-adult" id="lgAdultRow"><input type="checkbox" id="lgAdult">
+        <span>I am the parent or legal guardian and 18 or older. I agree to the <a href="site/terms.html" target="_blank" rel="noopener">Terms</a> and the <a href="site/privacy.html" target="_blank" rel="noopener">Privacy policy</a>.</span></label>
       <button type="submit" class="primary login-btn" id="loginBtn">Sign in</button>
       <button type="button" class="linkbtn lg-forgot" id="lgForgot" data-lg="forgot">Forgot password?</button>
       <div class="err" id="loginErr" role="alert"></div>
@@ -831,6 +834,9 @@
     <div class="print-title" id="aokTitle">🤖 Turn on the AI helper?</div>
     <p class="print-hint" id="aiOkText">To make worksheets, explain lessons and check answers, the app sends the school work (photos, files and answers) and the child's first name, year and school to Anthropic, the AI company. It is used only to make the answer and is never used to train AI.</p>
     <p class="print-hint" id="aiOkKid" hidden>👨‍👩‍👧 Ask your parent to turn on the AI helper on their phone.</p>
+    <!-- 🔐 Grown-ups only: a sum a young child can't easily do (a "parent gate", asked by the stores for kids' apps) -->
+    <div class="ai-gate" id="aiGate"><label class="small" for="aiGateIn">Grown-ups only: what is <b id="aiGateQ"></b>?</label>
+      <input type="text" id="aiGateIn" inputmode="numeric" autocomplete="off" maxlength="4"><div class="err" id="aiGateErr" role="alert"></div></div>
     <div class="btnrow"><button class="primary" id="aiOkYes">I agree</button><button id="aiOkNo">Not now</button></div>
   </div>
 </div>
@@ -882,7 +888,7 @@
       <li>🗑️ Want your family's data deleted? A parent can delete the whole family account in ⚙️ Settings → ☁️ Family account → Delete family account. It deletes everything at once and can't be undone. You can also email us and we will delete it for you.</li>
       <li>📊 On parents' phones we count how many people use the app and which pages they open (no names, no family data), to make the app better. Never on kids' phones.</li>
     </ol>
-    <p class="pv-foot"><a href="site/privacy.html" target="_blank" rel="noopener">Read the full privacy policy</a></p>
+    <p class="pv-foot"><a href="site/privacy.html" target="_blank" rel="noopener">Read the full privacy policy</a> · <a href="site/terms.html" target="_blank" rel="noopener">Terms</a></p>
     <p class="pv-foot" id="privacyContact" hidden></p>
     <p class="pv-foot" id="privacyDate"></p>
     <button class="k-ok" data-privacyclose>OK</button>
@@ -912,23 +918,23 @@
 <!-- 🕌 adhan: works out the prayer times on the device (sw.js keeps a copy, so it also works offline) -->
 <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js"></script>
 <!-- THE BRAIN: the app's JavaScript, split by feature in the js/ folder (they load in this order; see CLAUDE.md) -->
-<script src="js/core.js?v=232"></script>
-<script src="js/screens.js?v=232"></script>
-<script src="js/points.js?v=232"></script>
-<script src="js/fun.js?v=232"></script>
-<script src="js/reports.js?v=232"></script>
-<script src="js/profile.js?v=232"></script>
-<script src="js/home.js?v=232"></script>
-<script src="js/activities.js?v=232"></script>
-<script src="js/calendar.js?v=232"></script>
-<script src="js/school.js?v=232"></script>
-<script src="js/ai.js?v=232"></script>
-<script src="js/pictures.js?v=232"></script>
-<script src="js/study.js?v=232"></script>
-<script src="js/settings.js?v=232"></script>
-<script src="js/taps.js?v=232"></script>
-<script src="js/cloud.js?v=232"></script>
-<script src="js/news.js?v=232"></script>
-<script src="js/start.js?v=232"></script>
+<script src="js/core.js?v=233"></script>
+<script src="js/screens.js?v=233"></script>
+<script src="js/points.js?v=233"></script>
+<script src="js/fun.js?v=233"></script>
+<script src="js/reports.js?v=233"></script>
+<script src="js/profile.js?v=233"></script>
+<script src="js/home.js?v=233"></script>
+<script src="js/activities.js?v=233"></script>
+<script src="js/calendar.js?v=233"></script>
+<script src="js/school.js?v=233"></script>
+<script src="js/ai.js?v=233"></script>
+<script src="js/pictures.js?v=233"></script>
+<script src="js/study.js?v=233"></script>
+<script src="js/settings.js?v=233"></script>
+<script src="js/taps.js?v=233"></script>
+<script src="js/cloud.js?v=233"></script>
+<script src="js/news.js?v=233"></script>
+<script src="js/start.js?v=233"></script>
 </body>
 </html>

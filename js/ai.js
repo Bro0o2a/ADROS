@@ -92,22 +92,30 @@ const aiFailFor = key => aiFail && aiFail.key === key && Date.now() - aiFail.at 
 // 🤖 Before the AI helper is used the first time, a parent says OK for the family (the stores ask for this):
 // what goes to Anthropic, that it isn't kept or used to train. Kids' devices can't say OK: they're asked to get a parent.
 const aiOkNow = () => !!(data && data.aiOk && data.aiOk.at);
+let aiGateAns = 0;   // (🔐 the answer to the grown-ups-only sum)
 function askAiOk() {
-  const parent = isParentDevice();
+  const parent = isParentDevice(), a = 12 + Math.floor(Math.random() * 8), b = 3 + Math.floor(Math.random() * 7);
+  aiGateAns = a * b;
+  $("aiGateQ").textContent = a + " × " + b;
+  $("aiGateIn").value = "";
+  $("aiGateErr").textContent = "";
   $("aiOkText").hidden = false;
   $("aiOkKid").hidden = parent;
+  $("aiGate").hidden = !parent;
   $("aiOkYes").hidden = !parent;
   $("aiOkModal").hidden = false;
-  (parent ? $("aiOkYes") : $("aiOkNo")).focus();
+  (parent ? $("aiGateIn") : $("aiOkNo")).focus();
 }
 $("aiOkYes").onclick = () => {
   if (!isParentDevice()) return;
+  if (Number($("aiGateIn").value.trim()) !== aiGateAns) { $("aiGateErr").textContent = "That answer isn't right. Please try again."; return $("aiGateIn").focus(); }
   data.aiOk = { by: me || "", at: new Date().toISOString() };
   writeData("auto");
   $("aiOkModal").hidden = true;
   toast("🤖 AI helper turned on. Tap the button again.", 3500);
 };
 $("aiOkNo").onclick = () => { $("aiOkModal").hidden = true; };
+$("aiGateIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("aiOkYes").click(); } });
 $("aiOkModal").addEventListener("click", e => { if (e.target === $("aiOkModal")) $("aiOkModal").hidden = true; });
 async function callAi(action, body, key, auto = false) {
   if (!aiOkNow()) { if (!auto) askAiOk(); return null; }   // (🤖 no OK yet: nothing is sent)

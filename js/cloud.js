@@ -140,6 +140,7 @@ function loginMode(mode) {
   $("lgFamilyRow").hidden = mode !== "create";
   $("lgNameRow").hidden = mode === "signin";
   $("lgCodeRow").hidden = mode !== "code";
+  $("lgAdultRow").hidden = mode === "signin";
   $("lgForgot").hidden = mode !== "signin";
   $("loginPass").autocomplete = mode === "signin" ? "current-password" : "new-password";
   document.querySelectorAll("[data-lgmode]").forEach(b => { b.classList.toggle("on", b.dataset.lgmode === mode); b.setAttribute("aria-selected", b.dataset.lgmode === mode); });
@@ -180,6 +181,7 @@ $("loginForm").addEventListener("submit", async e => {
   if (!email || !pass) return $("loginErr").textContent = "Please type the email and the password.";
   if (mode === "create" && !familyName) return $("loginErr").textContent = "Please type your family name.";
   if (mode === "code" && !isCode(code)) return $("loginErr").textContent = "Please type the 6-letter parent code.";
+  if (mode !== "signin" && !$("lgAdult").checked) return $("loginErr").textContent = "Please tick the box to say you are the parent and 18 or older.";
   if (!fb) return $("loginErr").textContent = "No internet yet. Connect to the internet and try again.";
   $("loginBtn").disabled = true;
   $("loginBtn").textContent = "One moment…";

@@ -278,8 +278,14 @@ try {
     data.aiOk = null;
     const r = await callAi("check", { title: "test" }, "check|test");
     const shown = !document.getElementById("aiOkModal").hidden;
+    // 🔐 Grown-ups-only sum: a wrong answer keeps it off, the right one turns it on
+    document.getElementById("aiGateIn").value = "1";
     document.getElementById("aiOkYes").click();
-    return r === null && shown && !!data.aiOk && document.getElementById("aiOkModal").hidden;
+    const stillOff = !data.aiOk && !document.getElementById("aiOkModal").hidden;
+    const [x, y] = document.getElementById("aiGateQ").textContent.split("×").map(Number);
+    document.getElementById("aiGateIn").value = String(x * y);
+    document.getElementById("aiOkYes").click();
+    return r === null && shown && stillOff && !!data.aiOk && document.getElementById("aiOkModal").hidden;
   });
   if (asked === false) errors.push("[AI OK] the AI helper did not ask the parent first, or the OK was not saved");
 
