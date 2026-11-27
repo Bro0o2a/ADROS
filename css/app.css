@@ -4406,3 +4406,53 @@ button.set3-out { width: 100%; min-height: 56px; margin-top: 14px; border: 0; bo
 #scr-settings .two-col { gap: 0; }
 .set3-row .bell-num { position: static; margin-left: auto; }
 .kt3-ic { width: 76px; height: 76px; border-radius: 22px; background: rgba(255,255,255,.8); } .kt3-ic .i3d, .kt3-ic img { width: 64px !important; height: 64px !important; object-fit: contain; }
+
+/* 🎨 v233 the activity card pop-up (Broo2a's picture): buddy bubble, white card (icon, name, day · time, chips, faces), Edit · Mark done */
+#kCard { background: #f6ecdf; border-radius: 30px; padding: 16px; }
+.kc3-buddy { display: flex; align-items: center; gap: 10px; margin: 0 34px 12px 0; }
+.kc3-buddy img { width: 78px; height: 78px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.kc3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 11px 13px; font: 800 15px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.kc3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.kc3-card { background: #fff; border-radius: 24px; padding: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.05); }
+.kc3-head { display: flex; align-items: center; gap: 12px; }
+.kc3-ic { width: 60px; height: 60px; flex: none; border-radius: 18px; background: var(--soft, #fde0dc); display: grid; place-items: center; }
+.kc3-ic .k-bigic, .kc3-ic img { width: 44px !important; height: 44px !important; } .kc3-ic .e { font-size: 32px; }
+.kc3-t { flex: 1; min-width: 0; } .kc3-t b { display: block; font: 900 21px/1.15 Nunito, sans-serif; color: #3b2a1e; overflow-wrap: normal; } .kc3-t small { font: 700 14px Nunito, sans-serif; color: #7a6656; }
+.kc3-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.kc3-chips span { background: #f3ebe2; border-radius: 999px; padding: 5px 12px; font: 800 12px Nunito, sans-serif; color: #7a6656; text-transform: uppercase; letter-spacing: .5px; }
+.kc3-ppl { display: flex; align-items: center; gap: 8px; } .kc3-faces { display: flex; }
+.kc3-faces img { width: 38px; height: 38px; object-fit: contain; margin-right: -6px; } .kc3-faces i { font-style: normal; font-size: 26px; margin-right: 2px; }
+.kc3-ppl b { font: 800 13px Nunito, sans-serif; color: #7a6656; margin-left: 8px; }
+.kc3-card .kc2-tiles { margin-top: 10px; }
+.kc3-btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.kc3-btns > button { flex: 1 1 40%; min-height: 52px; border: 0; border-radius: 22px; font: 900 16px Nunito, sans-serif; }
+button.kc3-edit { background: #dbe9fb; color: #1f4f8a; box-shadow: 0 4px 0 #b9d0ee; }
+button.kc3-done { background: #dff0da; color: #2f5a2a; box-shadow: 0 4px 0 #b9dcb1; } button.kc3-done.on { background: #6cc070; color: #fff; }
+.kc3-btns .k-ok { background: #fff; color: #5a4636; box-shadow: 0 4px 0 rgba(0,0,0,.08); margin: 0; }
+.kc3-btns:has(.kc3-edit, .kc3-done) .k-ok { flex-basis: 100%; min-height: 44px; }
+#kCard { position: relative; }
+button.kc3-x { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #fff; color: #7a6656; font: 900 17px Nunito, sans-serif; box-shadow: 0 3px 0 rgba(0,0,0,.08); z-index: 2; }
+
+/* 🎨 v233 News pop-up (Broo2a's picture): cream card, title with icon + round ✕, each news a white rounded card with the person's character */
+.news-card { position: relative; background: #f6ecdf !important; border-radius: 30px !important; }
+.nw3-title { display: flex; align-items: center; gap: 10px; font: 900 26px Nunito, sans-serif !important; color: #3b2a1e; text-align: left !important; margin: 2px 50px 4px 2px; }
+.nw3-title .i3d { width: 40px; height: 40px; }
+button.nw3-x { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #fff; color: #7a6656; font: 900 17px Nunito, sans-serif; box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+.news-card .news-list { display: flex; flex-direction: column; gap: 8px; padding: 0; }
+.news-card .news-item { display: flex; align-items: center; gap: 12px; background: #fff; border: 0 !important; border-radius: 20px; padding: 10px 12px; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.news-card .news-item.new { box-shadow: 0 3px 0 rgba(0,0,0,.05), inset 4px 0 0 #f2c14e; }
+.news-card .news-face { width: 50px; height: 50px; flex: none; border-radius: 16px; background: #f6efe4; display: grid; place-items: center; font-size: 26px; overflow: hidden; }
+.news-card .news-face img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.news-card .news-item b { font-weight: 900; color: #3b2a1e; } .news-card .news-item small { display: block; color: #8a7666; font-weight: 600; }
+
+/* 🎨 v233 Needs you (Broo2a's picture): a cream box with "Needs you, Name!" in red, the buddy saying what it is, white cards inside */
+.needs-panel.nd3 { background: #f6ecdf; border-radius: 28px; padding: 14px; margin-top: 8px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.nd3-title { display: block; font: 900 24px/1.15 Nunito, sans-serif; color: #9a2a22; margin: 2px 2px 8px; }
+.nd3-buddy { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.nd3-buddy img { width: 74px; height: 74px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.nd3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 11px 13px; font: 800 15px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.nd3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.nd3 .card { background: #fff; border: 0; border-radius: 22px; box-shadow: 0 3px 0 rgba(0,0,0,.05); margin: 0 0 10px; }
+.nd3 .rate-card h2 { font: 900 17px Nunito, sans-serif; color: #3b2a1e; }
+.nd3 .rate-btns button { border-radius: 16px; background: #fdf3d6; border: 0; box-shadow: 0 3px 0 #ecd9a6; }
+.nd3 .rate-btns .miss-btn { background: #f3ebe2; box-shadow: 0 3px 0 #e0d3c2; }

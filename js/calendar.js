@@ -671,21 +671,32 @@ function openCard(b) {
   const mins = b.end - b.start, len = mins >= 60 ? `${Math.floor(mins / 60)} h${mins % 60 ? ` ${mins % 60} min` : ""}` : `${mins} min`;
   cardDay = b.day;
   $("kCard").style.cssText = `--soft:${b.soft};--ink:${b.ink}`;
-  $("kCard").innerHTML = `
-    <div class="k-card-top kc2-top">${canEditAct ? `<button class="k-edit kc2-pen" data-kedit="${b.fixed ? "fixed" : "flex"}|${safe(baseActId(actId))}" aria-label="Change this activity">✏️</button>` : ""}
-      <div class="big">${b.fixed ? safe(b.emoji) : actIcon3d(b.name, b.type, "k-bigic")}</div>
-      <div class="nm">${subj ? `${safe(subj.emoji)} ` : ""}${safe(what)}</div>
-      <div class="kc2-tags"><span class="kc2-tag">${safe(tEmoji)} ${safe(tWord)}</span>${isSecondId(actId || "") ? `<span class="kc2-tag">2nd today</span>` : ""}${(() => { const ac = actId && (b.fixed ? data.fixed : data.flexible).find(a => a.id === baseActId(actId)); return ac && ac.must ? `<span class="kc2-tag">⭐ Must-do</span>` : ""; })()}</div></div>
-    <div class="kc2-when">
-      <div class="kc2-day">📅 ${safe(dayLong(b.day))}</div>
-      <div class="kc2-time">${safe(clock(b.start, true))} <span>→</span> ${safe(clock(b.end, true))}</div>
-      <span class="kc2-len">⏱️ ${len}</span>
-      ${canMove ? `<button class="k-edit kc2-pen" data-kedit="move|${safe(b.day)}|${safe(actId)}" aria-label="Change the day or time">✏️</button>` : ""}</div>
+  // 🎨 v233 (Broo2a's picture): the buddy says when it is, a white card (icon, name, day · time, chips, everyone's characters), Edit · Mark done
+  const viewer = userById(me), kidOne = b.users.length === 1 && !isParentId(b.users[0]) ? userById(b.users[0]) : null;
+  const bud = kidOne && (isParentDevice() || kidOne.id === me) ? kidOne : viewer, isT = b.day === todayYmd();
+  const ac = actId && (b.fixed ? data.fixed : data.flexible).find(a => a.id === baseActId(actId));
+  const sayTxt = `${what} ${isT ? "today" : "on " + DAYS[weekdayOf(b.day)]}! ${b.type === "free" ? "Pick something fun." : `Get ready at ${clock(b.start)}.`}`;
+  const chips = [b.fixed ? "Fixed" : "Flexible", `${tEmoji} ${tWord}`, len, ac && ac.must ? "⭐ Must-do" : "", isSecondId(actId || "") ? "2nd today" : ""].filter(Boolean);
+  const ppl = b.users.map(id => userById(id)).filter(Boolean);
+  const mine = b.acts.find(a => a.user === me) || (isParentDevice() && kids.length === 1 ? kids[0] : null);
+  const canTick = mine && isT && !b.gone && (isParentId(me) || mine.user === me);
+  const tickOn = mine && isDone(b.day, mine.actId, mine.user);
+  $("kCard").innerHTML = `<button class="kc3-x" aria-label="Close">✕</button>
+    <div class="kc3-buddy">${charPic(bud, "jump") ? `<img src="${charPic(bud, "jump")}" alt="">` : ""}<p>${safe(sayTxt)}</p></div>
+    <div class="kc3-card">
+      <div class="kc3-head"><span class="kc3-ic">${b.fixed ? `<span class="e">${safe(b.emoji)}</span>` : actIcon3d(b.name, b.type, "k-bigic")}</span>
+        <span class="kc3-t"><b>${subj ? `${safe(subj.emoji)} ` : ""}${safe(what)}</b><small>${safe(dayLong(b.day))} · ${safe(clock(b.start))} - ${safe(clock(b.end))}</small></span>
+        ${canMove ? `<button class="k-edit kc2-pen" data-kedit="move|${safe(b.day)}|${safe(actId)}" aria-label="Change the day or time">✏️</button>` : ""}</div>
+      <div class="kc3-chips">${chips.map(c => `<span>${safe(c)}</span>`).join("")}</div>
+      <div class="kc3-ppl"><span class="kc3-faces">${ppl.map(u => charPic(u, "happy") ? `<img src="${charPic(u, "happy")}" alt="">` : `<i>${safe(u.emoji)}</i>`).join("")}</span><b>${safe(namesOf(b.users))}</b></div>
+      ${tiles.length > 1 ? `<div class="kc2-tiles">${tiles.slice(1).map(([ic, l, v, wide]) => `<div class="kc2-tile${wide ? " wide" : ""}"><small>${ic} ${l}</small><b>${v}</b></div>`).join("")}</div>` : ""}
+    </div>
     ${b.type === "free" ? `<div class="kc2-free">🎈 Free time: pick what to do!<div class="kc2-freebtns">${b.users.map(u => `<button class="pill small" data-freeopen="${safe(u)}">💡 Ideas${b.users.length > 1 ? ` for ${safe(userById(u).name)}` : ""}</button>`).join("")}</div></div>` : ""}
-    <div class="kc2-tiles">${tiles.map(([ic, l, v, wide]) => `<div class="kc2-tile${wide ? " wide" : ""}"><small>${ic} ${l}</small><b>${v}</b></div>`).join("")}</div>
     ${quickEditHtml(b, actId, canEditAct, canMove)}
     ${fixedTodayHtml(b)}
-    <button class="k-ok" id="kOk">OK 👍</button>`;
+    <div class="kc3-btns">${canEditAct ? `<button class="kc3-edit" data-kedit="${b.fixed ? "fixed" : "flex"}|${safe(baseActId(actId))}">✏️ Edit</button>` : ""}
+      ${canTick ? `<button class="kc3-done${tickOn ? " on" : ""}" data-check="${safe(b.day)}|${safe(mine.actId)}|${safe(mine.user)}">${tickOn ? "✓ Done!" : "✓ Mark done"}</button>` : ""}
+      <button class="k-ok" id="kOk">OK 👍</button></div>`;
   $("kCard").classList.toggle("qe-on", !!$("kCard").querySelector(".qe-bar"));
   $("kModal").hidden = false;
   $("kOk").focus();
@@ -1954,3 +1965,6 @@ setInterval(() => {
     if (planDay(todayYmd()).items.some(it => it.start > was && it.start <= now)) render();
   } catch (e) {}
 }, 20000);
+// (✓ Mark done on the big card: the tick is saved by the usual [data-check] tap, then the card closes)
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".kc3-x")) $("kModal").hidden = true; });
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".kc3-done")) setTimeout(() => { $("kModal").hidden = true; }, 350); });

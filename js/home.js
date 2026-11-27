@@ -220,7 +220,7 @@ function needsLineHtml() {
     ${one ? safe(list[0].text) : `🔔 ${list.length} things need you`}<span aria-hidden="true">${open ? "▲" : "›"}</span></button>${one ? x1(list[0]) : ""}</div>`;
   const shown = list.find(x => x.key === needsOpen);
   return `<div class="needs">${head}${needsOpen === "list" && !one ? `<div class="needs-list">${list.map(x => `<div class="needs-row"><button data-needs="${x.key}">${safe(x.text)} ›</button>${x1(x)}</div>`).join("")}</div>` : ""}
-    ${shown ? `<div class="needs-panel">${shown.html}</div>` : ""}</div>`;
+    ${shown ? `<div class="needs-panel nd3">${(u => `<b class="nd3-title">Needs you, ${safe(u.name)}!</b><div class="nd3-buddy">${charPic(u, "point") ? `<img src="${charPic(u, "point")}" alt="">` : ""}<p>${safe(shown.text.replace(/^\S+\s/, ""))}</p></div>`)(userById(me))}${shown.html}</div>` : ""}</div>`;
 }
 // 🎯 The score ring (0–100) in the kid's colour
 function scoreRingHtml(n, color, target) {
