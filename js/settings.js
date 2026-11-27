@@ -571,31 +571,43 @@ function drawFamily() {
   const form = famEdit ? familyFormHtml(famEdit === "new" ? {} : userById(famEdit)) : "";
   $("familyBody").innerHTML = `
     ${familySetup ? `<div class="card sc-newtopic"><b>🎉 Your family is ready!</b><p>Now add your kids. Each kid gets a code to sign in on their own phone or tablet.</p></div>` : ""}
+    ${famPeopleHtml(kids, form)}
     ${online ? "" : `<div class="card"><p class="sc-empty">🔌 Codes need the internet and the family sign-in.</p></div>`}
     ${cloud.familyId && isParentDevice() ? `<div class="card fam-id"><span>Family ID: <code>${safe(cloud.familyId)}</code></span>
       <button class="pill" data-famidcopy>📋 Copy</button>${aiUsageHtml()}</div>` : ""}
-    <div class="bd-head"><h2>🧒 Kids</h2>${famEdit === "new" ? "" : `<button class="edit" data-famedit="new">➕ Add a kid</button>`}</div>
-    ${famEdit === "new" ? form : ""}
-    ${kids.length ? `<div class="fam-list">${kids.map(u => {
-      const c = colorsOf(u), about = [u.school, u.curriculum, u.year].filter(Boolean).join(" · ");
-      return `<div class="card bd-card fam-kid" style="--c:${c.color}">
-        <div class="fam-top"><span class="fam-face" style="background:${c.soft}">${safe(u.emoji)}</span>
-          <div class="what"><b>${safe(u.name)}</b><small>${about ? safe(about) : "No school or year yet"}</small></div></div>
-        ${famEdit === u.id ? form : ""}
-        <div class="fam-code">${u.code ? `🔑 <span class="code-big">${safe(u.code)}</span>` : `<span class="sc-empty">No code yet</span>`}</div>
-        <div class="ai-btns">
-          ${u.code ? `<button data-famcopy="${safe(u.id)}">📋 Copy</button><button data-famshare="${safe(u.id)}">📤 Share</button>` : ""}
-          <button data-famcode="${safe(u.id)}">${u.code ? "🔁 New code" : "🔑 Make code"}</button>
-          ${famEdit === u.id ? "" : `<button data-famedit="${safe(u.id)}">✏️ Edit</button>`}
-          <button class="danger-text" data-famdel="${safe(u.id)}">🗑️ Remove</button>
-          ${isParentDevice() ? `<button class="danger-fill" data-famreset="${safe(u.id)}">🗑️ Reset study data</button>` : ""}</div></div>`;
-    }).join("")}</div>` : `<div class="card"><p class="sc-empty">No kids yet. Tap ➕ Add a kid.</p></div>`}
-    <div class="card bd-card" style="margin-top:18px"><h2>👨‍👩‍👧 Add a parent</h2>
-      <p class="hint">Makes a code for the other parent. They open the app, tap 👨‍👩‍👧 I'm a parent → Parent code, sign up with their own email, and type the code. It works once.</p>
-      ${famParentCode ? `<div class="fam-code">🔑 <span class="code-big">${safe(famParentCode)}</span></div>
-        <div class="ai-btns"><button data-famcopy="parent">📋 Copy</button><button data-famshare="parent">📤 Share</button></div>` : ""}
-      <div class="ai-btns" style="margin-top:10px"><button class="primary" data-famcode="parent">${famParentCode ? "🔁 New parent code" : "🔑 Make a parent code"}</button></div></div>
     ${familySetup ? `<div class="btnrow" style="margin-top:18px"><button class="primary" data-famdone>✅ Done</button></div>` : ""}`;
+}
+// 🎨 v233 (Broo2a's picture): everyone in one list (character, name, a short line, Parent / Kid tag); tap a kid → their code + buttons;
+// the dashed "+ Add a family member" → Add a kid · Add a parent
+let famOpen = null, famAdd = false;
+const NUM_WORDS = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+function famPeopleHtml(kids, form) {
+  const all = [...parentsList(), ...kids], pts = pointsByUser(), star = stars(), fi = fairInfo();
+  const lead = fairOrder(Object.fromEntries(Object.entries(fi).map(([k, x]) => [k, x.fair])))[0], meU = userById(me);
+  const pic = x => charPic(x, "happy") ? `<img src="${charPic(x, "happy")}" alt="">` : `<span class="e">${safe(x.emoji)}</span>`;
+  const subOf = x => isParentId(x.id) ? (x.id === me ? "You · plans the week" : "Parent") : [star.includes(x.id) ? "Star of the week" : lead && lead.id === x.id && fi[x.id].fair > 0 ? "Leading" : [x.school, x.year].filter(Boolean).join(" · "), `${pts[x.id] || 0} stars`].filter(Boolean).join(" · ");
+  const kidMore = u => `<div class="fam3-more">${famEdit === u.id ? form : ""}
+      <div class="fam-code">${u.code ? `🔑 <span class="code-big">${safe(u.code)}</span>` : `<span class="sc-empty">No code yet</span>`}</div>
+      <div class="ai-btns">
+        ${u.code ? `<button data-famcopy="${safe(u.id)}">📋 Copy</button><button data-famshare="${safe(u.id)}">📤 Share</button>` : ""}
+        <button data-famcode="${safe(u.id)}">${u.code ? "🔁 New code" : "🔑 Make code"}</button>
+        ${famEdit === u.id ? "" : `<button data-famedit="${safe(u.id)}">✏️ Edit</button>`}
+        <button class="danger-text" data-famdel="${safe(u.id)}">🗑️ Remove</button>
+        ${isParentDevice() ? `<button class="danger-fill" data-famreset="${safe(u.id)}">🗑️ Reset study data</button>` : ""}</div></div>`;
+  const rows = all.map(x => { const kid = !isParentId(x.id), open = kid && (famOpen === x.id || famEdit === x.id);
+    return `<div class="fam3-item${open ? " open" : ""}"><button class="fam3-row" ${kid ? `data-famopen="${safe(x.id)}" aria-expanded="${open}"` : "disabled"}>
+      <span class="fam3-pic" style="--soft:${colorsOf(x).soft}">${pic(x)}</span><span class="fam3-t"><b>${safe(x.name)}</b><small>${safe(subOf(x))}</small></span>
+      <span class="fam3-tag ${kid ? "kid" : "par"}">${kid ? "Kid" : "Parent"}</span></button>${open ? kidMore(x) : ""}</div>`; }).join("");
+  const n = all.length, say = `${NUM_WORDS[n] || n} of us! Kids join with their own code and pick a buddy.`;
+  const addBox = famAdd || famEdit === "new" || famParentCode ? `<div class="card bd-card fam3-add">
+      ${famEdit === "new" ? `<h2>🧒 Add a kid</h2>${form}` : `<div class="ai-btns"><button class="primary" data-famedit="new">🧒 Add a kid</button><button data-famcode="parent">${famParentCode ? "🔁 New parent code" : "👨‍👩‍👧 Add a parent"}</button></div>`}
+      ${famParentCode ? `<p class="hint">The other parent opens the app, taps 👨‍👩‍👧 I'm a parent → Parent code, signs up with their own email, and types this code. It works once.</p>
+        <div class="fam-code">🔑 <span class="code-big">${safe(famParentCode)}</span></div>
+        <div class="ai-btns"><button data-famcopy="parent">📋 Copy</button><button data-famshare="parent">📤 Share</button></div>` : ""}</div>` : "";
+  return `<div class="fam3-title"><h2>Family members</h2><small>everyone in the plan</small></div>
+    <div class="fam3-buddy">${charPic(meU, "wave") ? `<img src="${charPic(meU, "wave")}" alt="">` : ""}<p>${safe(say)}</p></div>
+    <div class="fam3-list">${rows}</div>
+    ${addBox || `<button class="fam3-addbtn" data-famaddopen>＋ Add a family member</button>`}`;
 }
 function familyFormHtml(u) {
   const color = u.color || freeColor();
@@ -680,7 +692,9 @@ $("scr-family").addEventListener("click", e => {
   if (!b || !isParentId(me)) return;
   const ds = b.dataset;
   if (ds.famedit) { famEdit = ds.famedit; render(); const n = $("famName"); if (n) n.focus(); return; }
-  if ("famcancel" in ds) { famEdit = null; return render(); }
+  if ("famcancel" in ds) { famEdit = null; famAdd = false; return render(); }
+  if (ds.famopen) { famOpen = famOpen === ds.famopen ? null : ds.famopen; return render(); }
+  if ("famaddopen" in ds) { famAdd = true; return render(); }
   if ("famsave" in ds) return saveFamilyKid();
   if (ds.famemoji) { $("famEmoji").value = ds.famemoji; return; }
   if (ds.famcode) return makeCode(ds.famcode);

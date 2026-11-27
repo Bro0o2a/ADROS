@@ -4363,3 +4363,22 @@ button.sj3-all { width: 100%; min-height: 44px; border: 0; border-radius: 18px; 
 #scr-school .bd-folder-head.sj3-head { display: flex !important; }
 #scr-school .bd-folder-head.sj3-head h2 { display: block; }
 #scr-school:has(.sj3-head) > .puff-banner, #scr-school:has(.sj3-head) > h1 { display: none !important; }
+
+/* 🎨 v233 Family members (Broo2a's picture): buddy bubble, a white row per person with character + Parent/Kid tag, dashed Add */
+#scr-family > h1, #scr-family > .puff-banner, #scr-family .buddy-row { display: none !important; }
+.fam3-title h2 { margin: 6px 2px 0; font: 900 30px/1.1 Nunito, sans-serif; color: #3b2a1e; } .fam3-title small { display: block; margin: 2px 2px 10px; font: 700 15px Nunito, sans-serif; color: #8a7666; }
+.fam3-buddy { display: flex; align-items: center; gap: 12px; background: #fbe3ec; border-radius: 26px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.fam3-buddy img { width: 84px; height: 84px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.fam3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 12px 14px; font: 800 15px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.fam3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.fam3-list { display: flex; flex-direction: column; gap: 10px; }
+.fam3-item { background: #fff; border-radius: 26px; box-shadow: 0 4px 0 rgba(0,0,0,.06); overflow: hidden; }
+button.fam3-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 0; padding: 12px 14px; border: 0; background: none; box-shadow: none; text-align: left; color: inherit; opacity: 1; }
+.fam3-pic { width: 60px; height: 60px; flex: none; border-radius: 50%; background: var(--soft, #f6efe4); display: grid; place-items: center; overflow: hidden; }
+.fam3-pic img { width: 100%; height: 100%; object-fit: cover; object-position: top; } .fam3-pic .e { font-size: 32px; }
+.fam3-t { flex: 1; min-width: 0; } .fam3-t b { display: block; font: 900 19px Nunito, sans-serif; color: #3b2a1e; } .fam3-t small { font: 700 13px Nunito, sans-serif; color: #7a6656; }
+.fam3-tag { flex: none; border-radius: 999px; padding: 5px 12px; font: 900 13px Nunito, sans-serif; }
+.fam3-tag.par { background: #fbe3ec; color: #b8325a; } .fam3-tag.kid { background: #dff0da; color: #2f6a2a; }
+.fam3-more { padding: 0 14px 14px; }
+button.fam3-addbtn { width: 100%; min-height: 58px; margin-top: 12px; border: 3px dashed #e3d6c6; border-radius: 26px; background: rgba(255,255,255,.5); color: #7a6656; font: 800 17px Nunito, sans-serif; box-shadow: none; }
+.fam3-add { margin-top: 12px; }
