@@ -29,6 +29,15 @@ function weekStats(id) {
   const moods = Array.from({ length: weekIndex() + 1 }, (_, d) => { const e = diaryOf(id, ymd(dayDate(d))); return { day: SHORT[weekdayOf(ymd(dayDate(d)))], face: e ? moodFace(e.mood) : "" }; });
   return { pct: planned ? Math.min(100, Math.round(done / planned * 100)) : null, done, planned, ticks, moods };
 }
+// 🎨 v233 the Me card: things done today (activity ticks + habits done) · days in a row with a ⭐ (today counts once it has one)
+const meDoneToday = id => { const t = todayYmd(); return tickLog().filter(x => x.user === id && x.date === t).length
+  + habitsFor(id).filter(h => habitDone(h, data.habitMarks[habitKey(t, h.id, id)])).length; };
+function dayStreak(id) {
+  let n = 0, d = todayYmd();
+  if (!dayStarPts(id, d)) d = addDaysYmd(d, -1);
+  while (n < 60 && dayStarPts(id, d) > 0) { n++; d = addDaysYmd(d, -1); }
+  return n;
+}
 function drawMe() {
   if (!exists(meWho)) meWho = me;
   const u = userById(meWho), c = colorsOf(u), mine = u.id === me, kid = !isParentId(u.id), parent = isParentViewer();
@@ -83,15 +92,19 @@ function drawMe() {
   const meU = userById(me), notYou = !isKidDevice() && isParentId(me) && isMainLogin(cloudMeta().member) && parentsList().length > 1;
   const signedIn = exists(me) ? `<p class="me-signed">Signed in as: <b>${whoHtml(me)}</b>${notYou ? `<button class="linkbtn" data-menotyou>Not you?</button>` : ""}</p>` : "";
   $("meBody").innerHTML = `${signedIn}${chips}
-    <div class="card me-top" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-      <div class="me-face">${faceHtml(u)}</div>
-      <div class="me-name"><h1>${safe(u.name)}</h1><small>${mine ? "👤 My profile" : "👤 Profile"}</small></div>
+    <div class="me3-title"><h1>${mine ? "Me" : safe(u.name)}</h1><small>${safe(u.name)}'s profile and buddy</small></div>
+    <div class="card me-top me3" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
+      <div class="me3-row"><div class="me-face me3-face">${charPic(u, "happy") ? `<img src="${charPic(u, "happy")}" alt="">` : faceHtml(u)}</div>
+      <div class="me3-info"><div class="me-name"><h2>${safe(u.name)}</h2>${stars().includes(u.id) ? `<span class="me3-star">STAR</span>` : ""}</div>
+        ${kid ? `<div class="me3-stats"><span><b>${pointsByUser()[u.id] || 0}</b><small>stars</small></span><span><b>${meDoneToday(u.id)}</b><small>done today</small></span><span><b>${dayStreak(u.id)}</b><small>day streak</small></span></div>` : `<small class="me3-role">Parent</small>`}</div></div>
       ${hasSpark(u.id) ? `<button class="me-spark" ${canEdit ? "data-mespark" : "disabled"} aria-label="${sparkName(u, true)}: level ${L}, ${pct}% to level ${L + 1}">
         <span class="bu-ring bu-big" aria-hidden="true">${buddyRingSvg(pct)}<span class="bu-in"><span class="e">${buddyFace(u.id, L)}</span><b>Lv ${L}</b></span></span>
         <span class="bu-text"><b>${pct}% to Lv ${L + 1}</b><small>${u.buddy ? `✨ ${safe(sparkName(u, true))}` : "✨ Pick your Spark"}${kid ? ` · ⭐ ${p} points in all` : ""}</small></span></button>` : ""}
       ${kid ? `<p class="me-kinds">This week: ${kindsText(k)}</p>` : ""}
     </div>
     ${canEdit ? "" : `<p class="me-lock">🔒 ${isParentId(u.id) ? `Only ${safe(u.name)} can change this profile.` : `Only ${safe(u.name)} or a parent can change this profile.`}</p>`}
+    ${canEdit && !meEdit ? `<div class="me3-pick"><div class="me3-ph"><h2>${mine ? "Choose your character" : `${safe(u.name)}'s character`}</h2><span>${AVATARS.girls.length + AVATARS.boys.length} buddies</span></div>
+      ${avatarPickHtml(u)}<button class="me3-save" data-mesavechar>Save my buddy</button></div>` : ""}
     ${form}
     <div class="card me-card"><h2>🎂 Birthday${canBirthday && !meEdit ? ` <button class="pill small me-cardedit" data-meedit="birthday">✏️ ${bd ? "Edit" : "Add"}</button>` : ""}</h2>${bd ? `<p class="me-big">${bd.days === 0 ? "🎉 Happy birthday!" : `🎂 ${bd.days} ${bd.days === 1 ? "day" : "days"} to go!`}</p>
       <p class="hint">${bd.label}${bd.age != null ? ` · ${bd.age} years old` : ""}</p>` : `<p class="sc-empty">${canBirthday ? "Tap ✏️ Add to put it in." : "Not added yet."}</p>`}</div>
@@ -309,6 +322,12 @@ document.addEventListener("click", e => {
     return $("meBody").querySelector(".me-form").scrollIntoView({ behavior: "smooth", block: "start" }); }
   if ("mecancel" in ds) { meEdit = false; mePhoto = null; return render(); }
   if ("mesave" in ds) return saveMe();
+  if ("mesavechar" in ds) {   // 🎨 v233: "Save my buddy" (the character list on the Me page)
+    const u = data.users.find(x => x.id === meWho), on = $("meBody").querySelector("[data-meavatar].on");
+    if (!u || !canEditProfile(u.id) || !on) return;
+    if (AVATAR_IDS.includes(on.dataset.meavatar)) u.avatar = on.dataset.meavatar; else delete u.avatar;
+    avTone = null; keepNow(); toast("✓ Saved: your buddy", 2000); return render();
+  }
   // 🖼️ a parent: 📷 take or choose a photo · 😀 use my emoji instead (tapping an emoji picks the emoji too)
   if ("mephoto" in ds) { $("mePhotoFile").value = ""; return $("mePhotoFile").click(); }
   if ("menophoto" in ds) { mePhoto = ""; $("mePicNow").innerHTML = mePicHtml(userById(meWho)); b.hidden = true; return; }
@@ -459,9 +478,29 @@ function setupSignOutButtons() {
     (bell && bell.parentElement !== bar ? bell.parentElement : bar).appendChild(b);   // (the last one on the right)
   });
 }
+// 🌈 v233 (Broo2a's picture): the top buttons sit in ONE white bar · ⬅ Back square · Home + School pills · the rest = round
+// buttons with their name under them (Calendar, News, Sign out, Print …). Done once per button (rb-done).
+function tidyBars() {
+  document.querySelectorAll(".screen .bar").forEach(bar => {
+    bar.classList.add("bar3");
+    bar.querySelectorAll("button.pill").forEach(b => {
+      if (b.classList.contains("rb-done") || b.hasAttribute("data-navback") || b.classList.contains("sch-btn")) return;
+      b.classList.add("rb-done");
+      const keep = [...b.querySelectorAll(".bell-num, .bu-badge")];
+      const txt = [...b.childNodes].filter(n => !keep.includes(n)).map(n => n.textContent).join("").replace(/\s+/g, " ").trim();
+      const m = txt.match(/^(\S+)\s+(.+)$/);
+      if (!m) return;
+      b.classList.add(b.getAttribute("data-go") === "home" ? "rb-home" : "rb");
+      b.innerHTML = `<span class="rb-ic" aria-hidden="true">${m[1]}</span><span class="rb-l">${m[2]}</span>`;
+      keep.forEach(k => b.appendChild(k));
+      if (!b.getAttribute("aria-label")) b.setAttribute("aria-label", m[2]);
+    });
+  });
+}
 function updateBuddyBadges() {
   setupBuddyBadges();
   setupSignOutButtons();
+  tidyBars();
   const u = exists(me) && userById(me);
   const show = !!u && hasSpark(me) && !["start", "setup"].includes(screen) && $("loginScreen").hidden;   // (✨ no Spark badge for a parent)
   const badges = document.querySelectorAll(".bu-badge");
@@ -585,19 +624,49 @@ function maybeShowStar() {
   let seen = ""; try { seen = localStorage.getItem("starSeen") || ""; } catch (e) {}
   if (seen === w) return;
   try { localStorage.setItem("starSeen", w); } catch (e) { return; }   // (no storage: never pop up again and again)
-  const win = stars(w), medal = i => ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
-  const rows = rec.board.filter(x => exists(x.id)).map((x, i) => { const u = userById(x.id);
-    return `<div class="sp-row${win.includes(x.id) ? " win" : ""}"><span>${medal(i)} ${charPic(u) ? `<img class="sp-face" src="${charPic(u, win.includes(x.id) ? "star" : "happy")}" alt="">` : safe(u.emoji)} ${safe(u.name)}</span><b>${x.s}</b></div>`; }).join("");
-  // 📣 v171: one BIG full-screen message, the same for every parent and kid
+  // 🎨 v233 (Broo2a's picture): bunting, the big star, the winner on the gold "1" podium, the name, the top 3, a pink Yay!
+  const win = stars(w), board = rec.board.filter(x => exists(x.id)).slice(0, Math.max(3, win.length));
+  const rows = board.map((x, i) => { const u = userById(x.id);
+    return `<div class="sp3-row${win.includes(x.id) ? " win" : ""}"><span class="sp3-n n${Math.min(i + 1, 4)}">${i + 1}</span><span class="sp3-face">${charPic(u) ? `<img src="${charPic(u, win.includes(x.id) ? "confetti" : "happy")}" alt="">` : safe(u.emoji)}</span><b class="sp3-nm">${safe(u.name)}</b><b class="sp3-s">${x.s}</b></div>`; }).join("");
+  const pics = win.map(id => charPic(userById(id), "stand") || charPic(userById(id), "confetti")).filter(Boolean);
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
-  $("kCard").innerHTML = `<div class="sp-confetti" aria-hidden="true">🎉 ✨ 🎊 ✨ 🎉</div>
-    ${(pics => pics.length ? `<div class="sp-chars">${pics.join("")}</div>` : `<div class="sp-star" aria-hidden="true">🌟</div>`)(win.map(id => charPic(userById(id), "full")).filter(Boolean).map(src => `<img class="sp-char" src="${src}" alt="">`))}
-    <div class="sp-title">Shining Star of the Week!</div>
-    <div class="sp-names">${win.map(id => `<div>${charPic(userById(id)) ? "" : safe(userById(id).emoji) + " "}${safe(userById(id).name)}</div>`).join("")}</div>
-    <div class="sp-board">${rows}</div>
-    <p class="sp-note">Well done everyone! A new week starts at midnight. Good luck! 💪${win.includes(me) ? "<br><b>🎁 Choose your gift in ⭐ Points!</b>" : ""}</p>
-    <button class="k-ok" id="kOk">Yay! 🎉</button>`;
+  $("kCard").innerHTML = `<div class="sp3-bunting" aria-hidden="true">${["#f2a7c3", "#f2c14e", "#8fcf8a", "#b9a3e8", "#7fc4d6", "#ee8a7d", "#f2c14e"].map(c => `<i style="--b:${c}"></i>`).join("")}</div>
+    <div class="sp3-star" aria-hidden="true"><img src="icons/3d/k-stars.png" alt=""></div>
+    <div class="sp3-title">Shining Star<br>of the Week!</div><p class="sp3-hip">Hip hip hooray!</p>
+    ${pics.length ? `<div class="sp3-stage">${pics.map(src => `<img class="sp3-char" src="${src}" alt="">`).join("")}<div class="sp3-podium">1</div></div>` : `<div class="sp3-podium solo">1</div>`}
+    <div class="sp3-name">${win.map(id => safe(userById(id).name)).join(" & ")}</div><p class="sp3-sub">${win.length > 1 ? "Our superstars!" : "Our superstar!"}</p>
+    <div class="sp3-board">${rows}</div>
+    <p class="sp3-note">Well done everyone! A new week starts at midnight. Good luck!${win.includes(me) ? "<br><b>🎁 Choose your gift in My Stars!</b>" : ""}</p>
+    <button class="k-ok sp3-yay" id="kOk"><img src="icons/3d/k-stars.png" alt=""> Yay!</button>`;
   $("kModal").classList.add("star-pop");
+  $("kModal").hidden = false;
+}
+// 🎉 v233 (Broo2a) Level up! When a kid's level in a subject goes up (🎚️ 1–10, see levelNow), that kid sees a small pop-up
+// once (remembered on this device; the first time a subject is seen nothing pops up), and the parents get a 🔔 News line.
+function maybeShowLevelUp() {
+  if (!exists(me) || isParentId(me) || !$("kModal").hidden || screen === "start" || typeof levelNow !== "function") return;
+  const s = schoolOf(me), learn = (s && s.learn) || {}, key = "lvlSeen:" + me;
+  let seen = {}; try { seen = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { return; }
+  let up = null;
+  Object.keys(learn).forEach(fid => {
+    const f = subjectList(s, true).find(x => x.id === fid), lv = levelNow(learn[fid]);
+    if (!f) return;
+    if (!up && seen[fid] && lv > seen[fid]) up = { f, lv };   // (one at a time: another level up shows next time)
+    if (!up || up.f.id === fid || !(seen[fid] && lv > seen[fid])) seen[fid] = lv;
+  });
+  try { localStorage.setItem(key, JSON.stringify(seen)); } catch (e) { return; }
+  if (!up) return;
+  const u = userById(me), pic = charPic(u, "jump") || charPic(u, "confetti");
+  try { addNews([newsItem("school", `🎉 ${u.name} reached ${up.f.name} Level ${up.lv}!`, `🎉 ${up.f.name} Level ${up.lv}`, me)]); } catch (e) {}
+  $("kCard").style.cssText = "--soft:#ecfdf5;--ink:#166534";
+  $("kCard").innerHTML = `<div class="lu3-confetti" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--d:${(i % 5) * .25}s;--c:${["#f2a7c3", "#f2c14e", "#8fcf8a", "#7fc4d6", "#b9a3e8"][i % 5]}"></i>`).join("")}</div>
+    ${pic ? `<img class="lu3-char" src="${pic}" alt="">` : `<div class="lu3-char lu3-emoji">${safe(u.emoji || "🎉")}</div>`}
+    <div class="lu3-title">Level up!</div>
+    <div class="lu3-badge">${ico3d(subjectIcon3d(up.f.name), "lu3-ic")}<b>${safe(up.f.name)}</b><span>Level ${up.lv}</span></div>
+    <div class="lu3-bar" aria-label="Level ${up.lv} of 10">${Array.from({ length: 10 }, (_, i) => `<i class="${i < up.lv ? "on" : ""}"></i>`).join("")}</div>
+    <p class="lu3-msg">Well done, ${safe(u.name)}! Your worksheets will be a little harder now. You can do it! 💪</p>
+    <button class="k-ok lu3-ok" id="kOk">Awesome! 🎉</button>`;
+  $("kModal").classList.add("lvl-pop");
   $("kModal").hidden = false;
 }
 // 🎁 Choose my gift (only the ⭐ star, from Friday 6 PM): big option buttons (kids' / parents'), or ✏️ type my own (40 letters).
@@ -835,6 +904,11 @@ function hallTap(ds) {
 
 // ---------- Points screen ----------
 function drawPoints() {
+  // 🎨 v233 (Broo2a's picture): a kid sees "My Stars" first (today's ⭐, beat yourself, today's habits, the Shining Star), the leaderboard below
+  const mine = !isParentDevice() && !isParentId(me) && exists(me);
+  $("ptsTitle").textContent = mine ? "My Stars" : "🏆 Points this week";
+  $("scr-points").classList.toggle("ms-on", mine);
+  $("ptsMine").innerHTML = mine ? myStarsHtml(me) : "";
   const totals = pointsByUser(), acts = activityPointsByUser(), star = stars(), from = data.points.week, to = weekEnd();
   $("ptsWeek").textContent = `${weekLabel(data.points.week)} · ✅ Tasks: activities, school work, duties · ⭐ Habits: good habits, prayers, My day · 🧩 Fun: wishes · only kids are scored · starts again every ${DAYS[(starTime().day + 1) % 7]} (after the ⭐ on ${DAYS[starTime().day]})`;
   // ⭐ The order and the bar: the OVERALL score (see SCORE); the old points stay in ✅ · ⭐ · 🧩
@@ -874,6 +948,38 @@ function drawPoints() {
       <b>🌟 ${w.winners.map(x => `${safe(x.emoji)} ${safe(x.name)}`).join(" & ")}${w.fair != null ? ` · ⭐ Score ${w.fair} / ${w.max != null ? w.max : 100}` : ""} · ${w.points} points</b>${
       w.winners.some(x => x.kinds) ? `<small class="hist-kinds">${w.winners.filter(x => x.kinds).map(x => `${w.winners.length > 1 ? safe(x.name) + ": " : ""}${kindsText(x.kinds)}`).join(" · ")}</small>` : ""}</div>`).join("")
     : `<p class="empty">No past weeks yet. The first star is chosen next Monday!</p>`;
+}
+
+// ⭐ points on one day (activity ticks + habits, homework, …): the same ⭐ points as the week, never the 🎯 score
+const dayStarPts = (id, ds) => tickLog().filter(t => t.user === id && t.date === ds).length * POINTS_EACH + bonusPoints(id, ds, addDaysYmd(ds, 1));
+function myStarsHtml(id) {
+  const u = userById(id), today = todayYmd(), days = [6, 5, 4, 3, 2, 1, 0].map(b => addDaysYmd(today, -b));
+  const pts = days.map(d => dayStarPts(id, d)), now = pts[6], yest = pts[5], best = Math.max(...pts.slice(0, 6), 0);
+  const goal = Math.max(10, best, now), pct = Math.round(now / goal * 100), on = Math.round(now / goal * 10);
+  const head = !now ? "No stars yet today. Let's start!" : now > best ? `${now} stars today! Your best this week` : `${now} stars today!`;
+  const sub = now > yest ? (yest ? `Beat yesterday (${yest})!` : "Great start!") : !yest ? "Tick something to get your first star!" : `${yest + 1 - now} more to beat yesterday (${yest})`;
+  const hi = Math.max(1, ...pts), wd = d => DAYS[weekdayOf(d)].charAt(0);
+  const bars = days.map((d, i) => `<div class="ms-bar${i === 6 ? " now" : ""}"><b>${pts[i]}</b><i style="height:${Math.max(8, Math.round(pts[i] / hi * 100))}%"></i><small>${wd(d)}</small></div>`).join("");
+  habitDay = weekIndex();
+  const hs = habitsFor(id), mark = h => data.habitMarks[habitKey(today, h.id, id)];
+  const habits = hs.map(h => { const v = mark(h), full = habitDone(h, v), multi = h.kind === "prayers" || h.kind === "water";
+    const n = h.kind === "prayers" ? (Array.isArray(v) ? v.filter(Boolean).length : 0) : (v || 0), of = h.kind === "prayers" ? PRAYERS.length : WATER_DROPS;
+    return `<div class="ms-hab${full ? " on" : ""}"><span class="ms-hico">${safe(h.emoji)}</span><span class="ms-htxt"><b>${safe(h.name)}</b><small>${full ? "Done today" : multi ? `${n} of ${of} today` : "Not yet"}</small></span>
+      ${multi ? `<span class="ms-tick${full ? " on" : ""}" aria-hidden="true">${full ? "✓" : ""}</span>`
+        : `<button class="ms-tick${full ? " on" : ""}" data-hb="${safe(id)}|${safe(h.id)}|0" aria-pressed="${full}" aria-label="${safe(h.name)}">${full ? "✓" : ""}</button>`}</div>`; }).join("");
+  const star = stars(), fi = fairInfo(), lead = fairOrder(Object.fromEntries(Object.entries(fi).map(([k, x]) => [k, x.fair])))[0];
+  const starTxt = star.length ? `${star.map(k => safe(userById(k).name)).join(" & ")} ${star.length > 1 ? "are" : "is"} the Shining Star!`
+    : lead && fi[lead.id].fair > 0 ? `Leading now: ${safe(lead.name)} · Score ${fi[lead.id].fair}` : "Who will it be this week?";
+  const starPic = charPic(star.length ? userById(star[0]) : lead || u, "confetti") || charPic(u, "jump");
+  return `<div class="ms3"><div class="ms-title"><h2>My Stars</h2><small>${safe(u.name)} · points and habits</small></div>
+    <div class="ms-buddy">${charPic(u, now > best ? "proud" : "happy") ? `<img src="${charPic(u, now > best ? "proud" : "happy")}" alt="">` : `<span class="ms-e">${safe(u.emoji)}</span>`}
+      <p><b>${head}</b><small>Beat yourself, not anyone else</small></p></div>
+    <div class="ms-today"><div class="ms-ring" style="--p:${pct}"><b>${now}<small>of ${goal}</small></b></div>
+      <div><h3>Today</h3><div class="ms-stars" aria-label="${now} of ${goal} stars">${"★".repeat(on)}<span>${"★".repeat(10 - on)}</span></div><p>${sub}</p></div></div>
+    <div class="ms-week"><div class="ms-wh"><h3>Beat yourself</h3><span>last 7 days</span></div><div class="ms-bars">${bars}</div></div>
+    ${habits ? `<h3 class="ms-h">Today's habits</h3><div class="ms-habs">${habits}</div>` : ""}
+    <div class="ms-shine">${starPic ? `<img src="${starPic}" alt="">` : "🌟"}<span><b>Shining Star of the week</b><small>${starTxt}</small></span><i aria-hidden="true">★</i></div>
+  </div>`;
 }
 
 // ("🎉 Jawad beat Bro2a this week!" was removed: parents aren't scored any more)
@@ -938,7 +1044,13 @@ function drawHome() {
   $("homeDate").className = "home-date" + (isParentDevice() ? "" : " kid");
   // 🫧 v159: the date in the middle, in the puffy banner: "Thursday" (pink) · "5 November" (purple) · a soft pill
   $("homeDate").className += " puff-banner pb-home";
-  $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
+  $("homeSay").innerHTML = exists(me) && isParentDevice() ? sayBoxHtml(u) : "";   // 💬 v233 my own line for the family
+  $("scr-home").classList.toggle("p-home3", isParentDevice());
+  if (isParentDevice()) {   // 🌈 v233 (Broo2a's picture): a white date card with the ADROS badge · my character waving, big
+    $("homeDate").className = "home-date hd3";
+    $("homeDate").innerHTML = `<img class="hd-logo" src="icons/icon-192.png" alt=""><span class="hd-wd">${dz({ weekday: "long" })}</span><span class="hd-d">${dz({ day: "numeric", month: "long" })}</span>`;
+    if (charPic(u)) $("homeFace").innerHTML = `<img class="hello-char" src="${charPic(u, "wave")}" alt="">` + starBadge(me);
+  } else $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
     <span class="bub-pill">${PUFF_PILLS.home}</span>`;
   const myPoints = pointsByUser()[me], myFair = scoreText(scoreOf(me));
   $("homePoints").textContent = (stars().includes(me) ? `🌟 Shining Star of the Week · ⭐ Score ${myFair} · ${myPoints} points` : `⭐ Score ${myFair} · ${myPoints} points this week`)

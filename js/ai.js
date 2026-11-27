@@ -56,7 +56,9 @@ function showAiWait() {
   let bar = document.getElementById("aiMaking");
   const making = /^(session|more)\|/.test(String(aiWait || ""));
   if (making && !bar) { bar = document.createElement("div"); bar.id = "aiMaking"; bar.className = "ai-making"; bar.setAttribute("role", "status"); document.body.appendChild(bar); }
-  if (bar) { bar.hidden = !making; bar.textContent = making ? "🤖 Making your worksheet… it takes about a minute. Stay here 🙂" : ""; }
+  if (bar) { bar.hidden = !making; bar.textContent = making ? "🤖 Making your worksheet… it takes about a minute. Stay here 🙂" : "";
+    const src = making && typeof charPic === "function" ? charPic(userById(me), "think") : "";   // 🎭 v233: my character, thinking
+    if (src) { bar.textContent = "Making your worksheet… it takes about a minute. Stay here 🙂"; bar.insertAdjacentHTML("afterbegin", `<img class="toast-char" src="${src}" alt="">`); } }
 }
 // Asks the AI server. → the result, or null (then a friendly message was shown)
 // 🤖 This month's AI use for a family with a limit (kept on this device: { used, limit, month }); our family has no limit, so nothing shows
@@ -842,15 +844,23 @@ function learnCardHtml(kid, f) {
     return sk.length ? `<ul class="learn-weak">${sk.map(x => `<li><span>${safe(x.skill)} <small>${x.mastery}% · ${x.right}/${x.tries} right</small></span>
         <button class="pill" data-learnpr="${safe(kid)}|${safe(f.id)}|${enc(x.skill)}" data-aiwait="learn|${safe(kid)}|${safe(x.skill)}">✏️ Practise this</button></li>`).join("")}</ul>`
       : `<p class="hint">Nothing to work on right now.</p>`; };
-  return `<div class="learn-box"><div class="learn-top"><span class="learn-sub">${safe(f.emoji)} ${safe(f.name)}</span>
-      </div>
+  // 🌈 v233 (Broo2a: "too long, make it simpler and not boring"): a short card first · level bar · 3 great-at chips · 3 to work on
+  // with a ✏️ button · everything else (the chart, the level buttons, the full lists) under "See everything"
+  const lvPct = Math.max(5, Math.min(100, L.level * 10));
+  const short = `<div class="lp3"><div class="lp3-top">${ico3d(subjectIcon3d(f.name), "lp3-ic")}<b>${safe(f.name)}</b><span class="lp3-lv">Level ${L.level}<small>/10</small></span></div>
+      <span class="lp3-bar"><i style="width:${lvPct}%"></i></span>
+      ${strong.length ? `<p class="lp3-h">💪 Great at</p><div class="lp3-chips">${strong.slice(0, 3).map(r => `<span class="lp3-good">${safe(r.title)}</span>`).join("")}${strong.length > 3 ? `<span class="lp3-more">+${strong.length - 3}</span>` : ""}</div>` : ""}
+      ${weak.length ? `<p class="lp3-h">🎯 Let's practise</p>${weak.slice(0, 3).map(r => `<div class="lp3-row"><span class="lp3-t">${safe(r.title)}<span class="lp3-mini"><i style="width:${r.pct}%"></i></span></span><b>${r.pct}%</b>
+          <button class="lp3-go" data-learntp="${safe(kid)}|${safe(f.id)}|${enc(r.title)}|${r.src}" data-aiwait="ltp|${safe(kid)}|${safe(r.title)}" aria-label="Practise ${safe(r.title)}">✏️</button></div>`).join("")}`
+        : !strong.length ? `<p class="hint">Keep going: more worksheets fill this in.</p>` : `<p class="lp3-yay">🎉 Nothing to practise right now!</p>`}</div>`;
+  return `<div class="learn-box lp3-box">${short}<details class="lp3-all"><summary>See everything</summary>
     ${wsLevelHtml(kid, f.name)}
     ${learnChartSvg(L)}
     <p class="learn-h">💪 Strong</p>${strong.length ? `<div class="learn-chips">${strong.map(r => `<span class="learn-chip good">${safe(r.title)} <small>${r.pct}%</small></span>`).join("")}</div>`
       : `<p class="hint">None yet (85% or more).</p>`}
     <p class="learn-h">🎯 To work on</p>${weak.length ? `<ul class="learn-weak">${weak.map(r => `<li><span>${ST[r.st][0]} ${safe(r.title)} (${r.pct}%)${tag(r)}${r.weak.length ? `<small>weak at ${safe(r.weak.join(", "))}</small>` : ""}</span>
         <button class="pill" data-learntp="${safe(kid)}|${safe(f.id)}|${enc(r.title)}|${r.src}" data-aiwait="ltp|${safe(kid)}|${safe(r.title)}">✏️ Practise this topic</button></li>`).join("")}</ul>`
-      : rows.length ? `<p class="hint">Nothing to work on right now.</p>` : skillsPart()}</div>`;
+      : rows.length ? `<p class="hint">Nothing to work on right now.</p>` : skillsPart()}</details></div>`;
 }
 // 🧒 The kid's friendly line: "🧠 Level 6 in Math · 💪 You're great at fractions · 🎯 Let's practise times tables"
 function learnKidLine(kid, f) {

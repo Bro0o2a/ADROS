@@ -20,7 +20,7 @@
      This section only controls colors, sizes and spacing.
      ============================================================ -->
 <!-- THE LOOK (all the CSS) is in css/app.css -->
-<link rel="stylesheet" href="css/app.css?v=233">
+<link rel="stylesheet" href="css/app.css?v=235">
 </head>
 <body>
 <!-- ============================================================
@@ -59,7 +59,7 @@
   <!-- 📅 Today's day and date, big (Dubai time) -->
   <div class="home-date" id="homeDate"></div>
   <div class="hello"><span class="hello-face" id="homeFace"></span>
-    <div><h1 class="big-title" id="homeHello"></h1><p class="hello-points" id="homePoints"></p></div></div>
+    <div><h1 class="big-title" id="homeHello"></h1><p class="hello-points" id="homePoints"></p><div id="homeSay"></div></div></div>
   <div class="note" id="homeNote" hidden></div>
   <!-- Parents: 📅 the family's week (everyone in their own color) + ➕ My activity -->
   <div id="homeCal"></div>
@@ -250,7 +250,8 @@
 <!-- ===== POINTS ===== -->
 <section class="screen" id="scr-points" hidden>
   <header class="bar"><button class="pill nav-btn" data-navback aria-label="Back" title="Back">⬅️ Back</button><button class="pill nav-btn" data-go="home" aria-label="Home" title="Home">🏠 Home</button><button class="pill cal-btn" data-go="mine">📅 Calendar</button><button class="pill sch-btn" data-schoolnav aria-label="School">🎒 School</button><button class="pill bell-btn" data-bell aria-label="What's new">🔔 News<span class="bell-num" hidden></span></button></header>
-  <h1 class="page-title">🏆 Points this week</h1>
+  <h1 class="page-title" id="ptsTitle">🏆 Points this week</h1>
+  <div id="ptsMine"></div>
   <p class="pt-fairnote" id="ptsFairNote">⭐ Score = 📚 Study 65% + ⚽ Activity 25% + 🌱 Habit 10% (ticked ✅ in the calendar)</p>
   <p class="lead" id="ptsWeek"></p>
   <div class="card" id="ptsList"></div>
@@ -739,18 +740,20 @@
   <div class="card login-card">
     <div class="login-logo"><img src="icons/logo-adros.jpg" alt="ADROS" width="900" height="398"><p class="login-tag">Calmer evenings. Bigger dreams.</p></div>
     <!-- 1. Who are you? -->
-    <div id="lgChoose" class="lg-step">
-      <h1>Welcome! 👋</h1>
-      <p class="hint" id="loginHint">Who is using this phone?</p>
-      <div class="lg-who">
-        <button type="button" class="lg-whocard lg-par" data-lg="parent">
-          <span class="lg-faces"><img src="icons/chars/mum/happy.jpg" alt=""><img src="icons/chars/dad/happy.jpg" alt=""></span>
-          <span class="lg-whotxt"><b>I'm a parent</b><small>Plan the week and help with school</small></span><span class="lg-go" aria-hidden="true">›</span>
-        </button>
-        <button type="button" class="lg-whocard lg-kidc" data-lg="kid">
-          <span class="lg-faces"><img src="icons/chars/c01/happy.jpg" alt=""><img src="icons/chars/c04d/happy.jpg" alt=""><img src="icons/chars/c08/happy.jpg" alt=""></span>
-          <span class="lg-whotxt"><b>I'm a kid</b><small>See my day, study and earn stars</small></span><span class="lg-go" aria-hidden="true">›</span>
-        </button>
+    <div id="lgChoose" class="lg-step lg3">
+      <!-- 🎨 v233 (Broo2a's picture): the buddy says hi · I am a kid: the 6-letter code right here + Join my family · OR · I am a parent: Sign in -->
+      <div class="lg3-buddy"><img src="icons/chars/c04d/jump.webp" alt=""><p>Hi! I will be with you on every page. Ready to start?</p></div>
+      <p class="hint lg3-hint" id="loginHint">Who is using this phone?</p>
+      <div class="lg3-card">
+        <b class="lg3-h"><img class="i3d" src="icons/3d/k-stars.png" alt=""> I am a kid · my code</b>
+        <div class="lg3-code" role="group" aria-label="Your 6-letter code"><input type="text" class="lg3-box" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Letter 1"><input type="text" class="lg3-box" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Letter 2"><input type="text" class="lg3-box" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Letter 3"><input type="text" class="lg3-box" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Letter 4"><input type="text" class="lg3-box" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Letter 5"><input type="text" class="lg3-box" maxlength="1" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Letter 6"></div>
+        <button type="button" class="lg3-join" data-lgjoin><img class="i3d" src="icons/3d/heart.png" alt=""> Join my family</button>
+        <button type="button" class="linkbtn lg3-small" data-lg="kid">Where is my code?</button>
+      </div>
+      <div class="lg3-or"><span>OR</span></div>
+      <div class="lg3-card lg3-par">
+        <div class="lg3-prow"><img src="icons/chars/mum/happy.webp" alt=""><span><b>I am a parent</b><small>Sign in to plan the week for everyone</small></span></div>
+        <button type="button" class="lg3-signin" data-lg="parent">Sign in</button>
       </div>
     </div>
     <!-- 2a. Parent: Sign in · Create a family account · I have a parent code -->
@@ -897,7 +900,8 @@
 <!-- 🔔 What's new: the family's last 30 changes (the same list on every device) -->
 <div class="k-modal" id="newsModal" hidden>
   <div class="k-card news-card" role="dialog" aria-modal="true" aria-labelledby="newsTitle">
-    <div class="print-title" id="newsTitle">🔔 What's new</div>
+    <button class="nw3-x" data-newsclose aria-label="Close">✕</button>
+    <div class="print-title nw3-title" id="newsTitle"><img class="i3d" src="icons/3d/paper.png" alt=""> News</div>
     <p class="print-hint">The family's last 30 changes. Newest first.</p>
     <ul class="news-list" id="newsList"></ul>
     <div class="notify-box" id="newsNotify"></div>
@@ -918,23 +922,23 @@
 <!-- 🕌 adhan: works out the prayer times on the device (sw.js keeps a copy, so it also works offline) -->
 <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js"></script>
 <!-- THE BRAIN: the app's JavaScript, split by feature in the js/ folder (they load in this order; see CLAUDE.md) -->
-<script src="js/core.js?v=233"></script>
-<script src="js/screens.js?v=233"></script>
-<script src="js/points.js?v=233"></script>
-<script src="js/fun.js?v=233"></script>
-<script src="js/reports.js?v=233"></script>
-<script src="js/profile.js?v=233"></script>
-<script src="js/home.js?v=233"></script>
-<script src="js/activities.js?v=233"></script>
-<script src="js/calendar.js?v=233"></script>
-<script src="js/school.js?v=233"></script>
-<script src="js/ai.js?v=233"></script>
-<script src="js/pictures.js?v=233"></script>
-<script src="js/study.js?v=233"></script>
-<script src="js/settings.js?v=233"></script>
-<script src="js/taps.js?v=233"></script>
-<script src="js/cloud.js?v=233"></script>
-<script src="js/news.js?v=233"></script>
-<script src="js/start.js?v=233"></script>
+<script src="js/core.js?v=235"></script>
+<script src="js/screens.js?v=235"></script>
+<script src="js/points.js?v=235"></script>
+<script src="js/fun.js?v=235"></script>
+<script src="js/reports.js?v=235"></script>
+<script src="js/profile.js?v=235"></script>
+<script src="js/home.js?v=235"></script>
+<script src="js/activities.js?v=235"></script>
+<script src="js/calendar.js?v=235"></script>
+<script src="js/school.js?v=235"></script>
+<script src="js/ai.js?v=235"></script>
+<script src="js/pictures.js?v=235"></script>
+<script src="js/study.js?v=235"></script>
+<script src="js/settings.js?v=235"></script>
+<script src="js/taps.js?v=235"></script>
+<script src="js/cloud.js?v=235"></script>
+<script src="js/news.js?v=235"></script>
+<script src="js/start.js?v=235"></script>
 </body>
 </html>

@@ -135,8 +135,8 @@ function drawSchool() {
   $("schoolKids").hidden = !isDad;
   $("schoolKids").innerHTML = isDad ? kids.map(x => {
     const c = colorsOf(x);
-    return `<button class="chip ${x.id === schoolKid ? "on" : ""}" data-sckid="${safe(x.id)}" style="--soft:${c.soft};--ink:${c.ink}"
-      ${x.id === schoolKid ? `aria-current="true"` : ""}><span class="e">${safe(x.emoji)}</span>${safe(x.name)}</button>`;
+    return `<button class="chip ${x.id === schoolKid ? "on" : ""}" data-sckid="${safe(x.id)}" style="--soft:${c.soft};--ink:${c.ink};--c:${c.color}"
+      ${x.id === schoolKid ? `aria-current="true"` : ""}>${charPic(x) ? `<img class="tab-face" src="${charPic(x)}" alt="">` : `<span class="e">${safe(x.emoji)}</span>`}${safe(x.name)}</button>`;   // (🌈 v233: their character's face)
   }).join("") : "";
   if (!schoolKid) {
     $("schoolTitle").textContent = "School";
@@ -264,7 +264,7 @@ function schoolHomeHtml(s, isDad) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10) : [];
   const looseHtml = loose.length ? `<div class="card bd-card"><h2>📂 School files</h2><ul class="list">${loose.map(x => fileRowHtml(x, s, true)).join("")}</ul></div>` : "";
   // 📝 Every worksheet of the kid, all subjects, with its score (the kid's own; a parent: look-only)
-  const allWs = `<button class="ip-item" data-scgo="allws">${ico3d("paper")}<b>Worksheets</b><small>All of them</small></button>`;
+  const allWs = `<button class="ip-item" data-scgo="allws">${ico3d("k-ws")}<b>Worksheets</b><small>All of them</small></button>`;
   const tools = `<section class="ip-sec"><span class="ip-rib ip-pink">School tools <i>🎀</i></span><div class="ip-panel ip-2">${up}${allWs}</div></section>`;
   return sess + tools + goalsLineHtml(schoolKid) + (list.length ? `<section class="ip-sec"><span class="ip-rib ip-butter">My subjects <i>★</i></span><div class="ip-panel ip-3">${list.map(x => subjectTileHtml(s, x)).join("")}</div></section>${looseHtml}${edit}`
     : edit ? `<div class="card"><p class="sc-empty">No subjects yet.</p>${edit}</div>` : `<div class="card"><p class="sc-empty">No subjects yet. ${look ? `Add them in ${safe(userById(schoolKid).name)}'s 👤 profile → ⚙️ Settings.` : "Add them in 👤 My profile → ⚙️ My settings."}</p>
@@ -823,8 +823,8 @@ let scMakeOpen = false;     // ✏️ worksheets → ➕ Make a new one: the top
 function schoolSubjectHtml(s, isDad, u) {
   const f = { id: schoolSubject, ...s.subjects[schoolSubject] }, c = subjectColors(f), parent = isParentDevice();
   const editing = isDad && schoolEdit === "subject" && schoolEditId === schoolSubject;
-  let html = `<div class="bd-folder-head" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><span class="e">${safe(f.emoji)}</span>
-      <h2>${safe(f.name)}</h2>${isDad && !editing ? `<span class="bd-head-btns">${itemBtns("subject", schoolSubject)}</span>` : ""}</div>`;
+  let html = `<div class="bd-folder-head sj3-head" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><span class="sj3-ic">${ico3d(subjectIcon3d(f.name))}</span>
+      <span class="sj3-t"><h2>${safe(f.name)}</h2><small>${safe(u.name)} · practice makes perfect!</small></span>${isDad && !editing ? `<span class="bd-head-btns">${itemBtns("subject", schoolSubject)}</span>` : ""}</div>`;
   if (editing) html += subjectFormHtml(f);
   // ⚙️ School coach off: just the files and the older records (no 🤖 worksheets, %, strong / weak points)
   if (!feat("coach")) return html + subjectFilesHtml(s, f, `📁 ${u.name}'s uploaded files`) + subjectOlderHtml(s, f, c, isDad);
@@ -835,10 +835,11 @@ function schoolSubjectHtml(s, isDad, u) {
   const secs = subjectSecs(parent).filter(x => x.id !== "files" || filesOf(s, f.name).length || exOf(schoolKid, f.name).length);
   if (stSec && !secs.some(x => x.id === stSec)) stSec = null;
   if (!stSec) {
-    const upTile = `<button class="ip-item sj-go" data-stup="${safe(f.id)}">${ico3d("pin")}<b>Upload topic</b><small>From school</small></button>`;
-    const SEC_ICON = { ws: "paper", profile: "idea", curr: "milestone", topics: "read", goal: "goal", study: "study", files: "briefcase", more: "lunchbox" };
-    // (v160: the subject corner buttons first, "In short" under them)
-    html += `<section class="ip-sec"><span class="ip-rib ip-lilac">${safe(f.name)} corner <i>🎀</i></span><div class="ip-panel ip-3">
+    const upTile = `<button class="ip-item sj-go" data-stup="${safe(f.id)}">${ico3d("k-upload")}<b>Upload topic</b><small>From school</small></button>`;
+    const SEC_ICON = { ws: "k-ws", profile: "idea", curr: "milestone", topics: "k-topics", goal: "k-goal", study: "study", files: "briefcase", more: "lunchbox" };
+    // 🎨 v233 (Broo2a's picture): the buddy says how it's going, This year's topics (in class now · coming next · ✏️ practise),
+    // the worksheets (to do first, then the last checked), then the subject corner buttons and "In short"
+    html += subjectTopHtml(s, f, c, all) + `<section class="ip-sec sj3-more"><h2 class="sj3-h">More for ${safe(f.name)}</h2><div class="ip-panel ip-3">
       ${secs.map((x, i) => (i === 1 ? upTile : "") + `<button class="ip-item" data-stsec="${x.id}">${ico3d(SEC_ICON[x.id] || "homework")}<b>${x.label}</b><small>${safe(subjectSecLine(x.id, s, f, all, todo))}</small>${
         x.id === "ws" && todo ? `<span class="sc-badge">${todo}</span>` : ""}</button>`).join("")}${secs.length < 2 ? upTile : ""}</div></section>
       <div class="card sj-sum" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><div class="ks-head"><h2>In short</h2>
@@ -867,6 +868,27 @@ function schoolSubjectHtml(s, isDad, u) {
     <button class="pill" data-scprof="${safe(schoolKid)}|info">🏫 School info</button><button class="pill" data-scprof="${safe(schoolKid)}">👤 Profile</button></div>`;
   if (isDad && !isKidDevice() && checked.length) html += aiMount(() => parentExtrasNode(s, checked));   // (🦉 the coach's tip, "By part")
   return html + subjectOlderHtml(s, f, c, isDad);
+}
+// 🎨 v233 the top of a subject (Broo2a's picture): buddy bubble · This year's topics · Worksheets
+function subjectTopHtml(s, f, c, all) {
+  const u = userById(schoolKid), B = curBriefData(schoolKid, f), has = w => w.answers.some(x => s.files[x]);
+  const todoL = all.filter(w => !w.check), done = all.filter(w => w.check).sort((a, b) => String(b.check.at || b.date || "").localeCompare(String(a.check.at || a.date || "")));
+  const last = done[0], lastPct = last ? wsPct(last) : null;
+  const head = B && B.matched.length ? `${B.matched.length >= B.off.length / 2 ? `${f.name} is going great` : `Good start in ${f.name}`}, ${u.name}!`
+    : lastPct != null ? (lastPct >= 80 ? `Great marks in ${f.name}, ${u.name}!` : `Let's practise ${f.name}, ${u.name}!`) : `Let's practise ${f.name}, ${u.name}!`;
+  const sub = B ? `${B.matched.length} of ${B.off.length} topics done.${B.next3[0] ? ` ${B.next3[0].title} is next.` : ""}`
+    : todoL.length ? `${todoL.length} ${todoL.length === 1 ? "worksheet" : "worksheets"} to do.` : "A little every day makes it easy.";
+  const pic = charPic(u, lastPct != null && lastPct >= 80 ? "proud" : "think");
+  const buddy = `<div class="sj3-buddy" style="--soft:${c.soft}">${pic ? `<img src="${pic}" alt="">` : `<span class="sj3-e">${safe(u.emoji)}</span>`}<p><b>${safe(head)}</b><small>${safe(sub)}</small></p></div>`;
+  const topics = B ? `<div class="sj3-hrow"><h2 class="sj3-h">This year's topics</h2><span class="sj3-n">${B.matched.length} of ${B.off.length}</span></div>
+    ${B.nowList.length ? `<div class="sj3-now"><span>📍 In class now</span><b>${safe(B.nowList.map(t => t.title).join(", "))}</b></div>` : ""}
+    ${B.next3.length ? `<div class="sj3-next"><span>Coming next</span><b>${safe(B.next3.map(t => t.title).join(" · "))}</b></div>` : ""}
+    ${B.toDo.length ? `<button class="sj3-go cur-go" data-stnotdone="${safe(f.id)}" data-stnotdonet="${safe(B.toDo.map(encodeURIComponent).join("|"))}" data-aiwait="mapmake">✏️ Practise what's not done yet${B.toDo.length > 1 ? ` (${B.toDo.length})` : ""}</button>` : ""}` : "";
+  const show = [...todoL.filter(w => !has(w)).map(w => [w, "todo"]), ...todoL.filter(has).map(w => [w, "wait"]), ...done.slice(0, 2).map(w => [w, "done"])];
+  const ws = all.length ? `<div class="sj3-hrow"><h2 class="sj3-h">Worksheets</h2><span class="sj3-n">${todoL.length ? `${todoL.length} to do` : `${done.length} checked`}</span></div>
+    <div class="sj3-ws">${aiMount(() => h("ul", { class: "wsg-list" }, show.map(([w, k]) => wsNiceNode(s, w, k))))}
+      ${all.length > show.length ? `<button class="sj3-all" data-stsec="ws">See all ${all.length} worksheets ›</button>` : ""}</div>` : "";
+  return buddy + topics + ws;
 }
 // 🎒 The subject's big buttons (the kid: worksheets, topics, goal; parents: all)
 let stSec = null;
@@ -1458,7 +1480,7 @@ function tickSchoolTask(id, box) {
   if (box.checked) {
     const r = box.getBoundingClientRect(), color = colorsOf(userById(schoolKid)).color;
     celebrate(r.left + r.width / 2, r.top + r.height / 2, color, false);
-    toast(`${me === schoolKid ? "🎉 Well done!" : "✓ Done"} +${POINTS_EACH} ⭐`, 2200, color, [schoolKid, "thumbs"]);
+    toast(`${me === schoolKid ? "🎉 Well done!" : "✓ Done"} +${POINTS_EACH} ⭐`, 2200, color, [schoolKid, "proud"]);
   }
 }
 
@@ -2099,6 +2121,8 @@ function wsDayDraftOf(kid) {
   return { per: false, n, list };
 }
 const wsDaySum = d => Object.values(d.list).reduce((a, b) => a + b, 0);
+let ssAddOpen = false;   // ➕ Add a subject: the list is open
+document.addEventListener("click", e => { if (!e.target.closest || !e.target.closest("[data-ssaddopen]")) return; ssAddOpen = !ssAddOpen; redrawSchoolSet(); });
 function schSetHtml() {
   const edit = isParentDevice(), kids = edit ? kidsList() : kidsList().filter(k => k.id === me);
   if (!kids.length) return `<p class="hint">Add a kid first in 👨‍👩‍👧 Family members.</p>`;
@@ -2127,18 +2151,18 @@ function schSetHtml() {
   const COMMON = ["Math", "English", "Science", "Arabic", "Islamic", "French", "Social Studies", "Humanities", "Computing", "Spelling", "Reading", "History", "Geography"];
   const have = n => all.some(f => sameSubject(f.name, n)) || d.add.some(x => sameSubject(x, n));
   const studyHtml = edit
-    ? `<div class="chips ss-subs">${all.map(f => `<button type="button" class="chip ${d.show[f.id] ? "on" : ""}" data-sssub="${safe(f.id)}" aria-pressed="${!!d.show[f.id]}">${d.show[f.id] ? "✅" : "⬜"} ${safe(f.emoji)} ${safe(f.name)}</button>`).join("")}${
-        d.add.map((n, i) => `<button type="button" class="chip on" data-ssunadd="${i}" aria-pressed="true">✅ 🆕 ${safe(n)}</button>`).join("")}</div>
+    ? `<div class="ss-subs3">${all.map(f => `<button type="button" class="ss-sub3 ${d.show[f.id] ? "on" : ""}" data-sssub="${safe(f.id)}" aria-pressed="${!!d.show[f.id]}"><span class="ss-tick" aria-hidden="true">${d.show[f.id] ? "✓" : ""}</span>${ico3d(subjectIcon3d(f.name), "ss-si")}<b>${safe(f.name)}</b></button>`).join("")}${
+        d.add.map((n, i) => `<button type="button" class="ss-sub3 on" data-ssunadd="${i}" aria-pressed="true"><span class="ss-tick" aria-hidden="true">✓</span>${ico3d(subjectIcon3d(n), "ss-si")}<b>${safe(n)}</b></button>`).join("")}</div>
        <p class="hint">${onN} ${onN === 1 ? "subject" : "subjects"} on. Tap one to turn it on or off (its work is kept).</p>
-       <label class="small" for="ssNewSub">➕ Add a subject</label>
-       <div class="chips ss-common">${COMMON.filter(n => !have(n)).map(n => `<button type="button" class="chip" data-ssnew="${safe(n)}">➕ ${safe(n)}</button>`).join("")}</div>
-       <div class="ss-addrow"><input type="text" id="ssNewSub" maxlength="30" placeholder="Or type one: Music, Drama…"><button type="button" class="pill" data-ssaddtyped>➕ Add</button></div>`
+       <button type="button" class="ss-addbtn" data-ssaddopen aria-expanded="${ssAddOpen}">＋ Add a subject</button>
+       <div class="ss-addbox" ${ssAddOpen ? "" : "hidden"}><div class="chips ss-common">${COMMON.filter(n => !have(n)).map(n => `<button type="button" class="chip" data-ssnew="${safe(n)}">➕ ${safe(n)}</button>`).join("")}</div>
+       <div class="ss-addrow"><input type="text" id="ssNewSub" maxlength="30" placeholder="Or type one: Music, Drama…"><button type="button" class="pill" data-ssaddtyped>➕ Add</button></div></div>`
     : `<ul class="me-list">${all.filter(f => !f.hidden).map(f => `<li><span>${safe(f.emoji)} ${safe(f.name)}</span></li>`).join("") || `<li>None yet</li>`}</ul>`;
   return `<div class="ss-box">${chips}${edit ? "" : `<p class="me-lock">🔒 Only Mum or Dad can change these.</p>`}
-    <section class="ss-sec"><h3>🎒 About school</h3>${school}</section>
-    <section class="ss-sec"><h3>📚 Subjects to study</h3>${studyHtml}</section>
-    <section class="ss-sec"><h3>📝 Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
-    <section class="ss-sec"><h3>📊 Compare my topics with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
+    <section class="ss-sec"><h3>${ico3d("school", "ss-hi")}About school</h3>${school}</section>
+    <section class="ss-sec"><h3>${ico3d("study", "ss-hi")}Subjects to study</h3>${studyHtml}</section>
+    <section class="ss-sec"><h3>${ico3d("homework", "ss-hi")}Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
+    <section class="ss-sec"><h3>${ico3d("research", "ss-hi")}Compare with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
     ${edit ? `<div class="btnrow"><button type="button" class="primary" data-sssave>💾 Save</button></div>` : ""}</div>`;
 }
 function openSchoolSet(kid) {

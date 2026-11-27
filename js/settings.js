@@ -25,7 +25,45 @@ function drawSettings() {
   $("signOutBtn").hidden = !cloud.user;
   $("delAcctBtn").hidden = !cloud.user || !cloud.user.email || isKidDevice();   // (🗑️ parents with an email login only)
   $("setNotify").innerHTML = notifyHtml();
+  settingsMenu();
 }
+// 🎨 v233 (Broo2a's picture): Settings = a short menu. Each card folds into one row (3D icon, title, short line, ›); a tap opens it.
+// Groups "PLAN" · "FAMILY AND APP", a buddy bubble on top, and News · Help · Privacy · a big Sign out at the end. (The cards are the same.)
+const SET_ROWS = [["featCard", "idea", "Features", "Pick what the app shows"], ["bed-set", "time", "Calendar setup", "Week, weekend, bedtimes, school hours"],
+  ["dayHours", "milestone", "My day", "When each day starts and ends"], ["maxTogether", "study", "Planning", "How many things at once"],
+  ["starCard", "achieve", "Shining Star and extras", "Day, time, extra worksheets"], ["prMine", "pin", "Prayer times", "City and times"],
+  ["kidHabitsCard", "goal", "Kids' habits", "The daily checklist"], ["userList", "heart", "People", "Names, emoji, colours"],
+  ["exportBtn", "briefcase", "Backup", "Save or bring back a copy"], ["acctInfo", "consistency", "Family account", "Sign-in and account"],
+  ["setNotify", "paper", "Notifications", "On this device"]];
+const setOpen = new Set();
+function settingsMenu() {
+  const scr = $("scr-settings");
+  const cardOf = key => { const el = $(key) || scr.querySelector("." + key); return el && (el.classList.contains("card") ? el : el.closest(".card")); };
+  SET_ROWS.forEach(([key, ic, title, sub]) => {
+    const card = cardOf(key);
+    if (!card) return;
+    card.classList.add("set3"); card.dataset.setkey = key; card.classList.toggle("open", setOpen.has(key));
+    if (card.querySelector(":scope > .set3-row")) return;
+    card.insertAdjacentHTML("afterbegin", `<button type="button" class="set3-row" data-setrow="${key}"><span class="set3-ic">${ico3d(ic)}</span><span class="set3-t"><b>${title}</b><small>${sub}</small></span><span class="set3-go" aria-hidden="true">›</span></button>`);
+  });
+  const hab = $("kidHabitsCard"), col1 = scr.querySelector(".two-col > div");
+  if (hab && col1 && hab.parentNode !== col1) col1.appendChild(hab);
+  if (!scr.querySelector(".set3-top")) {
+    scr.querySelector("h1.page-title").insertAdjacentHTML("afterend", `<div class="set3-top"><h2>Settings</h2><small>plan, backup, privacy, help, sign out</small></div><div class="set3-buddy" id="set3Buddy"></div>`);
+    const f = $("featCard"); if (f) f.insertAdjacentHTML("beforebegin", `<p class="set3-group">Plan</p>`);
+    const c2 = scr.querySelectorAll(".two-col > div")[1]; if (c2) c2.insertAdjacentHTML("afterbegin", `<p class="set3-group">Family and app</p>`);
+    scr.querySelector(".savebar").insertAdjacentHTML("beforebegin", `<div class="set3-app">
+      <button type="button" class="set3-row set3-link" data-bell><span class="set3-ic">${ico3d("paper")}</span><span class="set3-t"><b>News and updates</b><small>What is new in ADROS</small></span><span class="bell-num" hidden></span><span class="set3-go">›</span></button>
+      <button type="button" class="set3-row set3-link" data-askus><span class="set3-ic">${ico3d("idea")}</span><span class="set3-t"><b>Help</b><small>Ask us anything</small></span><span class="set3-go">›</span></button>
+      <button type="button" class="set3-row set3-link" data-privacy><span class="set3-ic">${ico3d("consistency")}</span><span class="set3-t"><b>Privacy</b><small>Your data stays in the family</small></span><span class="set3-go">›</span></button></div>
+      <button type="button" class="set3-out" data-signout>Sign out</button><p class="set3-foot">ADROS · made with love for families</p>`);
+  }
+  const u = userById(me), pic = charPic(u, "wave");
+  $("set3Buddy").innerHTML = `${pic ? `<img src="${pic}" alt="">` : ""}<p>Everything about your family's plan lives here, ${safe(u ? u.name : "")}.</p>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-setrow]"); if (!b) return;
+  const k = b.dataset.setrow; if (setOpen.has(k)) setOpen.delete(k); else setOpen.add(k);
+  const card = b.closest(".set3"); if (card) card.classList.toggle("open", setOpen.has(k)); });
 
 // ---------- My day ----------
 // Puts the saved "My day" hours into the boxes: "Day starts at" / "Day ends at" for each day, Monday … Sunday.
@@ -571,31 +609,43 @@ function drawFamily() {
   const form = famEdit ? familyFormHtml(famEdit === "new" ? {} : userById(famEdit)) : "";
   $("familyBody").innerHTML = `
     ${familySetup ? `<div class="card sc-newtopic"><b>🎉 Your family is ready!</b><p>Now add your kids. Each kid gets a code to sign in on their own phone or tablet.</p></div>` : ""}
+    ${famPeopleHtml(kids, form)}
     ${online ? "" : `<div class="card"><p class="sc-empty">🔌 Codes need the internet and the family sign-in.</p></div>`}
     ${cloud.familyId && isParentDevice() ? `<div class="card fam-id"><span>Family ID: <code>${safe(cloud.familyId)}</code></span>
       <button class="pill" data-famidcopy>📋 Copy</button>${aiUsageHtml()}</div>` : ""}
-    <div class="bd-head"><h2>🧒 Kids</h2>${famEdit === "new" ? "" : `<button class="edit" data-famedit="new">➕ Add a kid</button>`}</div>
-    ${famEdit === "new" ? form : ""}
-    ${kids.length ? `<div class="fam-list">${kids.map(u => {
-      const c = colorsOf(u), about = [u.school, u.curriculum, u.year].filter(Boolean).join(" · ");
-      return `<div class="card bd-card fam-kid" style="--c:${c.color}">
-        <div class="fam-top"><span class="fam-face" style="background:${c.soft}">${safe(u.emoji)}</span>
-          <div class="what"><b>${safe(u.name)}</b><small>${about ? safe(about) : "No school or year yet"}</small></div></div>
-        ${famEdit === u.id ? form : ""}
-        <div class="fam-code">${u.code ? `🔑 <span class="code-big">${safe(u.code)}</span>` : `<span class="sc-empty">No code yet</span>`}</div>
-        <div class="ai-btns">
-          ${u.code ? `<button data-famcopy="${safe(u.id)}">📋 Copy</button><button data-famshare="${safe(u.id)}">📤 Share</button>` : ""}
-          <button data-famcode="${safe(u.id)}">${u.code ? "🔁 New code" : "🔑 Make code"}</button>
-          ${famEdit === u.id ? "" : `<button data-famedit="${safe(u.id)}">✏️ Edit</button>`}
-          <button class="danger-text" data-famdel="${safe(u.id)}">🗑️ Remove</button>
-          ${isParentDevice() ? `<button class="danger-fill" data-famreset="${safe(u.id)}">🗑️ Reset study data</button>` : ""}</div></div>`;
-    }).join("")}</div>` : `<div class="card"><p class="sc-empty">No kids yet. Tap ➕ Add a kid.</p></div>`}
-    <div class="card bd-card" style="margin-top:18px"><h2>👨‍👩‍👧 Add a parent</h2>
-      <p class="hint">Makes a code for the other parent. They open the app, tap 👨‍👩‍👧 I'm a parent → Parent code, sign up with their own email, and type the code. It works once.</p>
-      ${famParentCode ? `<div class="fam-code">🔑 <span class="code-big">${safe(famParentCode)}</span></div>
-        <div class="ai-btns"><button data-famcopy="parent">📋 Copy</button><button data-famshare="parent">📤 Share</button></div>` : ""}
-      <div class="ai-btns" style="margin-top:10px"><button class="primary" data-famcode="parent">${famParentCode ? "🔁 New parent code" : "🔑 Make a parent code"}</button></div></div>
     ${familySetup ? `<div class="btnrow" style="margin-top:18px"><button class="primary" data-famdone>✅ Done</button></div>` : ""}`;
+}
+// 🎨 v233 (Broo2a's picture): everyone in one list (character, name, a short line, Parent / Kid tag); tap a kid → their code + buttons;
+// the dashed "+ Add a family member" → Add a kid · Add a parent
+let famOpen = null, famAdd = false;
+const NUM_WORDS = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+function famPeopleHtml(kids, form) {
+  const all = [...parentsList(), ...kids], pts = pointsByUser(), star = stars(), fi = fairInfo();
+  const lead = fairOrder(Object.fromEntries(Object.entries(fi).map(([k, x]) => [k, x.fair])))[0], meU = userById(me);
+  const pic = x => charPic(x, "happy") ? `<img src="${charPic(x, "happy")}" alt="">` : `<span class="e">${safe(x.emoji)}</span>`;
+  const subOf = x => isParentId(x.id) ? (x.id === me ? "You · plans the week" : "Parent") : [star.includes(x.id) ? "Star of the week" : lead && lead.id === x.id && fi[x.id].fair > 0 ? "Leading" : [x.school, x.year].filter(Boolean).join(" · "), `${pts[x.id] || 0} stars`].filter(Boolean).join(" · ");
+  const kidMore = u => `<div class="fam3-more">${famEdit === u.id ? form : ""}
+      <div class="fam-code">${u.code ? `🔑 <span class="code-big">${safe(u.code)}</span>` : `<span class="sc-empty">No code yet</span>`}</div>
+      <div class="ai-btns">
+        ${u.code ? `<button data-famcopy="${safe(u.id)}">📋 Copy</button><button data-famshare="${safe(u.id)}">📤 Share</button>` : ""}
+        <button data-famcode="${safe(u.id)}">${u.code ? "🔁 New code" : "🔑 Make code"}</button>
+        ${famEdit === u.id ? "" : `<button data-famedit="${safe(u.id)}">✏️ Edit</button>`}
+        <button class="danger-text" data-famdel="${safe(u.id)}">🗑️ Remove</button>
+        ${isParentDevice() ? `<button class="danger-fill" data-famreset="${safe(u.id)}">🗑️ Reset study data</button>` : ""}</div></div>`;
+  const rows = all.map(x => { const kid = !isParentId(x.id), open = kid && (famOpen === x.id || famEdit === x.id);
+    return `<div class="fam3-item${open ? " open" : ""}"><button class="fam3-row" ${kid ? `data-famopen="${safe(x.id)}" aria-expanded="${open}"` : "disabled"}>
+      <span class="fam3-pic" style="--soft:${colorsOf(x).soft}">${pic(x)}</span><span class="fam3-t"><b>${safe(x.name)}</b><small>${safe(subOf(x))}</small></span>
+      <span class="fam3-tag ${kid ? "kid" : "par"}">${kid ? "Kid" : "Parent"}</span></button>${open ? kidMore(x) : ""}</div>`; }).join("");
+  const n = all.length, say = `${NUM_WORDS[n] || n} of us! Kids join with their own code and pick a buddy.`;
+  const addBox = famAdd || famEdit === "new" || famParentCode ? `<div class="card bd-card fam3-add">
+      ${famEdit === "new" ? `<h2>🧒 Add a kid</h2>${form}` : `<div class="ai-btns"><button class="primary" data-famedit="new">🧒 Add a kid</button><button data-famcode="parent">${famParentCode ? "🔁 New parent code" : "👨‍👩‍👧 Add a parent"}</button></div>`}
+      ${famParentCode ? `<p class="hint">The other parent opens the app, taps 👨‍👩‍👧 I'm a parent → Parent code, signs up with their own email, and types this code. It works once.</p>
+        <div class="fam-code">🔑 <span class="code-big">${safe(famParentCode)}</span></div>
+        <div class="ai-btns"><button data-famcopy="parent">📋 Copy</button><button data-famshare="parent">📤 Share</button></div>` : ""}</div>` : "";
+  return `<div class="fam3-title"><h2>Family members</h2><small>everyone in the plan</small></div>
+    <div class="fam3-buddy">${charPic(meU, "wave") ? `<img src="${charPic(meU, "wave")}" alt="">` : ""}<p>${safe(say)}</p></div>
+    <div class="fam3-list">${rows}</div>
+    ${addBox || `<button class="fam3-addbtn" data-famaddopen>＋ Add a family member</button>`}`;
 }
 function familyFormHtml(u) {
   const color = u.color || freeColor();
@@ -680,7 +730,9 @@ $("scr-family").addEventListener("click", e => {
   if (!b || !isParentId(me)) return;
   const ds = b.dataset;
   if (ds.famedit) { famEdit = ds.famedit; render(); const n = $("famName"); if (n) n.focus(); return; }
-  if ("famcancel" in ds) { famEdit = null; return render(); }
+  if ("famcancel" in ds) { famEdit = null; famAdd = false; return render(); }
+  if (ds.famopen) { famOpen = famOpen === ds.famopen ? null : ds.famopen; return render(); }
+  if ("famaddopen" in ds) { famAdd = true; return render(); }
   if ("famsave" in ds) return saveFamilyKid();
   if (ds.famemoji) { $("famEmoji").value = ds.famemoji; return; }
   if (ds.famcode) return makeCode(ds.famcode);

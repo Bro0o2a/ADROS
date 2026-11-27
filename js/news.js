@@ -189,7 +189,7 @@ function drawNews() {
   $("newsList").innerHTML = list.length ? list.map(it => {
     const u = exists(it.by) ? userById(it.by) : null, saved = (it.who || "🙂 Someone").split(" ");
     return `<li class="news-item ${feed.fresh.has(newsSig(it)) ? "new" : ""}">
-      <span class="news-face">${safe(u ? u.emoji : saved[0])}</span>
+      <span class="news-face">${u && charPic(u, "happy") ? `<img src="${charPic(u, "happy")}" alt="">` : safe(u ? u.emoji : saved[0])}</span>
       <div>${it.kind === "school" ? safe(it.what) : `<b>${safe(u ? u.name : saved.slice(1).join(" ") || "Someone")}</b> ${safe(newsWhat(it))}`}
         <small>${agoText(it.at)}${it.dev === DEVICE ? " · on this device" : ""}</small></div></li>`;
   }).join("") : `<li class="news-empty">Nothing new yet. Ticks and plan changes will show up here.</li>`;

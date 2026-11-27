@@ -247,12 +247,12 @@ function navHtml(dates) {
 }
 
 // 🧸 v159: a 3D icon for an activity, from words in its name (icons/3d, see ico3d in home.js); unknown → by its type
-const ACT_ICONS = [[/break|get ready|lunch|dinner|breakfast|meal|bed|sleep|shower/i, "time"], [/quran|read|book|story|library|arabic|english|reading/i, "read"], [/math|maths|number/i, "class"], [/science|research|lab/i, "research"],
+const ACT_ICONS = [[/break|get ready|lunch|dinner|breakfast|meal|bed|sleep|shower/i, "time"], [/quran|qur.an|tajweed|hifz/i, "quran"], [/read|book|story|library|arabic|english|reading/i, "read"], [/math|maths|number/i, "class"], [/science|research|lab/i, "research"],
   [/music|piano|sing/i, "music"], [/art|draw|paint|craft/i, "palette"], [/homework|worksheet/i, "homework"], [/exam|test|quiz/i, "exam"], [/bus/i, "bus"], [/school|class/i, "school"],
   [/football|sport|gym|swim|karate|run|exercise|club|basket|tennis/i, "basketball"],
-  [/study|revision|revise|practi[cs]e|lesson|tutor/i, "study"], [/pray|salah/i, "consistency"]];
+  [/study|revision|revise|practi[cs]e|lesson|tutor/i, "study"], [/pray|salah/i, "consistency"], [/puzzle|riddle|sudoku|chess/i, "puzzle"], [/park|outside|outdoor|garden|bike|cycl/i, "pinwheel"], [/play|game|lego|toy/i, "blocks"]];
 function actIcon3d(name, type, cls = "k-ic") {
-  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" || type === "schoolapp" ? "study" : type === "sport" ? "basketball" : type === "routine" ? "time" : type === "free" || type === "family" ? "rainbow" : "goal";
+  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" ? "study" : type === "schoolapp" ? "laptop" : type === "sport" ? "basketball" : type === "routine" ? "time" : type === "family" ? "house" : type === "free" ? "kite" : type === "activity" ? "blocks" : type === "other" ? "puzzle" : "goal";
   return ico3d(n, cls);
 }
 // What a block shows: big title, colors, and a smaller line underneath.
@@ -671,21 +671,32 @@ function openCard(b) {
   const mins = b.end - b.start, len = mins >= 60 ? `${Math.floor(mins / 60)} h${mins % 60 ? ` ${mins % 60} min` : ""}` : `${mins} min`;
   cardDay = b.day;
   $("kCard").style.cssText = `--soft:${b.soft};--ink:${b.ink}`;
-  $("kCard").innerHTML = `
-    <div class="k-card-top kc2-top">${canEditAct ? `<button class="k-edit kc2-pen" data-kedit="${b.fixed ? "fixed" : "flex"}|${safe(baseActId(actId))}" aria-label="Change this activity">✏️</button>` : ""}
-      <div class="big">${b.fixed ? safe(b.emoji) : actIcon3d(b.name, b.type, "k-bigic")}</div>
-      <div class="nm">${subj ? `${safe(subj.emoji)} ` : ""}${safe(what)}</div>
-      <div class="kc2-tags"><span class="kc2-tag">${safe(tEmoji)} ${safe(tWord)}</span>${isSecondId(actId || "") ? `<span class="kc2-tag">2nd today</span>` : ""}${(() => { const ac = actId && (b.fixed ? data.fixed : data.flexible).find(a => a.id === baseActId(actId)); return ac && ac.must ? `<span class="kc2-tag">⭐ Must-do</span>` : ""; })()}</div></div>
-    <div class="kc2-when">
-      <div class="kc2-day">📅 ${safe(dayLong(b.day))}</div>
-      <div class="kc2-time">${safe(clock(b.start, true))} <span>→</span> ${safe(clock(b.end, true))}</div>
-      <span class="kc2-len">⏱️ ${len}</span>
-      ${canMove ? `<button class="k-edit kc2-pen" data-kedit="move|${safe(b.day)}|${safe(actId)}" aria-label="Change the day or time">✏️</button>` : ""}</div>
+  // 🎨 v233 (Broo2a's picture): the buddy says when it is, a white card (icon, name, day · time, chips, everyone's characters), Edit · Mark done
+  const viewer = userById(me), kidOne = b.users.length === 1 && !isParentId(b.users[0]) ? userById(b.users[0]) : null;
+  const bud = kidOne && (isParentDevice() || kidOne.id === me) ? kidOne : viewer, isT = b.day === todayYmd();
+  const ac = actId && (b.fixed ? data.fixed : data.flexible).find(a => a.id === baseActId(actId));
+  const sayTxt = `${what} ${isT ? "today" : "on " + DAYS[weekdayOf(b.day)]}! ${b.type === "free" ? "Pick something fun." : `Get ready at ${clock(b.start)}.`}`;
+  const chips = [b.fixed ? "Fixed" : "Flexible", `${tEmoji} ${tWord}`, len, ac && ac.must ? "⭐ Must-do" : "", isSecondId(actId || "") ? "2nd today" : ""].filter(Boolean);
+  const ppl = b.users.map(id => userById(id)).filter(Boolean);
+  const mine = b.acts.find(a => a.user === me) || (isParentDevice() && kids.length === 1 ? kids[0] : null);
+  const canTick = mine && isT && !b.gone && (isParentId(me) || mine.user === me);
+  const tickOn = mine && isDone(b.day, mine.actId, mine.user);
+  $("kCard").innerHTML = `<button class="kc3-x" aria-label="Close">✕</button>
+    <div class="kc3-buddy">${charPic(bud, "jump") ? `<img src="${charPic(bud, "jump")}" alt="">` : ""}<p>${safe(sayTxt)}</p></div>
+    <div class="kc3-card">
+      <div class="kc3-head"><span class="kc3-ic">${b.fixed ? `<span class="e">${safe(b.emoji)}</span>` : actIcon3d(b.name, b.type, "k-bigic")}</span>
+        <span class="kc3-t"><b>${subj ? `${safe(subj.emoji)} ` : ""}${safe(what)}</b><small>${safe(dayLong(b.day))} · ${safe(clock(b.start))} - ${safe(clock(b.end))}</small></span>
+        ${canMove ? `<button class="k-edit kc2-pen" data-kedit="move|${safe(b.day)}|${safe(actId)}" aria-label="Change the day or time">✏️</button>` : ""}</div>
+      <div class="kc3-chips">${chips.map(c => `<span>${safe(c)}</span>`).join("")}</div>
+      <div class="kc3-ppl"><span class="kc3-faces">${ppl.map(u => charPic(u, "happy") ? `<img src="${charPic(u, "happy")}" alt="">` : `<i>${safe(u.emoji)}</i>`).join("")}</span><b>${safe(namesOf(b.users))}</b></div>
+      ${tiles.length > 1 ? `<div class="kc2-tiles">${tiles.slice(1).map(([ic, l, v, wide]) => `<div class="kc2-tile${wide ? " wide" : ""}"><small>${ic} ${l}</small><b>${v}</b></div>`).join("")}</div>` : ""}
+    </div>
     ${b.type === "free" ? `<div class="kc2-free">🎈 Free time: pick what to do!<div class="kc2-freebtns">${b.users.map(u => `<button class="pill small" data-freeopen="${safe(u)}">💡 Ideas${b.users.length > 1 ? ` for ${safe(userById(u).name)}` : ""}</button>`).join("")}</div></div>` : ""}
-    <div class="kc2-tiles">${tiles.map(([ic, l, v, wide]) => `<div class="kc2-tile${wide ? " wide" : ""}"><small>${ic} ${l}</small><b>${v}</b></div>`).join("")}</div>
     ${quickEditHtml(b, actId, canEditAct, canMove)}
     ${fixedTodayHtml(b)}
-    <button class="k-ok" id="kOk">OK 👍</button>`;
+    <div class="kc3-btns">${canEditAct ? `<button class="kc3-edit" data-kedit="${b.fixed ? "fixed" : "flex"}|${safe(baseActId(actId))}">✏️ Edit</button>` : ""}
+      ${canTick ? `<button class="kc3-done${tickOn ? " on" : ""}" data-check="${safe(b.day)}|${safe(mine.actId)}|${safe(mine.user)}">${tickOn ? "✓ Done!" : "✓ Mark done"}</button>` : ""}
+      <button class="k-ok" id="kOk">OK 👍</button></div>`;
   $("kCard").classList.toggle("qe-on", !!$("kCard").querySelector(".qe-bar"));
   $("kModal").hidden = false;
   $("kOk").focus();
@@ -1348,7 +1359,7 @@ function openRoutineCard(b) {
   $("kModal").hidden = false;
   $("kOk").focus();
 }
-function closeCard() { $("kModal").hidden = true; $("kModal").classList.remove("star-pop"); }   // (🌟 star-pop = the big Shining Star message)
+function closeCard() { $("kModal").hidden = true; $("kModal").classList.remove("star-pop", "lvl-pop"); }   // (🌟 star-pop = the big Shining Star message)
 
 // ---------- 📅 Calendar: the one calendar page ----------
 // Chips: "Me" · "Everyone" · one per person. Everyone (kids too) can see everyone's week. The ✅ ticks work only for
@@ -1367,9 +1378,13 @@ function drawMine() {
   const chip = (id, face, label, c) => `<button class="chip ${calWho === id ? "on" : ""}" data-calwho="${safe(id)}" style="--soft:${c.soft};--ink:${c.ink}"
     ${calWho === id ? `aria-current="true"` : ""}><span class="e">${face}</span>${safe(label)}</button>`;
   // (👨‍👩‍👧 v182 Broo2a: 👨‍👩‍👧 Everyone first, then the family in order: father, mother, kids oldest first; "Me" sits in its own place)
-  $("minePeople").innerHTML = chip("all", "👨‍👩‍👧", "Everyone", { soft: "#fef3c7", ink: "var(--text)" })
-    + (parent ? familyOrder(data.users).map(x => chip(x.id, faceHtml(x), x.id === me ? "Me" : x.name, colorsOf(x))).join("")
-       : chip(me, "🙋", "Me", colorsOf(userById(me))));
+  // 🌈 v233 (Broo2a's picture): Everyone = the whole family's characters together in one circle · each person = their character
+  const fam = familyOrder(data.users), pics = fam.filter(x => charPic(x)).slice(0, 5);
+  const allFace = pics.length >= 2 ? `<span class="fam-collage n${pics.length}">${pics.map(x => `<img src="${charPic(x, "happy")}" alt="">`).join("")}</span>` : "👨‍👩‍👧";
+  const pFace = x => charPic(x) ? `<img class="cw-char" src="${charPic(x, "happy")}" alt="">` : faceHtml(x);
+  $("minePeople").innerHTML = chip("all", allFace, "Everyone", { soft: "#fde0e4", ink: "#9b2f3a" })
+    + (parent ? fam.map(x => chip(x.id, pFace(x), x.id === me ? "Me" : x.name, colorsOf(x))).join("")
+       : chip(me, charPic(userById(me)) ? pFace(userById(me)) : "🙋", "Me", colorsOf(userById(me))));
   $("mineTitle").textContent = all ? "Everyone's Week" : mine ? "My Week" : `${u.name}'s Week`;   // (🫧 the puffy banner: see puffTitles)
   $("mineSub").textContent = !mine && !parent && !all ? `Just looking 👀 Only ${u.name} or ${dadName()} can tick these.` : "";   // (v154: short)
   document.querySelector("#scr-mine .bar .cal-btn").classList.toggle("here", calWho === (parent ? "all" : me));
@@ -1415,8 +1430,11 @@ function drawMine() {
   const keepDay = viewDay, wk = wholeWeek, wdays = wk ? calWeekDates(weekShift).map(planDay) : days;
   if (wk) viewDay = Math.max(0, wdays.findIndex(x => x.date === todayYmd()));
   navSubj = subjPickHtml(sk, who);
-  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj }); }
-  finally { viewDay = keepDay; navSubj = ""; }
+  // 🌈 v233 (Broo2a's picture): the Week view = a grid (Morning · Day · Evening × 7 days, a picture per activity), the names under it,
+  //   then the chosen day's list (tap a day). ✏️ Edit calendar still uses the hour grid (dragging works there).
+  const glance = wk && !editing;
+  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + (glance ? glanceHtml(wdays, who, subj) : weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj })); }
+  finally { viewDay = keepDay; navSubj = ""; wholeWeek = wk; }
   putCalScroll("mineWeek");   // (📅 opens with today in view; a tick or a tap keeps it where it was)
   $("mineSubj").innerHTML = sk ? subjFilterHtml(sk, who) : "";   // (v180: only the picked subject's summary; the picker is in the days row)
   // ⭐ v154: one big button "Good habits today · 3 of 16"; tap → the habits card
@@ -1425,6 +1443,125 @@ function drawMine() {
       <span><b>Good habits today</b><small>${hb.done} of ${hb.all} done · tap to ${calHabits ? "close" : "see them"}</small></span><span class="kc-go">${calHabits ? "⌄" : "›"}</span></button>
     ${calHabits ? habitsCardHtml(who) : ""}` : "";   // ⭐ good habits (a kid; 🔒 a kid's device: only their own; parents have none)
 }
+
+// ---------- 🌈 v233 WEEK AT A GLANCE (Broo2a's picture) ----------
+let glDay = null;   // the day picked under the grid (a date); null = today (or the week's first day)
+const GL_PARTS = [["morning", "☀", "Morning"], ["day", "☁", "Day"], ["evening", "☾", "Evening"]];
+// which part of the day an activity is in, by its middle: before 10:00 morning · before 16:30 day · else evening
+const glPart = it => { const mid = (it.start + it.end) / 2; return mid < 600 ? "morning" : mid < 990 ? "day" : "evening"; };
+function glanceHtml(wdays, who, subj) {
+  const smx = document.getElementById("scr-mine"); if (smx) smx.classList.remove("gd-open");
+  if (who && !isParentId(who)) return pathHtml(wdays, who, subj);   // 🛤️ one kid: the path (Broo2a's 2nd picture)
+  const today = todayYmd(), dates = wdays.map(d => d.date);
+  if (!glDay || !dates.includes(glDay)) glDay = dates.includes(today) ? today : dates[0];
+  const itemsOf = d => d.items.filter(it => !who || it.people.includes(who));
+  const names = new Map();
+  wdays.forEach(d => itemsOf(d).forEach(it => { if (!names.has(it.name)) names.set(it.name, it.type); }));
+  const cell = (d, part) => { const list = itemsOf(d).filter(it => glPart(it) === part), seen = new Set();
+    const uniq = list.filter(it => !seen.has(it.name) && seen.add(it.name));
+    return `<button class="gl-cell gl-${part} ${d.date === glDay ? "sel" : ""}" data-glday="${d.date}" aria-label="${safe(dayHead(d.date))}">${uniq.slice(0, 3).map(it =>
+      `<span class="gl-act ${it.users.length === 1 ? "" : "shared"}" style="${blockColors(it)}" title="${safe(it.name)}">${actIcon3d(it.name, it.type, "gl-ic")}</span>`).join("")}${
+      uniq.length > 3 ? `<small class="gl-more">+${uniq.length - 3}</small>` : ""}</button>`; };
+  const nav = glNav(glDay);
+  const grid = `<div class="gl-card"><div class="gl-grid">
+      <div class="gl-corner"><button class="k-arrow" data-kprev aria-label="Previous week">‹</button><button class="k-arrow" data-knext aria-label="Next week">›</button></div>
+      ${wdays.map(d => `<button class="gl-head ${d.date === today ? "today" : ""} ${d.date === glDay ? "sel" : ""}" data-glday="${d.date}"><span>${SHORT[weekdayOf(d.date)]}</span><b>${fromYmd(d.date).getDate()}</b></button>`).join("")}
+      ${GL_PARTS.map(([part, ic, label]) => `<div class="gl-side"><i>${ic}</i>${label}</div>${wdays.map(d => cell(d, part)).join("")}`).join("")}
+    </div></div>`;
+  const legend = names.size ? `<div class="gl-legend">${[...names].map(([n, t]) => `<span class="gl-key">${actIcon3d(n, t, "gl-kic")}${safe(n)}</span>`).join("")}</div>` : "";
+  // the chosen day, as the usual day list (ticks work there), without its own day buttons
+  const keepW = wholeWeek, keepV = viewDay; let day = "";
+  wholeWeek = false; viewDay = 0;
+  try { day = weekHtml([planDay(glDay)], { only: who, subj }); } finally { wholeWeek = keepW; viewDay = keepV; }
+  return `${nav}${grid}${legend}<h2 class="gl-dayname">${glDay === today ? "Today · " : ""}${DAYS[weekdayOf(glDay)]}</h2><div class="gl-day">${day}</div>`;
+}
+const glNav = ds => `<div class="k-nav"><div class="k-navrow">${navSubj}
+      <div class="seg k-mode"><button data-kmode="day">📆 Day</button><button class="on" data-kmode="week">📅 Week</button></div>
+      <button class="pill small k-planbtn" data-dayplan="${ds}" aria-label="Day plan" title="This day's plan">📋 Plan</button></div></div>`;
+
+// ---------- 🛤️ v233 WEEK PATH (one kid): the days zig-zag down a dotted path, today has a big ring + the kid's character.
+// Tap a day → that day's page: Morning · Day · Evening with big cards (ticks + sessions work there) + "Coming next". ----------
+let glOpen = null;   // the day whose page is open (a date) · null = the path
+const GL_TINTS = ["#fff1c9", "#d9f0d3", "#fde0dc", "#dbe9fb", "#ffe3cc", "#e9e0fb", "#fbe3ec"];
+function pathHtml(wdays, who, subj) {
+  const today = todayYmd(), u = userById(who);
+  const sm = document.getElementById("scr-mine"); if (sm) sm.classList.toggle("gd-open", !!glOpen);   // (a day is open: its own buddy, not the week's)
+  if (glOpen) return glDayPage(glOpen, who, subj);
+  const itemsOf = d => d.items.filter(it => it.people.includes(who)).sort((a, b) => a.start - b.start);
+  const rows = wdays.map((d, i) => {
+    const list = itemsOf(d), seen = new Set(), uniq = list.filter(it => !seen.has(it.name) && seen.add(it.name)), wd = weekdayOf(d.date);
+    const card = `<button class="gp-card" data-glopen="${d.date}" style="--t:${GL_TINTS[wd]}"><b class="gp-dn">${SHORT[wd]}</b>${uniq.length
+      ? uniq.slice(0, 3).map(it => `<span class="gp-act">${actIcon3d(it.name, it.type, "gp-ic")}<span class="gp-nm">${safe(it.name)}</span><small>${clock(it.start)}</small></span>`).join("")
+        + (uniq.length > 3 ? `<small class="gp-more">+${uniq.length - 3} more</small>` : "")
+      : `<span class="gp-free">Free day!</span>`}</button>`;
+    const isT = d.date === today, pic = isT ? charPic(u, "jump") : "";
+    const dot = `<button class="gp-dot ${isT ? "today" : ""}" data-glopen="${d.date}" style="${isT ? `--c:${colorsOf(u).color}` : ""}"><b>${fromYmd(d.date).getDate()}</b><small>${SHORT[wd]}</small></button>`;
+    const buddy = pic ? `<img class="gp-buddy" src="${pic}" alt="">` : "";
+    return `<div class="gp-row ${i % 2 ? "r" : "l"}">${i % 2 ? `<div class="gp-side">${buddy}</div>${dot}${card}` : `${card}${dot}<div class="gp-side">${buddy}</div>`}</div>`;
+  }).join("");
+  return `${glNav(wdays.some(d => d.date === today) ? today : wdays[0].date)}<div class="gp-path">
+      <div class="gp-weeknav"><button class="k-arrow" data-kprev aria-label="Previous week">‹</button><span>${safe(dayHead(wdays[0].date))} – ${safe(dayHead(wdays[wdays.length - 1].date))}</span><button class="k-arrow" data-knext aria-label="Next week">›</button></div>
+      ${rows}</div>`;
+}
+function glDayPage(ds, who, subj) {
+  const today = todayYmd(), u = userById(who), wd = weekdayOf(ds), num = fromYmd(ds).getDate();
+  const head = ds === today ? `Today, ${DAYS[wd]} ${num}` : ds === addDaysYmd(today, 1) ? `Tomorrow, ${DAYS[wd]} ${num}` : `${DAYS[wd]} ${num}`;
+  // the usual day list (so ticks, 🔒 times and 📚 sessions work as always), then its cards are sorted into Morning · Day · Evening
+  const keepW = wholeWeek, keepV = viewDay; let html = "";
+  wholeWeek = false; viewDay = 0;
+  try { html = weekHtml([planDay(ds)], { only: who, subj }); } finally { wholeWeek = keepW; viewDay = keepV; }
+  const tpl = document.createElement("template"); tpl.innerHTML = html;
+  // 🎨 v233 (Broo2a's picture, choice B): one big day card: the date box, the weekday, "3 activities · all ticked!",
+  // each activity its own soft colour card (icon, name, time, the tick on the right), the prayer times strip at noon, bedtime last
+  const cards = [];
+  tpl.content.querySelectorAll(".k-block[data-kblock]").forEach(el => {
+    const b = blocks[Number(el.dataset.kblock)] || {}, st = b.start != null ? b.start : b.oneDay ? toMin(b.oneDay.from) : null;
+    const tf = el.querySelector(".t-full"), sj = b.name && findSubject(b.name);   // (the activity's own name, not the kid's: it's their page)
+    if (tf && b.name && !b.fixed && (b.users || []).length === 1) tf.textContent = sj ? sj.name : b.name;
+    const wh = el.querySelector(".k-sub .what"); if (tf && wh && wh.textContent.trim() === tf.textContent.trim()) wh.remove();
+    cards.push({ st: st == null ? -1 : st, html: el.outerHTML });
+  });
+  cards.sort((x, y) => x.st - y.st);
+  const n = cards.length, items = planDay(ds).items.filter(it => it.people.includes(who));
+  const ticked = items.filter(it => isDone(ds, it.id, who)).length;
+  const pr = prayersOn(ds), noon = 12 * 60;
+  const strip = pr.length ? `<div class="gd3-pray">${pr.filter(x => x.start >= noon - 60).map(x => `<span><b>${safe(x.name)}</b> ${clock(x.start)}</span>`).join("")}</div>` : "";
+  let list = "", stripDone = !strip;
+  cards.forEach((c, i) => { if (!stripDone && c.st >= noon) { list += strip; stripDone = true; }
+    list += `<div class="gd3-item" style="--t:${GL_TINTS[(i + 2) % GL_TINTS.length]}">${c.html}</div>`; });
+  if (!stripDone) list += strip;
+  const bed = bedMin(who, ds);
+  if (bed != null) list += `<div class="gd3-item gd3-bed"><span class="gd3-moon" aria-hidden="true">☾</span><span><b>Bedtime</b><small>${clock(bed, true)}</small></span></div>`;
+  const mon = fromYmd(ds).toLocaleDateString("en-GB", { month: "short" });
+  const say = !n ? "A free day! Plan something fun?" : ds === today ? (n >= 3 ? "Today is a big one. You can do it!" : "A nice easy day today!")
+    : `Here is your ${DAYS[wd]}!`;
+  const subTxt = !n ? "Free day" : `${n} ${n === 1 ? "activity" : "activities"}${ticked && ticked >= items.length ? " · all ticked!" : ticked ? ` · ${ticked} ticked` : ""}`;
+  const pic = charPic(u, n >= 3 ? "jump" : "happy");
+  // Coming next: the next day + the next free day (no activities) in the coming week
+  const sumOf = d => { const l = planDay(d).items.filter(it => it.people.includes(who)).sort((a, b) => a.start - b.start); return l; };
+  const nextD = addDaysYmd(ds, 1), nl = sumOf(nextD);
+  let freeD = null; for (let k = 2; k <= 7 && !freeD; k++) { const c = addDaysYmd(ds, k); if (hasPlan() && data.plan.dates[c] && !sumOf(c).length) freeD = c; }
+  const nextRow = (d, l, title) => `<button class="gd-next" data-glopen="${d}">${l.length ? actIcon3d(l[0].name, l[0].type, "gd-nic") : `<span class="gd-nic gd-clock">🕒</span>`}
+      <span><b>${safe(title)}, ${DAYS[weekdayOf(d)]} ${fromYmd(d).getDate()}</b><small>${l.length ? safe(l.slice(0, 2).map(it => `${it.name} · ${clock(it.start)}`).join(" · ")) + (l.length > 2 ? ` +${l.length - 2}` : "") : "Free day · plan something fun?"}</small></span><span class="kc-go">›</span></button>`;
+  const next = `<h2 class="gd-nexth">Coming next</h2>${nextRow(nextD, nl, nextD === addDaysYmd(today, 1) ? "Tomorrow" : "Next")}${freeD ? nextRow(freeD, [], "Free day") : ""}`;
+  return `<div class="gd-top"><button class="pill small" data-glopen="">‹ My week</button>
+      <button class="pill small k-planbtn" data-dayplan="${ds}" aria-label="Day plan">📋 Plan</button></div>
+    <div class="gd3-buddy">${pic ? `<img src="${pic}" alt="">` : ""}<p>${safe(say)}</p></div>
+    <div class="gd-card gd3"><div class="gd3-head"><div class="gd3-date"><b>${fromYmd(ds).getDate()}</b><small>${safe(mon)}</small></div>
+      <div><h2 class="gd-title">${ds === today ? "Today" : ds === addDaysYmd(today, 1) ? "Tomorrow" : safe(DAYS[wd])}</h2><p class="gd-sub">${ds === today || ds === addDaysYmd(today, 1) ? `${safe(DAYS[wd])} · ` : ""}${safe(subTxt)}</p></div></div>
+      ${list || `<div class="gd-none">Nothing planned. Enjoy your free day!</div>`}</div>
+    ${glDayChips(ds)}${next}`;
+}
+// the 7 day chips under the day card (Mo 23 … Su 29): tap = that day
+function glDayChips(ds) {
+  const start = addDaysYmd(ds, -weekdayOf(ds));
+  return `<div class="gd3-chips">${[0, 1, 2, 3, 4, 5, 6].map(k => { const d = addDaysYmd(start, k);
+    return `<button class="gd3-chip${d === ds ? " on" : ""}" data-glopen="${d}">${SHORT[weekdayOf(d)].slice(0, 2)} ${fromYmd(d).getDate()}</button>`; }).join("")}</div>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-glopen]"); if (!b) return;
+  glOpen = b.dataset.glopen || null; render(); window.scrollTo({ top: glOpen ? (document.querySelector(".gd-top") || {}).offsetTop - 70 || 0 : 0, behavior: "smooth" }); });
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-glday]"); if (!b) return;
+  glDay = b.dataset.glday; render(); const t = document.querySelector(".gl-dayname"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
 
 // ---------- 📚 SUBJECT FILTER (bottom of the calendar): "All" + each subject of a kid; a subject → only its study sessions this
 // week stand out (the rest is faded) and a summary card. Parents switch between kids; a kid sees only themselves. ----------
@@ -1828,3 +1965,6 @@ setInterval(() => {
     if (planDay(todayYmd()).items.some(it => it.start > was && it.start <= now)) render();
   } catch (e) {}
 }, 20000);
+// (✓ Mark done on the big card: the tick is saved by the usual [data-check] tap, then the card closes)
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".kc3-x")) $("kModal").hidden = true; });
+document.addEventListener("click", e => { if (e.target.closest && e.target.closest(".kc3-done")) setTimeout(() => { $("kModal").hidden = true; }, 350); });

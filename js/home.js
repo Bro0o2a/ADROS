@@ -14,10 +14,40 @@ const PUFF_PILLS = { home: "plan your day, make it happen!", mine: "plan your we
 const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, try, discover!"], [/english/i, "read, write, shine!"], [/arabic/i, "every word counts!"],
   [/islam|quran/i, "learn with your heart"], [/ssa|social|humanit/i, "explore the world!"]];
 // 🧒 v227 (Broo2a): the bunny/bear/heart stickers are gone; the banner shows YOUR character (picked in 👤 Me) with the feeling of that page.
-const PAGE_MOODS = { home: "happy", mine: "thumbs", school: "reading", points: "wow", me: "happy", add: "thumbs", settings: "thumbs", family: "happy",
-  diary: "happy", report: "wow", kidswork: "reading", kid: "happy", extra: "happy", setup: "thumbs" };
-const puffDeco = mood => { const src = charPic(userById(me), mood || PAGE_MOODS[screen] || "happy");
-  return src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : ""; };
+// 🎭 v233: the new feelings (wave = hello · point = tips · think = help · proud = how you grow)
+const PAGE_MOODS = { home: "wave", mine: "point", school: "reading", points: "proud", me: "wave", add: "point", settings: "point", family: "wave",
+  diary: "happy", report: "proud", kidswork: "think", kid: "wave", extra: "happy", setup: "point" };
+// 🌈 v233 (Broo2a's colourful pictures): the banner shows the page's kid on the left and again on the right (another feeling); home: a brother/sister
+const RIGHT_MOODS = { mine: "jump", school: "jump", points: "confetti", me: "proud", report: "jump", kid: "jump", diary: "wave" };
+const buddyId = () => screen === "school" && typeof schoolKid !== "undefined" && exists(schoolKid) ? schoolKid : me;
+const otherKids = id => data.users.filter(u => !isParentId(u.id) && u.id !== id && charPic(u));
+const puffDeco = mood => { const id = buddyId(), src = charPic(userById(id), mood || PAGE_MOODS[screen] || "happy"), sib = otherKids(id)[0];
+  // (Broo2a 27 Nov: a kid's pages show ONLY that kid's character, in 2 feelings; the home page may show the whole family)
+  const right = screen === "home" ? (sib ? charPic(sib, "wave") : "") : charPic(userById(id), RIGHT_MOODS[screen] || "jump");
+  return (src ? `<img class="pb-deco pb-l pb-char" src="${src}" alt="">` : "") + (right ? `<img class="pb-deco pb-rr pb-char" src="${right}" alt="">` : ""); };
+// 💬 the buddy under the title: [mood, big line, small line] ({n} = the kid's name)
+const BUDDY_LINES = { home: ["wave", "Hi {n}!", "Let's make today a great day"], mine: ["point", "Here is your week, {n}!", "Tap a day to see what is inside"],
+  school: ["happy", "Pick a subject, {n}!", "Every worksheet makes you stronger"], points: ["proud", "Look at your stars, {n}!", "Beat yourself, not anyone else"],
+  me: ["wave", "This is you, {n}!", "You can change your character any time"], diary: ["happy", "How was your day?", "Tell me in a few words"],
+  report: ["proud", "Look how you grow!", "Every week a little better"], kidswork: ["think", "Let's see today's work", "Who needs a little help?"],
+  add: ["point", "What is on this week?", "Add it once, the plan does the rest"], settings: ["point", "Make it just right", "Change anything, any time"],
+  family: ["wave", "Together is better", "Everyone in one place"], kid: ["wave", "All about {n}", "Scores, school and today"], extra: ["happy", "Have fun together!", ""],
+  setup: ["point", "Make the app yours", "Turn on what your family needs"] };
+// 🧒 3 characters at the end of a page: [mood, word] × 3 (me in 3 feelings; on home: me, then my brothers/sisters)
+const STRIP_WORDS = { school: [["reading", "Read"], ["jump", "Learn"], ["proud", "Grow"]], mine: [["point", "Plan"], ["think", "Do"], ["confetti", "Win"]],
+  points: [["think", "Try"], ["jump", "Shine"], ["confetti", "Win"]], home: [["wave", "Hello"], ["jump", "Play"], ["proud", "Learn"]] };
+function drawBuddies() {
+  const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
+  const id = buddyId(), u = userById(id), h = scr.querySelector("h1.page-title, .home-date");
+  const old = scr.querySelector(":scope .buddy-row"); if (old) old.remove();
+  const subj = screen === "school" && typeof schoolView !== "undefined" && schoolView === "subject" ? plainWords((h && h.dataset.puffed) || "") : "";
+  const line = subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
+  if (h && pic && screen !== "home") h.insertAdjacentHTML("afterend", `<div class="buddy-row"><img src="${pic}" alt=""><div class="buddy-bub"><b>${safe(line[1].replace("{n}", u.name))}</b>${line[2] ? `<small>${safe(line[2].replace("{n}", u.name))}</small>` : ""}</div></div>`);
+  const oldS = scr.querySelector(":scope > .buddy-strip"); if (oldS) oldS.remove();
+  const words = STRIP_WORDS[screen], kids = (screen === "home" ? [u, ...otherKids(id)] : [u]).filter(k => charPic(k));   // (only my character, except on home)
+  if (words && kids.length) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
+    `<figure><img src="${charPic(kids[i % kids.length], m)}" alt=""><figcaption>${w}</figcaption></figure>`).join("")}</div>`);
+}
 const plainWords = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F⬅️➡️›‹·]/gu, "").replace(/\s+/g, " ").trim();
 function puffBannerHtml(title, pill, mood) {
   const w = plainWords(title).split(" "), last = w.pop();
@@ -28,10 +58,13 @@ function puffTitles() {
   const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
   scr.querySelectorAll("h1.page-title").forEach(h => {
     const raw = h.dataset.puffed && h.querySelector(".pb-t") ? h.dataset.puffed : h.textContent, t = plainWords(raw);
-    if (!t || (h.dataset.puffed === raw && h.querySelector(".pb-t"))) return;
+    const who = `${buddyId()}|${userById(buddyId()).avatar || ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
+    if (!t || (h.dataset.puffed === raw && h.dataset.puffWho === who && h.querySelector(".pb-t"))) return;
+    h.dataset.puffWho = who;
     const sub = screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
     h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub); h.dataset.puffed = raw;
   });
+  drawBuddies();   // 🌈 v233
 }
 // 🧸 v159 planner style (Broo2a's "Daily Planner" picture): 3D icons (icons/3d/<name>.png, cut from their icon set),
 //   ribbon titles, lined paper cards: ❤️ Top 3 (must-do habits first, then what's next) · 🕒 My schedule (+ a sticky note) · 💧 Habit tracker · a kind quote
@@ -68,16 +101,30 @@ function drawKidHome(u) {
   const next = today.find(x => !isDone(todayYmd(), x.id, u.id));
   const tile = (cls, attr, icon, label, big, sub) => `<button class="kt ${cls}" ${attr}><span class="kt-ico" aria-hidden="true">${icon}</span><span class="kt-label">${label}</span><b class="kt-big">${big}</b><small>${sub}</small></button>`;
   // 🧒 v227 the hero: my character, happy · 👍 when today is all done · 😴 after my bedtime · no character yet → my emoji + "Choose your character"
-  const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "thumbs" : "happy";
-  $("homeBig").innerHTML = `<div class="k-hero">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
-      <div class="k-hero-text"><h2>${hi}</h2>${scoredUsers().some(x => x.id === u.id) ? `<p class="k-cheer">${safe(kidCheerShort(u.id))}</p>` : ""}<p>${!today.length ? "Nothing planned today. Enjoy!" : left ? `${left} ${left === 1 ? "thing" : "things"} left today. You can do it!` : "All done today. Amazing!"}</p>
-      ${next ? `<button class="k-go" data-kidcal>▶ ${safe(next.name.length > 18 ? next.name.slice(0, 17) + "…" : next.name)}</button>` : `<button class="k-go" data-kidcal>📅 My day</button>`}</div>
-      <svg class="k-plant" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 100V45" stroke="#5e8f5a" stroke-width="5" fill="none"/><path d="M60 70C35 70 22 52 20 34c22 0 36 14 40 36z" fill="#7fae6e"/><path d="M60 60C85 60 98 42 100 22c-22 0-36 14-40 38z" fill="#8fbb7c"/><path d="M60 50C48 36 46 20 54 6c10 10 12 26 6 44z" fill="#9ec68a"/><path d="M28 96h64l-8 40H36z" fill="#ead7bd"/><rect x="24" y="90" width="72" height="14" rx="7" fill="#f3e4cf"/></svg></div>
-    ${comingCardHtml(comingUp(u.id), false)}<div class="kt-grid">${tile("kt-study", `data-school="${safe(u.id)}"`, ico3d("study"), "Study", "My school", `${study} study points`)}
-      ${tile("kt-cal", "data-kidcal", ico3d("calendar"), "Calendar", `${doneToday} of ${today.length}`, "done today")}
-      ${tile("kt-habits", `data-kidpanel="habits"`, ico3d("goal"), "Good habits", hb.all ? `${hb.done} of ${hb.all}` : "–", "today")}
-      ${tile("kt-score kt-beat", `data-sdpop="${safe(u.id)}"`, scoreRingHtml(scoreOf(u.id).overall, colorsOf(u).color, lastWeekScore(u.id)), "Score this week", `${scoreOf(u.id).overall} ${ringTrendHtml(u.id)}`, `of ${scoreOf(u.id).max} · tap for the day`)}</div>
-    ${wishCardHtml(u)}${kidPlannerHtml(u, today, hb)}`;
+  const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "jump" : "wave";   // (🎭 v233: all done = jump, else wave)
+  // 🌈 v233 (Broo2a's picture): Hi Bana! + the date · my character + a bubble + my score bar · 4 soft tiles · Today's list
+  const sc = scoreOf(u.id), c = colorsOf(u), dz = o => new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Dubai", ...o });
+  const head = !today.length ? "Nothing planned today. Enjoy!" : !left ? "All finished today, superstar!" : left === 1 ? "Just 1 thing left today!" : `${left} things left today. You can do it!`;
+  const sub = !today.length ? hi : !left ? (hb.all && hb.done < hb.all ? `Good habits are next. Tick them to keep your ${sc.overall}!` : "Time to relax. See you tomorrow!") : next ? `Next: ${next.name}${next.start >= 0 ? ` at ${clock(next.start, true)}` : ""}.` : hi;
+  const tile3 = (cls, attr, icon, title, sub2) => `<button class="kt3 ${cls}" ${attr}><span class="kt3-ic">${icon}</span><b>${title}</b><small>${sub2}</small></button>`;
+  const d0 = todayYmd(), bedM = bedUsual(u.id, todayIndex());
+  const row = x => { const ok = isDone(d0, x.id, u.id), isNext = next && x.id === next.id;
+    return `<button class="kd3-row ${ok ? "done" : ""}" data-kidcal>${actIcon3d(x.name, x.type, "kd3-ic")}<span class="kd3-t"><b>${safe(x.name)}</b><small>${x.start >= 0 ? `${clock(x.start)} - ${clock(x.end)}` : "Any time"}</small></span>${
+      ok ? `<span class="kd3-ok" aria-label="Done">✓</span>` : isNext && x.start >= 0 ? `<span class="kd3-at">${clock(x.start, true).toUpperCase()}</span>` : `<span class="kd3-todo"></span>`}</button>`; };
+  $("homeBig").innerHTML = `<div class="kh3-top"><h1>Hi ${safe(u.name)}!</h1><span>${dz({ weekday: "long" })}<br>${dz({ day: "numeric", month: "long" })}</span></div>
+    <div class="kh3-hero" style="--soft:${c.soft};--c:${c.color}">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
+      <div class="kh3-bub"><b>${safe(head)}</b><small>${safe(sub)}</small></div>
+      ${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
+      <div class="kh3-say">${sayBoxHtml(u)}</div></div>
+    ${comingCardHtml(comingUp(u.id), false)}
+    <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("k-study"), "Study", "My school")}
+      ${tile3("kt3-yellow", "data-kidcal", ico3d("k-calendar"), "Calendar", "Today's plan")}
+      ${tile3("kt3-pink", `data-kidpanel="habits"`, ico3d("k-habits"), "Good habits", hb.all ? `${hb.done} of ${hb.all} done` : "None today")}
+      ${tile3("kt3-green", `data-go="points"`, ico3d("k-stars"), "My stars", `${pointsByUser()[u.id] || 0} this week`)}</div>
+    ${familySaysHtml(u.id)}
+    ${today.length || bedM != null ? `<div class="kd3-card"><div class="kd3-head">Today · ${safe(dayHead(d0))}</div>${today.slice(0, 8).map(row).join("")}${today.length > 8 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}
+      ${bedM != null ? `<div class="kd3-bed"><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : ""}
+    ${wishCardHtml(u)}`;
   $("homeMenu").hidden = true;
   const bar = [["data-go=\"points\"", "🏆", "Points"], ["data-kidpanel=\"habits\"", "⭐", "Habits"], ...(feat("diary") ? [["data-go=\"diary\"", "📔", "My day"]] : []),
                ...(feat("meeting") ? [[`data-extra="meeting"`, "🏡", "Community"]] : []), ["data-profile", "👤", "Me"], ["data-homemore", "☰", "More"]];
@@ -173,7 +220,7 @@ function needsLineHtml() {
     ${one ? safe(list[0].text) : `🔔 ${list.length} things need you`}<span aria-hidden="true">${open ? "▲" : "›"}</span></button>${one ? x1(list[0]) : ""}</div>`;
   const shown = list.find(x => x.key === needsOpen);
   return `<div class="needs">${head}${needsOpen === "list" && !one ? `<div class="needs-list">${list.map(x => `<div class="needs-row"><button data-needs="${x.key}">${safe(x.text)} ›</button>${x1(x)}</div>`).join("")}</div>` : ""}
-    ${shown ? `<div class="needs-panel">${shown.html}</div>` : ""}</div>`;
+    ${shown ? `<div class="needs-panel nd3">${(u => `<b class="nd3-title">Needs you, ${safe(u.name)}!</b><div class="nd3-buddy">${charPic(u, "point") ? `<img src="${charPic(u, "point")}" alt="">` : ""}<p>${safe(shown.text.replace(/^\S+\s/, ""))}</p></div>`)(userById(me))}${shown.html}</div>` : ""}</div>`;
 }
 // 🎯 The score ring (0–100) in the kid's colour
 function scoreRingHtml(n, color, target) {
@@ -221,14 +268,50 @@ const kidCardTags = id => (stars().includes(id) ? ` <span class="kc-tag kc-star"
   (leaders().includes(id) ? ` <span class="kc-tag kc-lead">🔥 Leading</span>` : "");
 // ONE CARD PER KID: the score ring, name + today's mood, today's line, 🎒 School · 📅 Calendar · 📊 Report. The card itself → the Kid page
 function kidCardHtml(k) {
-  const c = colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null;
-  return `<div class="card kid-card" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-    <div class="kc-top"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="${safe(k.name)}'s score: see it through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button>
-    <button class="kc-open" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">
-      <span class="kc-text"><b>${faceHtml(k)} ${safe(k.name)}${e && moodFace(e.mood) ? ` <span class="kc-mood" title="Today's mood">${moodFace(e.mood)}</span>` : ""}${kidCardTags(k.id)}</b>
-        <small>${safe(kidTodayLine(k.id))}</small><small class="kc-cheer">${safe(kidCheerShort(k.id))}</small></span><span class="kc-go" aria-hidden="true">›</span></button></div>
+  const c = colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);
+  const [main, rest] = line.split(" · "), allDone = /^All finished/.test(line);
+  const pic = charPic(k, allDone ? "proud" : "point");
+  return `<div class="card kid-card kc3" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
+    <div class="kc-head"><button class="kc-name" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">${faceHtml(k)}<b>${safe(k.name)}</b>${e && moodFace(e.mood) ? `<span class="kc-mood" title="Today's mood">${moodFace(e.mood)}</span>` : ""}${kidCardTags(k.id)}</button>
+      <button class="kc-pts" data-sdpop="${safe(k.id)}" aria-label="${safe(k.name)}'s score this week: ${sc.overall}"><b>${sc.overall}</b><small>score</small></button></div>
+    <div class="kc-mid">${pic ? `<img class="kc-big" src="${pic}" alt="">` : `<span class="kc-big kc-bigface">${faceHtml(k)}</span>`}
+      <div class="kc-bub"><button class="kc-bubtxt" data-kidpage="${safe(k.id)}"><b>${safe(main)}</b><small>${safe(rest ? `Next: ${rest.replace(/^next /, "")}` : kidCheerShort(k.id))}</small></button>${sayLineHtml(k)}</div></div>
     <div class="kc-btns"><button data-school="${safe(k.id)}">School</button><button data-viewcal="${safe(k.id)}">Calendar</button><button data-kidreport="${safe(k.id)}">Report</button></div></div>`;
 }
+// ---------- 💬 v233 SPEECH LINES (Broo2a): everyone writes a short line next to their name; the family sees it on the home screen.
+// You change your own · a parent can delete a kid's line (not nice). Stored as u.say {t, at, by}; the newer one wins when phones meet. ----------
+let sayEditing = null;   // whose line is being typed now (a person id)
+const sayOf = id => { const u = userById(id); return u && u.say && u.say.t ? u.say.t : ""; };
+const canClearSay = id => id === me || (isParentId(me) && isParentDevice());
+function setSay(id, text) {
+  const u = userById(id); if (!u) return;
+  u.say = { t: String(text || "").replace(/\s+/g, " ").trim().slice(0, SAY_MAX), at: new Date().toISOString(), by: me || "" };
+  keepNow();
+}
+// a kid's line on a card (look only; a parent gets ✕ to delete it)
+const sayLineHtml = u => sayOf(u.id) ? `<span class="say-line">“${safe(sayOf(u.id))}”${canClearSay(u.id) ? `<button class="say-x" data-sayclear="${safe(u.id)}" aria-label="Delete ${safe(u.name)}'s line" title="Delete">✕</button>` : ""}</span>` : "";
+// MY line, in the hello: a dashed box with ✏️ (tap → type it)
+function sayBoxHtml(u) {
+  if (sayEditing === u.id) return `<div class="say-box editing"><input id="sayInput" maxlength="${SAY_MAX}" value="${safe(sayOf(u.id))}" placeholder="Say something to your family…" aria-label="Your line">
+    <button class="say-ok" data-saysave="${safe(u.id)}" aria-label="Save">✓</button>${sayOf(u.id) ? `<button class="say-x" data-sayclear="${safe(u.id)}" aria-label="Delete my line">✕</button>` : ""}</div>`;
+  const t = sayOf(u.id);
+  return `<button class="say-box ${t ? "" : "empty"}" data-sayedit="${safe(u.id)}"><span>${t ? safe(t) : "Say something to your family…"}</span><i aria-hidden="true">✏️</i></button>`;
+}
+// 🧒 a kid's home: what everyone else in the family says
+function familySaysHtml(meId) {
+  const list = data.users.filter(u => u.id !== meId && sayOf(u.id));
+  if (!list.length) return "";
+  return `<div class="card fam-says"><h3>💬 What my family says</h3>${list.map(u => `<div class="fs-row" style="--c:${colorsOf(u).color};--soft:${colorsOf(u).soft}">
+      ${charPic(u) ? `<img class="fs-pic" src="${charPic(u, "wave")}" alt="">` : `<span class="fs-pic">${faceHtml(u)}</span>`}<div class="fs-bub"><b>${safe(u.name)}</b>${sayLineHtml(u)}</div></div>`).join("")}</div>`;
+}
+document.addEventListener("click", e => {
+  const ed = e.target.closest && e.target.closest("[data-sayedit]"), sv = e.target.closest && e.target.closest("[data-saysave]"), cl = e.target.closest && e.target.closest("[data-sayclear]");
+  if (ed && ed.dataset.sayedit === me) { sayEditing = me; render(); const i = $("sayInput"); if (i) { i.focus(); i.select(); } return; }
+  if (sv && sv.dataset.saysave === me) { const i = $("sayInput"); sayEditing = null; setSay(me, i ? i.value : ""); toast("💬 Your family can see it now", 2000); return; }
+  if (cl && canClearSay(cl.dataset.sayclear)) { e.stopPropagation(); sayEditing = null; setSay(cl.dataset.sayclear, ""); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target && e.target.id === "sayInput") { e.preventDefault(); sayEditing = null; setSay(me, e.target.value); }
+  if (e.key === "Escape" && e.target && e.target.id === "sayInput") { sayEditing = null; render(); } });
 // v155: the parent's home ends with ONE clear list in 4 groups (no hidden menus): Plan the week · The kids · Family · Settings.
 //   Each row = a title + one short line + ›. No pictures (Broo2a: simpler and more professional).
 const hubAttr = t => t.attr ? t.attr : t.plan ? "data-plan" : t.extra ? `data-extra="${t.extra}"` : t.tour ? "data-tour"
