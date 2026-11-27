@@ -4724,3 +4724,7 @@ button.kh3-spark { position: relative; flex: none; width: 84px; height: 84px; pa
 .ty4-tile small { font: 700 11px/1.1 Nunito, sans-serif; color: #a8927f; }
 .ty4-tile.sc small { color: #b07a10; }
 button.ty4-del { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: #fbdcdc; color: #9a2a22; font: 800 12px/1 Nunito, sans-serif; box-shadow: none; }
+
+/* v237 (Broo2a): phones in night (dark) mode made the app look strange: the app always stays light */
+:root { color-scheme: light only; }
+html, body { background-color: #f6eadc; }

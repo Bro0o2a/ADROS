@@ -258,7 +258,7 @@ function schoolHomeHtml(s, isDad) {
   const sess = "";   // (📚 v154: study sessions are only on 📅 the calendar now)
   // ⬆️ Upload a school file (a newsletter, a school review …): its topics go into every subject (see STUDY TOPICS)
   // 🎀 v159 (Broo2a's icon set picture): ribbon titles with a bow over cream panels of 3D icons with their names
-  const up = feat("coach") && list.length ? `<button class="ip-item" data-stup="">${ico3d("pin")}<b>Upload topic</b><small>From school</small></button>` : "";
+  const up = feat("coach") && list.length ? `<button class="ip-item" data-stup="">${ico3d("k-upload")}<b>Upload topic</b><small>From school</small></button>` : "";
   // 👨‍👩‍👧 the kid's files that aren't in a subject (newsletters, reviews …)
   const loose = isParentDevice() ? Object.entries(s.files).map(([id, x]) => ({ id, ...x })).filter(x => !x.subject && !x.worksheet && x.kind !== "link")
     .sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10) : [];
@@ -755,7 +755,7 @@ function briefNode(kid, b) {
 }
 // 🧸 v159: a 3D icon for each subject (icons/3d)
 const subjectIcon3d = n => [[/math/i, "practice"], [/science|physics|chem|bio/i, "research"], [/english|phonics/i, "class"], [/arabic|french|urdu/i, "lesson"],
-  [/islam|quran|religio/i, "read"], [/ssa|social|humanit|history|geo/i, "milestone"], [/art|design/i, "palette"], [/music/i, "music"], [/comput|ict|coding/i, "focus"]].find(([re]) => re.test(n || ""))?.[1] || "homework";
+  [/islam|quran|religio/i, "read"], [/humanit|history/i, "map"], [/ssa|social|geo/i, "milestone"], [/spell/i, "homework"], [/art|design/i, "palette"], [/music/i, "music"], [/comput|ict|coding/i, "focus"]].find(([re]) => re.test(n || ""))?.[1] || "homework";
 function subjectTileHtml(s, x) {
   const avg = avgPct(checkedOf(schoolKid, x.name)), level = (s.profile.subjects[x.id] || {}).level, k = wsPickOf(schoolKid, x.name);
   return `<button class="ip-item sc-tile2" data-scgo="subject|${safe(x.id)}">${ico3d(subjectIcon3d(x.name))}<b>${safe(x.name)}</b>
