@@ -4715,3 +4715,12 @@ button.kh3-spark { position: relative; flex: none; width: 84px; height: 84px; pa
 .ks-in { position: relative; display: flex; flex-direction: column; align-items: center; line-height: 1; }
 .ks-in b { font: 800 20px/1 Fredoka, Nunito, sans-serif; color: #7b4cbc; margin: 1px 0; }
 .ks-in small { font: 800 10px/1.1 Nunito, sans-serif; color: #9a7cc0; }
+/* v236 (Broo2a): activity types as picture tiles */
+.ty4-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0 14px; }
+.ty4-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 12px 4px 10px; border-radius: 20px; background: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.06); text-align: center; }
+.ty4-tile .ty4-img { width: 50px; height: 50px; object-fit: contain; }
+.ty4-e { font-size: 38px; line-height: 50px; height: 50px; }
+.ty4-tile b { font: 800 13px/1.15 Nunito, sans-serif; color: #3b2a1e; }
+.ty4-tile small { font: 700 11px/1.1 Nunito, sans-serif; color: #a8927f; }
+.ty4-tile.sc small { color: #b07a10; }
+button.ty4-del { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: #fbdcdc; color: #9a2a22; font: 800 12px/1 Nunito, sans-serif; box-shadow: none; }

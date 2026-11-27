@@ -154,9 +154,10 @@ let addOpen = { fx: false, fl: false, rt: false, ty: false };
 function drawTypes() {
   const own = data.actTypes || [];
   $("tyCard").innerHTML = `<p class="hint">Every activity has a type. ⭐ = counts in the score when it's ticked.</p>
-    <ul class="list ty-list">${allActTypes().map(([k, e, w]) => { const mine = own.find(t => t.key === k);
-      return `<li class="ty-row"><span class="ty-e">${safe(e)}</span><span class="ty-n">${safe(w)}</span><span class="ty-s">${isScoredType(k) ? "⭐ scored" : "not scored"}</span>
-        ${mine ? `<button type="button" class="pill small danger-text" data-tydel="${safe(k)}" aria-label="Delete ${safe(w)}">🗑️</button>` : `<span class="ty-built">built-in</span>`}</li>`; }).join("")}</ul>
+    <div class="ty4-grid">${allActTypes().map(([k, e, w]) => { const mine = own.find(t => t.key === k);   // (🎨 v236 Broo2a: picture tiles)
+      return `<div class="ty4-tile${isScoredType(k) ? " sc" : ""}">${mine ? `<span class="ty4-e">${safe(e)}</span>` : actIcon3d("", k, "ty4-img")}<b>${safe(w)}</b>
+        <small>${isScoredType(k) ? "⭐ scored" : "not scored"}</small>
+        ${mine ? `<button type="button" class="ty4-del" data-tydel="${safe(k)}" aria-label="Delete ${safe(w)}">✕</button>` : ""}</div>`; }).join("")}</div>
     <div class="ty-new"><b>➕ New type</b>
       <div class="row"><div style="flex:0 0 84px"><label class="small" for="tyEmoji">Emoji</label><input type="text" id="tyEmoji" maxlength="8" placeholder="🎹"></div>
         <div><label class="small" for="tyName">Name</label><input type="text" id="tyName" maxlength="24" placeholder="Piano"></div></div>
