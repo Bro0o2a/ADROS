@@ -4012,3 +4012,17 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
 #scr-mine .bar.bar3 [data-navback]::before { content: "‹"; font: 900 30px/1 Fredoka, Nunito, sans-serif; color: #fff; }
 #scr-mine .bar.bar3 [data-printcal] { margin-left: auto !important; }
 .say-box.editing { flex-wrap: wrap; } .say-box.editing input { min-width: 120px; }
+
+/* 🎨 v233 (Broo2a 27 Nov): softer button colours, like the picture — pastel with dark words */
+.kid-card .kc-btns button { box-shadow: 0 4px 0 rgba(60, 40, 20, .1) !important; text-shadow: none !important; }
+.kid-card .kc-btns [data-school] { background: #d6e6fa !important; color: #1f4f8f !important; }
+.kid-card .kc-btns [data-viewcal] { background: #d5ecd2 !important; color: #2c6a35 !important; }
+.kid-card .kc-btns [data-kidreport] { background: #fbdcdc !important; color: #a8323a !important; }
+.bar.bar3 .pill { text-shadow: none !important; box-shadow: 0 4px 0 rgba(60, 40, 20, .14) !important; }
+.bar.bar3 [data-navback] { background: #5c9ded !important; }
+.bar.bar3 .rb-home { background: #9cc796 !important; color: #2b4a28 !important; }
+.bar.bar3 .sch-btn { background: #f2cf6a !important; color: #4a3410 !important; }
+.bar.bar3 .rb.cal-btn { background: #9cc796 !important; }
+.bar.bar3 .bell-btn { background: #b9a3ec !important; }
+.bar.bar3 [data-signout] { background: #f19a90 !important; }
+.bar.bar3 .rb:not([data-signout]):not(.bell-btn):not(.cal-btn) { background: #9dc0f0 !important; }
