@@ -4228,3 +4228,42 @@ button.ws-fixbtn img { width: 40px; height: 40px; object-fit: contain; }
 .ws-done-h { margin: 2px 2px 10px; } .ws-done-h h2 { margin: 0; font: 900 26px/1.15 Nunito, sans-serif; color: #3b2a1e; }
 .ws-done-h small { display: block; margin-top: 2px; font: 700 14px Nunito, sans-serif; color: #8a7666; }
 .ws-donebox .ans-thumbs { margin-top: 12px; }
+
+/* 🎨 v233 My Stars (Broo2a's picture): buddy bubble, today ring + 10 stars, beat-yourself bars, today's habits, Shining Star */
+.pts-sub { display: block; font: 700 15px Nunito, sans-serif; color: #8a7666; margin-top: 2px; }
+.ms3 { display: flex; flex-direction: column; gap: 12px; margin: 6px 0 18px; }
+.ms3 h3 { margin: 0; font: 900 20px Nunito, sans-serif; color: #3b2a1e; }
+.ms-buddy { display: flex; align-items: center; gap: 12px; background: #fbf1d6; border-radius: 26px; padding: 12px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ms-buddy img { width: 88px; height: 88px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); } .ms-e { font-size: 52px; }
+.ms-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 11px 13px; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.ms-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.ms-buddy b { display: block; font: 800 16px/1.3 Nunito, sans-serif; color: #3b2a1e; } .ms-buddy small { display: block; margin-top: 3px; font: 600 13px Nunito, sans-serif; color: #7a6656; }
+.ms-today, .ms-week { background: #fff; border-radius: 26px; padding: 14px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ms-today { display: flex; align-items: center; gap: 14px; }
+.ms-ring { width: 84px; height: 84px; flex: none; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#f2c14e calc(var(--p) * 1%), #efe6da 0); }
+.ms-ring b { width: 64px; height: 64px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font: 900 26px/1 Nunito, sans-serif; color: #3b2a1e; }
+.ms-ring small { font: 700 12px Nunito, sans-serif; color: #7a6656; margin-top: 2px; }
+.ms-stars { color: #f2c14e; font-size: 19px; letter-spacing: 2px; line-height: 1.3; } .ms-stars span { color: #ece3d6; }
+.ms-today p { margin: 2px 0 0; font: 800 14px Nunito, sans-serif; color: #8a6a1e; }
+.ms-wh { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ms-wh span { background: #e3eefc; color: #1f4f8a; border-radius: 999px; padding: 4px 12px; font: 800 13px Nunito, sans-serif; }
+.ms-bars { display: flex; gap: 7px; height: 150px; margin-top: 10px; }
+.ms-bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+.ms-bar b { font: 800 13px Nunito, sans-serif; color: #7a6656; }
+.ms-bar i { display: block; width: 100%; max-height: calc(100% - 40px); border-radius: 12px; background: #f3ebe2; }
+.ms-bar.now i { background: #f2c14e; box-shadow: 0 3px 0 #d9a632; } .ms-bar.now b { color: #3b2a1e; }
+.ms-bar small { font: 800 13px Nunito, sans-serif; color: #7a6656; }
+.ms-h { margin: 6px 2px 0 !important; }
+.ms-habs { display: flex; flex-direction: column; gap: 10px; }
+.ms-hab { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 22px; padding: 10px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ms-hico { width: 48px; height: 48px; flex: none; border-radius: 14px; background: #f6efe4; display: grid; place-items: center; font-size: 26px; }
+.ms-htxt { flex: 1; min-width: 0; } .ms-htxt b { display: block; font: 900 17px Nunito, sans-serif; color: #3b2a1e; } .ms-htxt small { font: 600 13px Nunito, sans-serif; color: #7a6656; }
+.ms-tick { width: 40px; height: 40px; min-height: 0; flex: none; padding: 0; border-radius: 50%; border: 3px solid #e6dccf; background: #fbf7f1; display: grid; place-items: center; color: #fff; font: 900 18px Nunito, sans-serif; box-shadow: none; }
+.ms-tick.on { border-color: #6cc070; background: #6cc070; }
+.ms-shine { display: flex; align-items: center; gap: 12px; background: #fbf1d6; border-radius: 26px; padding: 12px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ms-shine img { width: 64px; height: 64px; object-fit: contain; flex: none; }
+.ms-shine span { flex: 1; } .ms-shine b { display: block; font: 900 17px Nunito, sans-serif; color: #9a6c12; } .ms-shine small { font: 700 13px Nunito, sans-serif; color: #9a7a3a; }
+.ms-shine i { font-style: normal; color: #f2c14e; font-size: 30px; }
+#scr-points.ms-on > .puff-banner, #scr-points.ms-on > h1, #scr-points.ms-on .buddy-row { display: none !important; }
+.ms-title h2 { margin: 4px 2px 0; font: 900 30px/1.1 Nunito, sans-serif; color: #3b2a1e; } .ms-title small { display: block; margin: 2px 2px 0; font: 700 15px Nunito, sans-serif; color: #8a7666; }
+.ms-stars { font-size: 16px; letter-spacing: 1px; white-space: nowrap; }

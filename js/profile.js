@@ -855,6 +855,11 @@ function hallTap(ds) {
 
 // ---------- Points screen ----------
 function drawPoints() {
+  // 🎨 v233 (Broo2a's picture): a kid sees "My Stars" first (today's ⭐, beat yourself, today's habits, the Shining Star), the leaderboard below
+  const mine = !isParentDevice() && !isParentId(me) && exists(me);
+  $("ptsTitle").textContent = mine ? "My Stars" : "🏆 Points this week";
+  $("scr-points").classList.toggle("ms-on", mine);
+  $("ptsMine").innerHTML = mine ? myStarsHtml(me) : "";
   const totals = pointsByUser(), acts = activityPointsByUser(), star = stars(), from = data.points.week, to = weekEnd();
   $("ptsWeek").textContent = `${weekLabel(data.points.week)} · ✅ Tasks: activities, school work, duties · ⭐ Habits: good habits, prayers, My day · 🧩 Fun: wishes · only kids are scored · starts again every ${DAYS[(starTime().day + 1) % 7]} (after the ⭐ on ${DAYS[starTime().day]})`;
   // ⭐ The order and the bar: the OVERALL score (see SCORE); the old points stay in ✅ · ⭐ · 🧩
@@ -894,6 +899,38 @@ function drawPoints() {
       <b>🌟 ${w.winners.map(x => `${safe(x.emoji)} ${safe(x.name)}`).join(" & ")}${w.fair != null ? ` · ⭐ Score ${w.fair} / ${w.max != null ? w.max : 100}` : ""} · ${w.points} points</b>${
       w.winners.some(x => x.kinds) ? `<small class="hist-kinds">${w.winners.filter(x => x.kinds).map(x => `${w.winners.length > 1 ? safe(x.name) + ": " : ""}${kindsText(x.kinds)}`).join(" · ")}</small>` : ""}</div>`).join("")
     : `<p class="empty">No past weeks yet. The first star is chosen next Monday!</p>`;
+}
+
+// ⭐ points on one day (activity ticks + habits, homework, …): the same ⭐ points as the week, never the 🎯 score
+const dayStarPts = (id, ds) => tickLog().filter(t => t.user === id && t.date === ds).length * POINTS_EACH + bonusPoints(id, ds, addDaysYmd(ds, 1));
+function myStarsHtml(id) {
+  const u = userById(id), today = todayYmd(), days = [6, 5, 4, 3, 2, 1, 0].map(b => addDaysYmd(today, -b));
+  const pts = days.map(d => dayStarPts(id, d)), now = pts[6], yest = pts[5], best = Math.max(...pts.slice(0, 6), 0);
+  const goal = Math.max(10, best, now), pct = Math.round(now / goal * 100), on = Math.round(now / goal * 10);
+  const head = !now ? "No stars yet today. Let's start!" : now > best ? `${now} stars today! Your best this week` : `${now} stars today!`;
+  const sub = now > yest ? (yest ? `Beat yesterday (${yest})!` : "Great start!") : !yest ? "Tick something to get your first star!" : `${yest + 1 - now} more to beat yesterday (${yest})`;
+  const hi = Math.max(1, ...pts), wd = d => DAYS[weekdayOf(d)].charAt(0);
+  const bars = days.map((d, i) => `<div class="ms-bar${i === 6 ? " now" : ""}"><b>${pts[i]}</b><i style="height:${Math.max(8, Math.round(pts[i] / hi * 100))}%"></i><small>${wd(d)}</small></div>`).join("");
+  habitDay = weekIndex();
+  const hs = habitsFor(id), mark = h => data.habitMarks[habitKey(today, h.id, id)];
+  const habits = hs.map(h => { const v = mark(h), full = habitDone(h, v), multi = h.kind === "prayers" || h.kind === "water";
+    const n = h.kind === "prayers" ? (Array.isArray(v) ? v.filter(Boolean).length : 0) : (v || 0), of = h.kind === "prayers" ? PRAYERS.length : WATER_DROPS;
+    return `<div class="ms-hab${full ? " on" : ""}"><span class="ms-hico">${safe(h.emoji)}</span><span class="ms-htxt"><b>${safe(h.name)}</b><small>${full ? "Done today" : multi ? `${n} of ${of} today` : "Not yet"}</small></span>
+      ${multi ? `<span class="ms-tick${full ? " on" : ""}" aria-hidden="true">${full ? "✓" : ""}</span>`
+        : `<button class="ms-tick${full ? " on" : ""}" data-hb="${safe(id)}|${safe(h.id)}|0" aria-pressed="${full}" aria-label="${safe(h.name)}">${full ? "✓" : ""}</button>`}</div>`; }).join("");
+  const star = stars(), fi = fairInfo(), lead = fairOrder(Object.fromEntries(Object.entries(fi).map(([k, x]) => [k, x.fair])))[0];
+  const starTxt = star.length ? `${star.map(k => safe(userById(k).name)).join(" & ")} ${star.length > 1 ? "are" : "is"} the Shining Star!`
+    : lead && fi[lead.id].fair > 0 ? `Leading now: ${safe(lead.name)} · Score ${fi[lead.id].fair}` : "Who will it be this week?";
+  const starPic = charPic(star.length ? userById(star[0]) : lead || u, "confetti") || charPic(u, "jump");
+  return `<div class="ms3"><div class="ms-title"><h2>My Stars</h2><small>${safe(u.name)} · points and habits</small></div>
+    <div class="ms-buddy">${charPic(u, now > best ? "proud" : "happy") ? `<img src="${charPic(u, now > best ? "proud" : "happy")}" alt="">` : `<span class="ms-e">${safe(u.emoji)}</span>`}
+      <p><b>${head}</b><small>Beat yourself, not anyone else</small></p></div>
+    <div class="ms-today"><div class="ms-ring" style="--p:${pct}"><b>${now}<small>of ${goal}</small></b></div>
+      <div><h3>Today</h3><div class="ms-stars" aria-label="${now} of ${goal} stars">${"★".repeat(on)}<span>${"★".repeat(10 - on)}</span></div><p>${sub}</p></div></div>
+    <div class="ms-week"><div class="ms-wh"><h3>Beat yourself</h3><span>last 7 days</span></div><div class="ms-bars">${bars}</div></div>
+    ${habits ? `<h3 class="ms-h">Today's habits</h3><div class="ms-habs">${habits}</div>` : ""}
+    <div class="ms-shine">${starPic ? `<img src="${starPic}" alt="">` : "🌟"}<span><b>Shining Star of the week</b><small>${starTxt}</small></span><i aria-hidden="true">★</i></div>
+  </div>`;
 }
 
 // ("🎉 Jawad beat Bro2a this week!" was removed: parents aren't scored any more)
