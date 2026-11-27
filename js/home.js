@@ -9,7 +9,7 @@ let kidPanel = null;
 //   (the last word purple, the rest pink), a soft pill under it, and (🧒 v227) your own character at the top left.
 //   Every page title (h1.page-title) becomes one after each render; the home's date is one too (see drawHome).
 const PUFF_PILLS = { home: "plan your day, make it happen!", mine: "plan your week, make it happen!", school: "learn, explore, grow!", points: "every star counts!",
-  me: "this is me!", add: "what's on this week?", settings: "make it just right", family: "together is better", diary: "how was your day?", report: "look how you grow!",
+  me: "this is me!", add: "plan something new", settings: "make it just right", family: "together is better", diary: "how was your day?", report: "look how you grow!",
   kidswork: "busy little bees!", kid: "all about them", extra: "have fun together!", setup: "make the app yours" };
 const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, try, discover!"], [/english/i, "read, write, shine!"], [/arabic/i, "every word counts!"],
   [/islam|quran/i, "learn with your heart"], [/ssa|social|humanit/i, "explore the world!"]];
@@ -30,7 +30,7 @@ const BUDDY_LINES = { home: ["wave", "Hi {n}!", "Let's make today a great day"],
   school: ["happy", "Pick a subject, {n}!", "Every worksheet makes you stronger"], points: ["proud", "Look at your stars, {n}!", "Beat yourself, not anyone else"],
   me: ["wave", "This is you, {n}!", "You can change your character any time"], diary: ["happy", "How was your day?", "Tell me in a few words"],
   report: ["proud", "Look how you grow!", "Every week a little better"], kidswork: ["think", "Let's see today's work", "Who needs a little help?"],
-  add: ["point", "What is on this week?", "Add it once, the plan does the rest"], settings: ["point", "Make it just right", "Change anything, any time"],
+  add: ["point", "What are we planning?", "Pick a type, who it is for, and when."], settings: ["point", "Make it just right", "Change anything, any time"],
   family: ["wave", "Together is better", "Everyone in one place"], kid: ["wave", "All about {n}", "Scores, school and today"], extra: ["happy", "Have fun together!", ""],
   setup: ["point", "Make the app yours", "Turn on what your family needs"] };
 // 🧒 3 characters at the end of a page: [mood, word] × 3 (me in 3 feelings; on home: me, then my brothers/sisters)
@@ -114,7 +114,8 @@ function drawKidHome(u) {
   $("homeBig").innerHTML = `<div class="kh3-top"><h1>Hi ${safe(u.name)}!</h1><span>${dz({ weekday: "long" })}<br>${dz({ day: "numeric", month: "long" })}</span></div>
     <div class="kh3-hero" style="--soft:${c.soft};--c:${c.color}">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
       <div class="kh3-bub"><b>${safe(head)}</b><small>${safe(sub)}</small></div>
-      ${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
+      <div class="kh3-stats">${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
+      ${feat("buddy") && hasSpark(u.id) ? `<button class="kh3-spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}">${buddyRingSvg(pct)}<span class="ks-in"><small>✨ Spark</small><b>Lv ${L}</b><small>${pct}%</small></span></button>` : ""}</div>
       <div class="kh3-say">${sayBoxHtml(u)}</div></div>
     ${comingCardHtml(comingUp(u.id), false)}
     <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("k-study"), "Study", "My school")}
@@ -129,7 +130,7 @@ function drawKidHome(u) {
   const bar = [["data-go=\"points\"", "🏆", "Points"], ["data-kidpanel=\"habits\"", "⭐", "Habits"], ...(feat("diary") ? [["data-go=\"diary\"", "📔", "My day"]] : []),
                ...(feat("meeting") ? [[`data-extra="meeting"`, "🏡", "Community"]] : []), ["data-profile", "👤", "Me"], ["data-homemore", "☰", "More"]];
   $("homeHabits").innerHTML = (u.buddy || !feat("buddy") ? "" : buddyCardHtml(me))
-    + `${free.count || feat("buddy") ? `<div class="card kid-week" style="--c:${colorsOf(u).color}"><p>${feat("buddy") ? `<span>✨ Spark Lv ${L} (${pct}% to Lv ${L + 1})</span>` : ""}</p>${free.count ? `<p class="kid-free">${freeLine(free)}</p>` : ""}</div>` : ""}
+    + `${free.count ? `<div class="card kid-week" style="--c:${colorsOf(u).color}">${free.count ? `<p class="kid-free">${freeLine(free)}</p>` : ""}</div>` : ""}
     <nav class="kid-bar" aria-label="More">${bar.map(([attr, e, label]) => `<button ${attr} class="${(attr.includes("habits") && kidPanel === "habits") || (attr === "data-homemore" && homeMore) ? "on" : ""}"><span class="e">${e}</span><small>${label}</small></button>`).join("")}</nav>
     ${kidPanel === "habits" ? habitsCardHtml(me) + (feat("chores") ? choresTodayHtml(me) : "") || `<div class="card"><p class="sc-empty">No habits today.</p></div>` : ""}
     ${homeMore ? `<div class="menu kid-more">${moreTilesHtml()}</div>` : ""}`;
