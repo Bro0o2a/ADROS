@@ -102,15 +102,29 @@ function drawKidHome(u) {
   const tile = (cls, attr, icon, label, big, sub) => `<button class="kt ${cls}" ${attr}><span class="kt-ico" aria-hidden="true">${icon}</span><span class="kt-label">${label}</span><b class="kt-big">${big}</b><small>${sub}</small></button>`;
   // 🧒 v227 the hero: my character, happy · 👍 when today is all done · 😴 after my bedtime · no character yet → my emoji + "Choose your character"
   const nowMin = hr * 60 + new Date().getMinutes(), bed = bedUsual(u.id, todayIndex()), heroMood = bed != null && nowMin >= bed - 30 ? "sleepy" : today.length && !left ? "jump" : "wave";   // (🎭 v233: all done = jump, else wave)
-  $("homeBig").innerHTML = `<div class="k-hero">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
-      <div class="k-hero-text"><h2>${hi}</h2>${sayBoxHtml(u)}${scoredUsers().some(x => x.id === u.id) ? `<p class="k-cheer">${safe(kidCheerShort(u.id))}</p>` : ""}<p>${!today.length ? "Nothing planned today. Enjoy!" : left ? `${left} ${left === 1 ? "thing" : "things"} left today. You can do it!` : "All done today. Amazing!"}</p>
-      ${next ? `<button class="k-go" data-kidcal>▶ ${safe(next.name.length > 18 ? next.name.slice(0, 17) + "…" : next.name)}</button>` : `<button class="k-go" data-kidcal>📅 My day</button>`}</div>
-      <svg class="k-plant" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 100V45" stroke="#5e8f5a" stroke-width="5" fill="none"/><path d="M60 70C35 70 22 52 20 34c22 0 36 14 40 36z" fill="#7fae6e"/><path d="M60 60C85 60 98 42 100 22c-22 0-36 14-40 38z" fill="#8fbb7c"/><path d="M60 50C48 36 46 20 54 6c10 10 12 26 6 44z" fill="#9ec68a"/><path d="M28 96h64l-8 40H36z" fill="#ead7bd"/><rect x="24" y="90" width="72" height="14" rx="7" fill="#f3e4cf"/></svg></div>
-    ${comingCardHtml(comingUp(u.id), false)}${familySaysHtml(u.id)}<div class="kt-grid">${tile("kt-study", `data-school="${safe(u.id)}"`, ico3d("study"), "Study", "My school", `${study} study points`)}
-      ${tile("kt-cal", "data-kidcal", ico3d("calendar"), "Calendar", `${doneToday} of ${today.length}`, "done today")}
-      ${tile("kt-habits", `data-kidpanel="habits"`, ico3d("goal"), "Good habits", hb.all ? `${hb.done} of ${hb.all}` : "–", "today")}
-      ${tile("kt-score kt-beat", `data-sdpop="${safe(u.id)}"`, scoreRingHtml(scoreOf(u.id).overall, colorsOf(u).color, lastWeekScore(u.id)), "Score this week", `${scoreOf(u.id).overall} ${ringTrendHtml(u.id)}`, `of ${scoreOf(u.id).max} · tap for the day`)}</div>
-    ${wishCardHtml(u)}${kidPlannerHtml(u, today, hb)}`;
+  // 🌈 v233 (Broo2a's picture): Hi Bana! + the date · my character + a bubble + my score bar · 4 soft tiles · Today's list
+  const sc = scoreOf(u.id), c = colorsOf(u), dz = o => new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Dubai", ...o });
+  const head = !today.length ? "Nothing planned today. Enjoy!" : !left ? "All finished today, superstar!" : left === 1 ? "Just 1 thing left today!" : `${left} things left today. You can do it!`;
+  const sub = !today.length ? hi : !left ? (hb.all && hb.done < hb.all ? `Good habits are next. Tick them to keep your ${sc.overall}!` : "Time to relax. See you tomorrow!") : next ? `Next: ${next.name}${next.start >= 0 ? ` at ${clock(next.start, true)}` : ""}.` : hi;
+  const tile3 = (cls, attr, icon, title, sub2) => `<button class="kt3 ${cls}" ${attr}><span class="kt3-ic">${icon}</span><b>${title}</b><small>${sub2}</small></button>`;
+  const d0 = todayYmd(), bedM = bedUsual(u.id, todayIndex());
+  const row = x => { const ok = isDone(d0, x.id, u.id), isNext = next && x.id === next.id;
+    return `<button class="kd3-row ${ok ? "done" : ""}" data-kidcal>${actIcon3d(x.name, x.type, "kd3-ic")}<span class="kd3-t"><b>${safe(x.name)}</b><small>${x.start >= 0 ? `${clock(x.start)} - ${clock(x.end)}` : "Any time"}</small></span>${
+      ok ? `<span class="kd3-ok" aria-label="Done">✓</span>` : isNext && x.start >= 0 ? `<span class="kd3-at">${clock(x.start, true).toUpperCase()}</span>` : `<span class="kd3-todo"></span>`}</button>`; };
+  $("homeBig").innerHTML = `<div class="kh3-top"><h1>Hi ${safe(u.name)}!</h1><span>${dz({ weekday: "long" })}<br>${dz({ day: "numeric", month: "long" })}</span></div>
+    <div class="kh3-hero" style="--soft:${c.soft};--c:${c.color}">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
+      <div class="kh3-bub"><b>${safe(head)}</b><small>${safe(sub)}</small></div>
+      ${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
+      <div class="kh3-say">${sayBoxHtml(u)}</div></div>
+    ${comingCardHtml(comingUp(u.id), false)}
+    <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("study"), "Study", "My school")}
+      ${tile3("kt3-yellow", "data-kidcal", ico3d("calendar"), "Calendar", "Today's plan")}
+      ${tile3("kt3-pink", `data-kidpanel="habits"`, ico3d("heart"), "Good habits", hb.all ? `${hb.done} of ${hb.all} done` : "None today")}
+      ${tile3("kt3-green", `data-go="points"`, ico3d("achieve"), "My stars", `${pointsByUser()[u.id] || 0} this week`)}</div>
+    ${familySaysHtml(u.id)}
+    ${today.length || bedM != null ? `<div class="kd3-card"><div class="kd3-head">Today · ${safe(dayHead(d0))}</div>${today.slice(0, 8).map(row).join("")}${today.length > 8 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}
+      ${bedM != null ? `<div class="kd3-bed"><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : ""}
+    ${wishCardHtml(u)}`;
   $("homeMenu").hidden = true;
   const bar = [["data-go=\"points\"", "🏆", "Points"], ["data-kidpanel=\"habits\"", "⭐", "Habits"], ...(feat("diary") ? [["data-go=\"diary\"", "📔", "My day"]] : []),
                ...(feat("meeting") ? [[`data-extra="meeting"`, "🏡", "Community"]] : []), ["data-profile", "👤", "Me"], ["data-homemore", "☰", "More"]];
