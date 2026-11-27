@@ -1415,8 +1415,11 @@ function drawMine() {
   const keepDay = viewDay, wk = wholeWeek, wdays = wk ? calWeekDates(weekShift).map(planDay) : days;
   if (wk) viewDay = Math.max(0, wdays.findIndex(x => x.date === todayYmd()));
   navSubj = subjPickHtml(sk, who);
-  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj }); }
-  finally { viewDay = keepDay; navSubj = ""; }
+  // 🌈 v233 (Broo2a's picture): the Week view = a grid (Morning · Day · Evening × 7 days, a picture per activity), the names under it,
+  //   then the chosen day's list (tap a day). ✏️ Edit calendar still uses the hour grid (dragging works there).
+  const glance = wk && !editing;
+  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + (glance ? glanceHtml(wdays, who, subj) : weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj })); }
+  finally { viewDay = keepDay; navSubj = ""; wholeWeek = wk; }
   putCalScroll("mineWeek");   // (📅 opens with today in view; a tick or a tap keeps it where it was)
   $("mineSubj").innerHTML = sk ? subjFilterHtml(sk, who) : "";   // (v180: only the picked subject's summary; the picker is in the days row)
   // ⭐ v154: one big button "Good habits today · 3 of 16"; tap → the habits card
@@ -1425,6 +1428,40 @@ function drawMine() {
       <span><b>Good habits today</b><small>${hb.done} of ${hb.all} done · tap to ${calHabits ? "close" : "see them"}</small></span><span class="kc-go">${calHabits ? "⌄" : "›"}</span></button>
     ${calHabits ? habitsCardHtml(who) : ""}` : "";   // ⭐ good habits (a kid; 🔒 a kid's device: only their own; parents have none)
 }
+
+// ---------- 🌈 v233 WEEK AT A GLANCE (Broo2a's picture) ----------
+let glDay = null;   // the day picked under the grid (a date); null = today (or the week's first day)
+const GL_PARTS = [["morning", "☀", "Morning"], ["day", "☁", "Day"], ["evening", "☾", "Evening"]];
+// which part of the day an activity is in, by its middle: before 10:00 morning · before 16:30 day · else evening
+const glPart = it => { const mid = (it.start + it.end) / 2; return mid < 600 ? "morning" : mid < 990 ? "day" : "evening"; };
+function glanceHtml(wdays, who, subj) {
+  const today = todayYmd(), dates = wdays.map(d => d.date);
+  if (!glDay || !dates.includes(glDay)) glDay = dates.includes(today) ? today : dates[0];
+  const itemsOf = d => d.items.filter(it => !who || it.people.includes(who));
+  const names = new Map();
+  wdays.forEach(d => itemsOf(d).forEach(it => { if (!names.has(it.name)) names.set(it.name, it.type); }));
+  const cell = (d, part) => { const list = itemsOf(d).filter(it => glPart(it) === part), seen = new Set();
+    const uniq = list.filter(it => !seen.has(it.name) && seen.add(it.name));
+    return `<button class="gl-cell gl-${part} ${d.date === glDay ? "sel" : ""}" data-glday="${d.date}" aria-label="${safe(dayHead(d.date))}">${uniq.slice(0, 3).map(it =>
+      `<span class="gl-act ${it.users.length === 1 ? "" : "shared"}" style="${blockColors(it)}" title="${safe(it.name)}">${actIcon3d(it.name, it.type, "gl-ic")}</span>`).join("")}${
+      uniq.length > 3 ? `<small class="gl-more">+${uniq.length - 3}</small>` : ""}</button>`; };
+  const nav = `<div class="k-nav"><div class="k-navrow">${navSubj}
+      <div class="seg k-mode"><button data-kmode="day">📆 Day</button><button class="on" data-kmode="week">📅 Week</button></div>
+      <button class="pill small k-planbtn" data-dayplan="${glDay}" aria-label="Day plan" title="This day's plan">📋 Plan</button></div></div>`;
+  const grid = `<div class="gl-card"><div class="gl-grid">
+      <div class="gl-corner"><button class="k-arrow" data-kprev aria-label="Previous week">‹</button><button class="k-arrow" data-knext aria-label="Next week">›</button></div>
+      ${wdays.map(d => `<button class="gl-head ${d.date === today ? "today" : ""} ${d.date === glDay ? "sel" : ""}" data-glday="${d.date}"><span>${SHORT[weekdayOf(d.date)]}</span><b>${fromYmd(d.date).getDate()}</b></button>`).join("")}
+      ${GL_PARTS.map(([part, ic, label]) => `<div class="gl-side"><i>${ic}</i>${label}</div>${wdays.map(d => cell(d, part)).join("")}`).join("")}
+    </div></div>`;
+  const legend = names.size ? `<div class="gl-legend">${[...names].map(([n, t]) => `<span class="gl-key">${actIcon3d(n, t, "gl-kic")}${safe(n)}</span>`).join("")}</div>` : "";
+  // the chosen day, as the usual day list (ticks work there), without its own day buttons
+  const keepW = wholeWeek, keepV = viewDay; let day = "";
+  wholeWeek = false; viewDay = 0;
+  try { day = weekHtml([planDay(glDay)], { only: who, subj }); } finally { wholeWeek = keepW; viewDay = keepV; }
+  return `${nav}${grid}${legend}<h2 class="gl-dayname">${glDay === today ? "Today · " : ""}${DAYS[weekdayOf(glDay)]}</h2><div class="gl-day">${day}</div>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-glday]"); if (!b) return;
+  glDay = b.dataset.glday; render(); const t = document.querySelector(".gl-dayname"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
 
 // ---------- 📚 SUBJECT FILTER (bottom of the calendar): "All" + each subject of a kid; a subject → only its study sessions this
 // week stand out (the rest is faded) and a summary card. Parents switch between kids; a kid sees only themselves. ----------

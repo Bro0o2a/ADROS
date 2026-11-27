@@ -3825,3 +3825,34 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
 .pb-home .bub-pink { font-size: 38px !important; }
 .pb-home .bub-lilac, .pb-home .bub-sm { font-size: 30px !important; white-space: nowrap; }
 @media (max-width: 380px) { .pb-home .bub-pink { font-size: 32px !important; } .pb-home .bub-lilac, .pb-home .bub-sm { font-size: 26px !important; } }
+
+/* 🌈 v233 WEEK AT A GLANCE (Broo2a's picture): 7 days × Morning · Day · Evening, a 3D picture per activity */
+.gl-card { background: var(--card); border-radius: 32px; box-shadow: var(--shadow); padding: 16px 10px 16px 6px; margin: 10px 0 14px; }
+.gl-grid { display: grid; grid-template-columns: 58px repeat(7, minmax(0, 1fr)); gap: 8px 5px; align-items: stretch; }
+.gl-corner { display: flex; gap: 2px; align-items: center; justify-content: center; }
+.gl-corner .k-arrow { width: 26px !important; min-width: 0; height: 30px; min-height: 0 !important; padding: 0; font-size: 18px; border-radius: 10px; }
+.gl-head { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; padding: 0; color: var(--muted); font: 700 14px/1 Nunito, sans-serif; cursor: pointer; }
+.gl-head b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; font: 700 19px/1 Fredoka, Nunito, sans-serif; color: var(--text); }
+.gl-head.today b { background: var(--a-green); color: #fff; }
+.gl-head.sel:not(.today) b { outline: 3px solid var(--a-green); }
+.gl-side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font: 700 12px/1 Nunito, sans-serif; }
+.gl-side i { font-style: normal; font-size: 18px; }
+.gl-cell { min-height: 96px; border: 0; border-radius: 22px; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.gl-morning { background: #fdf2d3; } .gl-day { background: #e4eefb; } .gl-evening { background: #efe7fa; }
+.gl-cell.gl-day { background: #e4eefb; }
+.gl-cell.sel { box-shadow: inset 0 0 0 3px rgba(103, 189, 106, .55); }
+.gl-act { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; background: var(--soft); border: 3px solid #fff; box-shadow: 0 3px 6px rgba(120, 90, 60, .15); }
+.gl-act.shared { background: #fde3ea; }
+.gl-ic { width: 28px; height: 28px; object-fit: contain; }
+.gl-more { font: 800 12px/1 Nunito, sans-serif; color: var(--muted); }
+.gl-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 18px; }
+.gl-key { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px 6px 6px; background: var(--card); border-radius: 999px; box-shadow: var(--press); font: 800 16px/1 Nunito, sans-serif; color: var(--text); }
+.gl-kic { width: 30px; height: 30px; object-fit: contain; padding: 3px; border-radius: 50%; background: #f6ece2; }
+.gl-dayname { font: 700 30px/1.1 Fredoka, Nunito, sans-serif; margin: 8px 4px 10px; scroll-margin-top: 12px; }
+.gl-day .k-nav { display: none; }   /* (the day list: no second Day/Week row) */
+@media (max-width: 380px) {
+  .gl-grid { grid-template-columns: 48px repeat(7, minmax(0, 1fr)); gap: 7px 3px; }
+  .gl-head b { width: 32px; height: 32px; font-size: 16px; } .gl-head { font-size: 12px; }
+  .gl-act { width: 34px; height: 34px; border-radius: 12px; } .gl-ic { width: 24px; height: 24px; } .gl-cell { min-height: 84px; border-radius: 18px; }
+  .gl-side { font-size: 11px; }
+}
