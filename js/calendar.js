@@ -247,12 +247,12 @@ function navHtml(dates) {
 }
 
 // 🧸 v159: a 3D icon for an activity, from words in its name (icons/3d, see ico3d in home.js); unknown → by its type
-const ACT_ICONS = [[/break|get ready|lunch|dinner|breakfast|meal|bed|sleep|shower/i, "time"], [/quran|read|book|story|library|arabic|english|reading/i, "read"], [/math|maths|number/i, "class"], [/science|research|lab/i, "research"],
+const ACT_ICONS = [[/break|get ready|lunch|dinner|breakfast|meal|bed|sleep|shower/i, "time"], [/quran|qur.an|tajweed|hifz/i, "quran"], [/read|book|story|library|arabic|english|reading/i, "read"], [/math|maths|number/i, "class"], [/science|research|lab/i, "research"],
   [/music|piano|sing/i, "music"], [/art|draw|paint|craft/i, "palette"], [/homework|worksheet/i, "homework"], [/exam|test|quiz/i, "exam"], [/bus/i, "bus"], [/school|class/i, "school"],
   [/football|sport|gym|swim|karate|run|exercise|club|basket|tennis/i, "basketball"],
-  [/study|revision|revise|practi[cs]e|lesson|tutor/i, "study"], [/pray|salah/i, "consistency"]];
+  [/study|revision|revise|practi[cs]e|lesson|tutor/i, "study"], [/pray|salah/i, "consistency"], [/puzzle|riddle|sudoku|chess/i, "puzzle"], [/park|outside|outdoor|garden|bike|cycl/i, "pinwheel"], [/play|game|lego|toy/i, "blocks"]];
 function actIcon3d(name, type, cls = "k-ic") {
-  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" || type === "schoolapp" ? "study" : type === "sport" ? "basketball" : type === "routine" ? "time" : type === "free" || type === "family" ? "rainbow" : "goal";
+  const hit = ACT_ICONS.find(([re]) => re.test(name || "")), n = hit ? hit[1] : type === "study" ? "study" : type === "schoolapp" ? "laptop" : type === "sport" ? "basketball" : type === "routine" ? "time" : type === "family" ? "house" : type === "free" ? "kite" : type === "activity" ? "blocks" : type === "other" ? "puzzle" : "goal";
   return ico3d(n, cls);
 }
 // What a block shows: big title, colors, and a smaller line underneath.
