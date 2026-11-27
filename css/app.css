@@ -4702,3 +4702,7 @@ button.set3-out svg { width: 26px; height: 26px; }
 .p-home3 .hello > div { padding-bottom: 14px; }
 @media (max-width: 380px) { .p-home3 .hello { grid-template-columns: 130px 1fr !important; } .p-home3 .hello-face { width: 130px !important; height: 150px !important; } }
 .p-home3 .hello-face { border: 0 !important; }
+/* v236 (Broo2a): ✨ Spark level on the kid's home, under the score, so they see it grow */
+.kh3-spark span { color: #8a5cc4 !important; filter: none !important; white-space: nowrap; }
+.kh3-spark em { background: linear-gradient(90deg, #c9a6f2, #8a5cc4) !important; }
+.kh3-spark b { color: #8a5cc4 !important; filter: none !important; font-size: 15px !important; }

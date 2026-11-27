@@ -115,6 +115,7 @@ function drawKidHome(u) {
     <div class="kh3-hero" style="--soft:${c.soft};--c:${c.color}">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
       <div class="kh3-bub"><b>${safe(head)}</b><small>${safe(sub)}</small></div>
       ${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
+      ${feat("buddy") && hasSpark(u.id) ? `<button class="kh3-bar kh3-spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}"><span>✨ SPARK Lv ${L}</span><i><em style="width:${pct}%"></em></i><b>${pct}%</b></button>` : ""}
       <div class="kh3-say">${sayBoxHtml(u)}</div></div>
     ${comingCardHtml(comingUp(u.id), false)}
     <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("k-study"), "Study", "My school")}
@@ -129,7 +130,7 @@ function drawKidHome(u) {
   const bar = [["data-go=\"points\"", "🏆", "Points"], ["data-kidpanel=\"habits\"", "⭐", "Habits"], ...(feat("diary") ? [["data-go=\"diary\"", "📔", "My day"]] : []),
                ...(feat("meeting") ? [[`data-extra="meeting"`, "🏡", "Community"]] : []), ["data-profile", "👤", "Me"], ["data-homemore", "☰", "More"]];
   $("homeHabits").innerHTML = (u.buddy || !feat("buddy") ? "" : buddyCardHtml(me))
-    + `${free.count || feat("buddy") ? `<div class="card kid-week" style="--c:${colorsOf(u).color}"><p>${feat("buddy") ? `<span>✨ Spark Lv ${L} (${pct}% to Lv ${L + 1})</span>` : ""}</p>${free.count ? `<p class="kid-free">${freeLine(free)}</p>` : ""}</div>` : ""}
+    + `${free.count ? `<div class="card kid-week" style="--c:${colorsOf(u).color}">${free.count ? `<p class="kid-free">${freeLine(free)}</p>` : ""}</div>` : ""}
     <nav class="kid-bar" aria-label="More">${bar.map(([attr, e, label]) => `<button ${attr} class="${(attr.includes("habits") && kidPanel === "habits") || (attr === "data-homemore" && homeMore) ? "on" : ""}"><span class="e">${e}</span><small>${label}</small></button>`).join("")}</nav>
     ${kidPanel === "habits" ? habitsCardHtml(me) + (feat("chores") ? choresTodayHtml(me) : "") || `<div class="card"><p class="sc-empty">No habits today.</p></div>` : ""}
     ${homeMore ? `<div class="menu kid-more">${moreTilesHtml()}</div>` : ""}`;
