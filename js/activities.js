@@ -117,9 +117,9 @@ document.addEventListener("click", e => {
 });
 
 function drawAdd() {
-  $("addTitle").textContent = isParentId(me) ? "✏️ Everyone's activities" : "✏️ My activities";
-  $("addSub").textContent = isParentId(me) ? "Tick “Who?” for each activity. School can be for all the kids at once!"
-                                       : `Shared activities (like School) can only be changed by ${dadName()}.`;
+  $("addTitle").textContent = "Add an activity";   // (➕ v236 Broo2a's picture; the lists are below "Your activities")
+  $("addSub").textContent = isParentId(me) ? "" : `Shared activities (like School) can only be changed by ${dadName()}.`;
+  $("addSub").hidden = isParentId(me);
   // Only Dad picks who an activity is for
   $("fxWhoWrap").hidden = $("flWhoWrap").hidden = !isParentId(me);
   if (isParentId(me)) { drawWho("fx"); drawWho("fl"); }
@@ -209,9 +209,87 @@ document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("#scr-add [data-addwho]"); if (!b) return;
   addWho = b.dataset.addwho || null; drawAddSections();
 });
+// ➕ v236 (Broo2a's picture): QUICK "Add an activity" card on top: picture tiles for the type, who (character circles),
+// when (day chips with dates), from–to, 📌 Fixed / 🔄 Flexible, one big Save. It fills the usual fixed/flexible form and
+// presses its ➕ Add, so every rule (clashes, kids ask a parent, 🤝 helper …) stays the same. "More options" = the full form.
+const QA_PRESETS = [["Sport", "sport", "basketball"], ["Quran", "activity", "quran"], ["Study", "study", "k-study"],
+  ["Clubs", "activity", "palette"], ["Music", "activity", "music"], ["Play", "free", "blocks"]];
+let qa = null;
+function qaFresh() {
+  const today = (new Date().getDay() + 6) % 7;   // (0 = Mon, like fxDays)
+  return { t: -1, name: "", who: newFormWho(), days: [today], from: "16:00", to: "17:00", mode: "fx", dur: 45, times: 3, err: "" };
+}
+function drawQuick() {
+  const box = $("qa3"); if (!box) return;
+  if (!qa) qa = qaFresh();
+  const parent = isParentId(me), now = new Date(), fx = qa.mode === "fx";
+  if (parent) qa.who = qa.who.filter(id => data.users.some(u => u.id === id));
+  const dayChips = [...Array(7)].map((_, i) => { const d = new Date(now); d.setDate(now.getDate() + i); const wd = (d.getDay() + 6) % 7;
+    return `<button type="button" class="qa3-day${qa.days.includes(wd) ? " on" : ""}" data-qaday="${wd}" aria-pressed="${qa.days.includes(wd)}"><b>${SHORT[wd]}</b><small>${d.getDate()}</small></button>`; }).join("");
+  const chip = (attr, v, on, label) => `<button type="button" class="qa3-pill${on ? " on" : ""}" ${attr}="${v}" aria-pressed="${on}">${label}</button>`;
+  box.innerHTML = `<h3 class="qa3-h">Activity type</h3>
+    <div class="qa3-types">${QA_PRESETS.map(([w, , ic], i) => `<button type="button" class="qa3-tile${qa.t === i ? " on" : ""}" data-qat="${i}" aria-pressed="${qa.t === i}">${ico3d(ic, "qa3-img")}<b>${w}</b></button>`).join("")}</div>
+    <label class="small" for="qaName">Name</label><input type="text" id="qaName" maxlength="40" placeholder="${qa.t >= 0 ? QA_PRESETS[qa.t][0] : "e.g. Swimming"}" value="${safe(qa.name)}">
+    ${parent ? `<h3 class="qa3-h">Who?</h3><div class="qa3-who">${data.users.map(u => { const on = qa.who.includes(u.id), pic = charPic(u, "happy");
+      return `<button type="button" class="qa3-face${on ? " on" : ""}" data-qawho="${safe(u.id)}" aria-pressed="${on}"><span class="qa3-ring">${pic ? `<img src="${pic}" alt="">` : `<span class="e">${safe(u.emoji)}</span>`}</span><small>${safe(u.name)}</small></button>`; }).join("")}</div>` : ""}
+    <div class="qa3-mode">${chip("data-qamode", "fx", fx, "📌 Fixed")}${chip("data-qamode", "fl", !fx, "🔄 Flexible")}</div>
+    ${fx ? `<h3 class="qa3-h">When?</h3><div class="qa3-days">${dayChips}</div>
+      <div class="qa3-time"><input type="time" id="qaFrom" value="${qa.from}" aria-label="From"><span>to</span><input type="time" id="qaTo" value="${qa.to}" aria-label="To"></div>`
+    : `<p class="hint">Flexible: the plan finds the best free time for it.</p>
+      <h3 class="qa3-h">How long?</h3><div class="qa3-row">${[15, 30, 45, 60, 90].map(m => chip("data-qadur", m, qa.dur === m, `${m} min`)).join("")}</div>
+      <h3 class="qa3-h">Times a week</h3><div class="qa3-row">${[1, 2, 3, 4, 5, 6, 7].map(n => chip("data-qatimes", n, qa.times === n, n)).join("")}</div>`}
+    <div class="qa3-err" id="qaErr" role="alert">${qa.err}</div>
+    <button type="button" class="qa3-save" data-qasave>Save activity</button>
+    <button type="button" class="linkish qa3-more" data-qamore>More options (get ready, break, helper …)</button>`;
+}
+// Copy the quick card into the usual form (fx or fl), ready for its ➕ Add
+function qaFill() {
+  const p = qa.mode, P = QA_PRESETS[qa.t], name = qa.name.trim() || (P ? P[0] : "");
+  if (p === "fx") resetFixedForm(); else resetFlexForm();
+  $(p + "Name").value = name; fillPads(p);
+  $(p + "Type").value = P ? P[1] : defaultActType({ name }); typeTouched[p] = true; typeTiles(p);
+  if (isParentId(me)) drawWho(p, qa.who);
+  drawStudy(p, { subjectIds: [ALL_SUBJECTS], studyMode: "sole", helper: "" });
+  if (p === "fx") { $("fxDays").querySelectorAll("input").forEach(c => c.checked = qa.days.includes(Number(c.value))); $("fxStart").value = qa.from; $("fxEnd").value = qa.to; }
+  else { $("flDur").value = qa.dur; $("flTimes").value = qa.times; }
+  return name;
+}
+function qaSave(win) {
+  qaRead();
+  const p = qa.mode;
+  if (!qaFill()) { qa.err = "Pick a type or type a name."; return drawQuick(); }
+  if (isParentId(me) && !qa.who.length) { qa.err = "Tap who it is for."; return drawQuick(); }
+  if (win) fxWinPending = true;
+  $(p + "Err").textContent = "";
+  $(p + "Add").click();
+  const err = $(p + "Err").innerHTML.replace(/data-fxwin/g, "data-qawin");
+  if (err) { qa.err = err; return drawQuick(); }
+  const keep = { mode: qa.mode, who: qa.who }; qa = Object.assign(qaFresh(), keep); drawQuick();
+}
+function qaRead() {
+  if (!$("qaName")) return;
+  qa.name = $("qaName").value;
+  if ($("qaFrom")) { qa.from = $("qaFrom").value || qa.from; qa.to = $("qaTo").value || qa.to; }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("#qa3 button"); if (!b) return;
+  const d = b.dataset; qaRead(); qa.err = "";
+  if ("qasave" in d) return qaSave(false);
+  if ("qawin" in d) return qaSave(true);
+  if ("qamore" in d) { const p = qa.mode; qaFill(); addOpen = { fx: false, fl: false, rt: false, ty: false, [p]: true }; addWho = null; drawAddSections(); $(p + "Form").hidden = false; $(p + "Form").scrollIntoView({ block: "start" }); return; }
+  if (d.qat != null) { const i = Number(d.qat); qa.t = qa.t === i ? -1 : i; }
+  if (d.qawho) qa.who = qa.who.includes(d.qawho) ? qa.who.filter(x => x !== d.qawho) : [...qa.who, d.qawho];
+  if (d.qaday != null) { const n = Number(d.qaday); qa.days = qa.days.includes(n) ? qa.days.filter(x => x !== n) : [...qa.days, n]; }
+  if (d.qamode) qa.mode = d.qamode;
+  if (d.qadur) qa.dur = Number(d.qadur);
+  if (d.qatimes) qa.times = Number(d.qatimes);
+  drawQuick();
+});
 function drawAddSections() {
   const parent = isParentId(me);
-  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="addAsks"></div><div id="addWho"></div>`);
+  if (!$("addWho")) $("scr-add").querySelector(".add-secs").insertAdjacentHTML("beforebegin", `<div id="qa3" class="qa3"></div><div id="addAsks"></div><h2 class="qa3-h" id="addListsH">Your activities</h2><div id="addWho"></div>`);
+  drawQuick();
+  if ($("addTime").previousElementSibling !== $("addListsH")) $("addListsH").after($("addTime"));
   $("addAsks").innerHTML = asksCardHtml();
   if (addWho && !data.users.some(u => u.id === addWho)) addWho = null;
   $("addWho").innerHTML = addWhoHtml() + (addWho ? addWhoListHtml(addWho) : "");

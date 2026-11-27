@@ -9,7 +9,7 @@ let kidPanel = null;
 //   (the last word purple, the rest pink), a soft pill under it, and (🧒 v227) your own character at the top left.
 //   Every page title (h1.page-title) becomes one after each render; the home's date is one too (see drawHome).
 const PUFF_PILLS = { home: "plan your day, make it happen!", mine: "plan your week, make it happen!", school: "learn, explore, grow!", points: "every star counts!",
-  me: "this is me!", add: "what's on this week?", settings: "make it just right", family: "together is better", diary: "how was your day?", report: "look how you grow!",
+  me: "this is me!", add: "plan something new", settings: "make it just right", family: "together is better", diary: "how was your day?", report: "look how you grow!",
   kidswork: "busy little bees!", kid: "all about them", extra: "have fun together!", setup: "make the app yours" };
 const SUBJECT_PILLS = [[/math/i, "practice makes perfect!"], [/science/i, "ask, try, discover!"], [/english/i, "read, write, shine!"], [/arabic/i, "every word counts!"],
   [/islam|quran/i, "learn with your heart"], [/ssa|social|humanit/i, "explore the world!"]];
@@ -30,7 +30,7 @@ const BUDDY_LINES = { home: ["wave", "Hi {n}!", "Let's make today a great day"],
   school: ["happy", "Pick a subject, {n}!", "Every worksheet makes you stronger"], points: ["proud", "Look at your stars, {n}!", "Beat yourself, not anyone else"],
   me: ["wave", "This is you, {n}!", "You can change your character any time"], diary: ["happy", "How was your day?", "Tell me in a few words"],
   report: ["proud", "Look how you grow!", "Every week a little better"], kidswork: ["think", "Let's see today's work", "Who needs a little help?"],
-  add: ["point", "What is on this week?", "Add it once, the plan does the rest"], settings: ["point", "Make it just right", "Change anything, any time"],
+  add: ["point", "What are we planning?", "Pick a type, who it is for, and when."], settings: ["point", "Make it just right", "Change anything, any time"],
   family: ["wave", "Together is better", "Everyone in one place"], kid: ["wave", "All about {n}", "Scores, school and today"], extra: ["happy", "Have fun together!", ""],
   setup: ["point", "Make the app yours", "Turn on what your family needs"] };
 // 🧒 3 characters at the end of a page: [mood, word] × 3 (me in 3 feelings; on home: me, then my brothers/sisters)
