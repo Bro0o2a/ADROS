@@ -4610,3 +4610,15 @@ button.sp3-yay img { width: 30px; height: 30px; }
 #scr-school .wsg .wsg-main { background: none !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; border-radius: 0; }
 .ws-opts3 .ws-words summary { display: block; line-height: 1.4; }
 .ws-opts3 .ws-words summary::before { display: inline-block; vertical-align: -4px; margin-right: 10px; }
+
+/* 🎨 v236 (Broo2a's picture) top buttons: soft flat colours, brown words */
+.bar.bar3 .pill { box-shadow: none !important; }
+.bar.bar3 [data-navback] { background: #b4cce4 !important; color: #fff !important; }
+.bar.bar3 .rb-home { background: #b4cc9c !important; color: #5c422b !important; }
+.bar.bar3 .sch-btn { background: #fccc84 !important; color: #5c422b !important; }
+.bar.bar3 .rb.cal-btn { background: #b4cce4 !important; }
+.bar.bar3 .bell-btn { background: #ccb4e4 !important; }
+.bar.bar3 [data-signout] { background: #df9f9f !important; }
+.bar.bar3 .rb:not([data-signout]):not(.bell-btn):not(.cal-btn) { background: #b4cce4 !important; }
+.bar.bar3 .rb-l, .bar.bar3 .rb-home .rb-l { color: #5c422b !important; }
+.bar.bar3 .bell-num { background: #e77f88 !important; color: #fff !important; }
