@@ -4529,3 +4529,15 @@ button.sp3-yay img { width: 30px; height: 30px; }
 .sp3-char { height: 260px; }
 .sp3-stage { width: 100%; padding-bottom: 40px; }
 .sp3-stage .sp3-char { margin-bottom: -14px; }
+/* (v233 Shining Star: the winner big and full-body, feet on the podium; sun rays behind the star) */
+.sp3-stage { padding-bottom: 50px; }
+.sp3-stage .sp3-char { height: min(48vh, 360px); max-width: 85%; margin-bottom: -26px; }
+.sp3-stage:has(.sp3-char + .sp3-char) .sp3-char { max-width: 48%; height: min(38vh, 280px); }
+.sp3-podium { width: 190px; height: 64px; line-height: 64px; font-size: 34px; }
+.sp3-star { position: relative; margin-top: 30px; box-shadow: 0 5px 0 #e6d8c6; }
+.sp3-star::before { content: ""; position: absolute; inset: -46px; z-index: -1; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(242,193,78,.28) 0deg 9deg, transparent 9deg 22.5deg);
+  -webkit-mask: radial-gradient(circle, #000 35%, transparent 70%); mask: radial-gradient(circle, #000 35%, transparent 70%); }
+.star-pop #kCard { isolation: isolate; }
+.sp3-stage .sp3-char { margin-bottom: -44px; }
+.sp3-stage .sp3-char { margin-bottom: -62px; } .sp3-stage { padding-bottom: 56px; }
