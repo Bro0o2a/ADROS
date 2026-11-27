@@ -4577,8 +4577,8 @@ button.sp3-yay img { width: 30px; height: 30px; }
 .lv3-t small { display: block; font: 600 14px Nunito, sans-serif; color: #7a6656; }
 .lv3 input[type="range"] { accent-color: #5b9be0; margin-top: 12px !important; }
 .lv3 .ws-lv-ends { font-weight: 700; color: #8a7868; opacity: 1; }
-.lv3-tip { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.lv3-tip img { width: 56px; height: 56px; object-fit: contain; flex: none; }
+.lv3-tip { display: flex; align-items: flex-end; gap: 8px; margin-top: 12px; }
+.lv3-tip img { width: 118px; height: 132px; margin: -10px -6px 0 -8px; object-fit: contain; flex: none; }
 .lv3-tip p { margin: 0; flex: 1; background: #f6f1ea; border-radius: 18px 18px 18px 4px; padding: 10px 14px; }
 .lv3-tip b { display: block; font: 900 15px Nunito, sans-serif; color: #3b2a1e; }
 .lv3-tip span { display: block; font: 600 14px/1.35 Nunito, sans-serif; color: #5b4a3a; }
