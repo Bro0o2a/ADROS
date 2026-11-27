@@ -3864,3 +3864,62 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
 .mine-top:has(.cal-big + .cal-big) #minePeople { width: 100%; }
 .mine-top #minePeople > :first-child { margin-left: auto; }
 .mine-top #minePeople > :last-child { margin-right: auto; }
+
+/* 🛤️ v233 WEEK PATH (one kid) + the day page (Broo2a's pictures 27 Nov) */
+.gp-path { position: relative; padding: 4px 0 10px; }
+.gp-weeknav { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800; color: #6b5a4a; margin: 4px 0 10px; font-size: 14px; }
+.gp-row { display: grid; grid-template-columns: 1fr 64px 1fr; align-items: center; gap: 8px; position: relative; margin-top: -6px; }
+.gp-row::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 4px dashed #e1cdb6; transform: translateX(-2px); z-index: 0; }
+.gp-row:first-of-type::before { top: 50%; } .gp-row:last-child::before { bottom: 50%; }
+.gp-dot { position: relative; z-index: 1; justify-self: center; width: 54px; height: 54px; border-radius: 50%; border: 0; background: #fffaf3; box-shadow: 0 4px 0 #e6d6c3, 0 6px 12px rgba(120, 90, 60, .15);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; font-family: inherit; color: #3b2a1e; cursor: pointer; }
+.gp-dot b { font-family: "Fredoka", "Nunito", sans-serif; font-size: 21px; } .gp-dot small { font-size: 11px; font-weight: 700; color: #7a6656; }
+.gp-dot.today { width: 64px; height: 64px; background: var(--c, #ef857b); color: #fff; box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--c, #ef857b), 0 8px 16px rgba(0,0,0,.18); }
+.gp-dot.today small { color: #fff; }
+.gp-card { position: relative; z-index: 1; text-align: left; border: 0; border-radius: 22px; background: var(--t); padding: 10px 10px 12px; margin: 8px 0; font-family: inherit; color: #3b2a1e; cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0,0,0,.06), 0 6px 14px rgba(120, 90, 60, .12); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gp-dn { font-family: "Fredoka", "Nunito", sans-serif; font-size: 18px; padding-left: 4px; }
+.gp-act { display: flex; align-items: center; gap: 6px; background: #fff; border-radius: 14px; padding: 4px 8px 4px 4px; box-shadow: 0 2px 0 rgba(0,0,0,.06); min-width: 0; }
+.gp-act .gp-ic { width: 26px; height: 26px; flex: none; font-size: 18px; }
+.gp-nm { font-weight: 800; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+.gp-act small { font-size: 11px; font-weight: 700; color: #8a7666; flex: none; }
+.gp-more { font-size: 12px; font-weight: 800; color: #7a6656; padding-left: 6px; }
+.gp-free { font-weight: 700; color: #7a6656; padding-left: 4px; font-size: 14px; }
+.gp-side { display: flex; justify-content: center; }
+.gp-buddy { width: 92px; height: 92px; border-radius: 24px; object-fit: cover; background: #fff8f1; box-shadow: 0 6px 14px rgba(120, 90, 60, .18); animation: gpHop 2.4s ease-in-out infinite; }
+@keyframes gpHop { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .gp-buddy { animation: none; } }
+
+.gd-top { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 10px; }
+.gd-card { background: #fffaf3; border-radius: 28px; padding: 18px 14px 14px; box-shadow: 0 5px 0 #eadbc8, 0 10px 22px rgba(120, 90, 60, .14); }
+.gd-title { text-align: center; font-family: "Fredoka", "Nunito", sans-serif; font-size: 26px; margin: 0; color: #3b2a1e; }
+.gd-sub { text-align: center; margin: 4px 0 14px; font-weight: 700; color: #7a6656; }
+.gd-sec { border-radius: 22px; padding: 10px 10px 12px; margin-top: 12px; }
+.gd-sec.gl-morning { background: #fdf2d3; } .gd-sec.gl-day { background: #e4eefb; } .gd-sec.gl-evening { background: #efe7fa; }
+.gd-lab { display: flex; gap: 8px; align-items: center; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; padding: 2px 6px 8px; color: #8a6a12; }
+.gl-day .gd-lab { color: #2f5b9a; } .gl-evening .gd-lab { color: #5b3e9e; }
+.gd-none { padding: 6px 8px; color: #6b5a4a; font-size: 16px; }
+.gd-sec .k-block { position: relative !important; inset: auto !important; width: auto !important; height: auto !important; min-height: 0 !important; margin: 0 0 10px !important;
+  background: #fff !important; border: 0 !important; border-radius: 18px !important; padding: 12px 64px 12px 12px !important; box-shadow: 0 3px 0 rgba(0,0,0,.07) !important;
+  display: grid !important; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; }
+.gd-sec .k-block:last-child { margin-bottom: 0 !important; }
+.gd-sec .k-block .who { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 900; }
+.gd-sec .k-block .who .k-ic { width: 44px !important; height: 44px !important; border-radius: 14px; }
+.gd-sec .k-block .t-short { display: none !important; } .gd-sec .k-block .t-full { display: inline !important; }
+.gd-sec .k-block .k-sub, .gd-sec .k-block .k-sessrow { grid-column: 1 / -1; padding-left: 54px; }
+.gd-sec .k-block .k-checks { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 4px; }
+.gd-sec .gl-at { position: absolute; right: 10px; top: 12px; background: #f3ebe2; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 800; color: #6b5a4a; }
+.gd-nexth { font-family: "Fredoka", "Nunito", sans-serif; margin: 20px 4px 10px; }
+.gd-next { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; background: #fffaf3; border-radius: 22px; padding: 12px 14px; margin-bottom: 10px;
+  box-shadow: 0 4px 0 #eadbc8, 0 8px 16px rgba(120, 90, 60, .1); font-family: inherit; color: #3b2a1e; cursor: pointer; }
+.gd-next > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; } .gd-next b { font-size: 16px; } .gd-next small { color: #7a6656; font-weight: 700; }
+.gd-next .gd-nic { width: 44px; height: 44px; flex: none; border-radius: 14px; } .gd-clock { display: grid; place-items: center; background: #f3ebe2; font-size: 22px; }
+@media (max-width: 380px) { .gp-row { grid-template-columns: 1fr 56px 1fr; gap: 4px; } .gp-buddy { width: 76px; height: 76px; } .gp-dot { width: 48px; height: 48px; } .gp-dot.today { width: 56px; height: 56px; } .gp-nm { font-size: 12px; } }
+.gd-sec .k-block .k-sub { font-size: 14px !important; font-weight: 700; color: #7a6656; line-height: 1.3; }
+.gd-sec .k-block .k-sub .when { font-size: 14px !important; }
+.gp-row { grid-template-columns: 1fr 52px 1fr; gap: 4px; }
+.gp-card { padding: 8px 8px 10px; }
+.gp-act { flex-wrap: wrap; gap: 2px 6px; padding: 4px 6px 4px 4px; }
+.gp-nm { white-space: normal; overflow-wrap: anywhere; font-size: 12.5px; line-height: 1.15; }
+.gp-act small { margin-left: auto; }
+.gp-nm { overflow-wrap: normal; word-break: normal; flex: 1 1 auto; }
