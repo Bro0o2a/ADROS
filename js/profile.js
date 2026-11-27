@@ -29,6 +29,15 @@ function weekStats(id) {
   const moods = Array.from({ length: weekIndex() + 1 }, (_, d) => { const e = diaryOf(id, ymd(dayDate(d))); return { day: SHORT[weekdayOf(ymd(dayDate(d)))], face: e ? moodFace(e.mood) : "" }; });
   return { pct: planned ? Math.min(100, Math.round(done / planned * 100)) : null, done, planned, ticks, moods };
 }
+// 🎨 v233 the Me card: things done today (activity ticks + habits done) · days in a row with a ⭐ (today counts once it has one)
+const meDoneToday = id => { const t = todayYmd(); return tickLog().filter(x => x.user === id && x.date === t).length
+  + habitsFor(id).filter(h => habitDone(h, data.habitMarks[habitKey(t, h.id, id)])).length; };
+function dayStreak(id) {
+  let n = 0, d = todayYmd();
+  if (!dayStarPts(id, d)) d = addDaysYmd(d, -1);
+  while (n < 60 && dayStarPts(id, d) > 0) { n++; d = addDaysYmd(d, -1); }
+  return n;
+}
 function drawMe() {
   if (!exists(meWho)) meWho = me;
   const u = userById(meWho), c = colorsOf(u), mine = u.id === me, kid = !isParentId(u.id), parent = isParentViewer();
@@ -83,15 +92,19 @@ function drawMe() {
   const meU = userById(me), notYou = !isKidDevice() && isParentId(me) && isMainLogin(cloudMeta().member) && parentsList().length > 1;
   const signedIn = exists(me) ? `<p class="me-signed">Signed in as: <b>${whoHtml(me)}</b>${notYou ? `<button class="linkbtn" data-menotyou>Not you?</button>` : ""}</p>` : "";
   $("meBody").innerHTML = `${signedIn}${chips}
-    <div class="card me-top" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-      <div class="me-face">${faceHtml(u)}</div>
-      <div class="me-name"><h1>${safe(u.name)}</h1><small>${mine ? "👤 My profile" : "👤 Profile"}</small></div>
+    <div class="me3-title"><h1>${mine ? "Me" : safe(u.name)}</h1><small>${safe(u.name)}'s profile and buddy</small></div>
+    <div class="card me-top me3" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
+      <div class="me3-row"><div class="me-face me3-face">${charPic(u, "happy") ? `<img src="${charPic(u, "happy")}" alt="">` : faceHtml(u)}</div>
+      <div class="me3-info"><div class="me-name"><h2>${safe(u.name)}</h2>${stars().includes(u.id) ? `<span class="me3-star">STAR</span>` : ""}</div>
+        ${kid ? `<div class="me3-stats"><span><b>${pointsByUser()[u.id] || 0}</b><small>stars</small></span><span><b>${meDoneToday(u.id)}</b><small>done today</small></span><span><b>${dayStreak(u.id)}</b><small>day streak</small></span></div>` : `<small class="me3-role">Parent</small>`}</div></div>
       ${hasSpark(u.id) ? `<button class="me-spark" ${canEdit ? "data-mespark" : "disabled"} aria-label="${sparkName(u, true)}: level ${L}, ${pct}% to level ${L + 1}">
         <span class="bu-ring bu-big" aria-hidden="true">${buddyRingSvg(pct)}<span class="bu-in"><span class="e">${buddyFace(u.id, L)}</span><b>Lv ${L}</b></span></span>
         <span class="bu-text"><b>${pct}% to Lv ${L + 1}</b><small>${u.buddy ? `✨ ${safe(sparkName(u, true))}` : "✨ Pick your Spark"}${kid ? ` · ⭐ ${p} points in all` : ""}</small></span></button>` : ""}
       ${kid ? `<p class="me-kinds">This week: ${kindsText(k)}</p>` : ""}
     </div>
     ${canEdit ? "" : `<p class="me-lock">🔒 ${isParentId(u.id) ? `Only ${safe(u.name)} can change this profile.` : `Only ${safe(u.name)} or a parent can change this profile.`}</p>`}
+    ${canEdit && !meEdit ? `<div class="me3-pick"><div class="me3-ph"><h2>${mine ? "Choose your character" : `${safe(u.name)}'s character`}</h2><span>${AVATARS.girls.length + AVATARS.boys.length} buddies</span></div>
+      ${avatarPickHtml(u)}<button class="me3-save" data-mesavechar>Save my buddy</button></div>` : ""}
     ${form}
     <div class="card me-card"><h2>🎂 Birthday${canBirthday && !meEdit ? ` <button class="pill small me-cardedit" data-meedit="birthday">✏️ ${bd ? "Edit" : "Add"}</button>` : ""}</h2>${bd ? `<p class="me-big">${bd.days === 0 ? "🎉 Happy birthday!" : `🎂 ${bd.days} ${bd.days === 1 ? "day" : "days"} to go!`}</p>
       <p class="hint">${bd.label}${bd.age != null ? ` · ${bd.age} years old` : ""}</p>` : `<p class="sc-empty">${canBirthday ? "Tap ✏️ Add to put it in." : "Not added yet."}</p>`}</div>
@@ -309,6 +322,12 @@ document.addEventListener("click", e => {
     return $("meBody").querySelector(".me-form").scrollIntoView({ behavior: "smooth", block: "start" }); }
   if ("mecancel" in ds) { meEdit = false; mePhoto = null; return render(); }
   if ("mesave" in ds) return saveMe();
+  if ("mesavechar" in ds) {   // 🎨 v233: "Save my buddy" (the character list on the Me page)
+    const u = data.users.find(x => x.id === meWho), on = $("meBody").querySelector("[data-meavatar].on");
+    if (!u || !canEditProfile(u.id) || !on) return;
+    if (AVATAR_IDS.includes(on.dataset.meavatar)) u.avatar = on.dataset.meavatar; else delete u.avatar;
+    avTone = null; keepNow(); toast("✓ Saved: your buddy", 2000); return render();
+  }
   // 🖼️ a parent: 📷 take or choose a photo · 😀 use my emoji instead (tapping an emoji picks the emoji too)
   if ("mephoto" in ds) { $("mePhotoFile").value = ""; return $("mePhotoFile").click(); }
   if ("menophoto" in ds) { mePhoto = ""; $("mePicNow").innerHTML = mePicHtml(userById(meWho)); b.hidden = true; return; }

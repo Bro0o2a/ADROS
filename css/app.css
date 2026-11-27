@@ -4267,3 +4267,35 @@ button.ws-fixbtn img { width: 40px; height: 40px; object-fit: contain; }
 #scr-points.ms-on > .puff-banner, #scr-points.ms-on > h1, #scr-points.ms-on .buddy-row { display: none !important; }
 .ms-title h2 { margin: 4px 2px 0; font: 900 30px/1.1 Nunito, sans-serif; color: #3b2a1e; } .ms-title small { display: block; margin: 2px 2px 0; font: 700 15px Nunito, sans-serif; color: #8a7666; }
 .ms-stars { font-size: 16px; letter-spacing: 1px; white-space: nowrap; }
+
+/* 🎨 v233 Me (Broo2a's picture): plain title, pink hero card (character, name, STAR, 3 number tiles), Choose your character grid + Save my buddy */
+.me3-title h1 { margin: 6px 2px 0; font: 900 30px/1.1 Nunito, sans-serif; color: #3b2a1e; text-align: left; }
+.me3-title small { display: block; margin: 2px 2px 10px; font: 700 15px Nunito, sans-serif; color: #8a7666; }
+.card.me3 { display: block; border: 0; border-top: 0; background: var(--soft, #fbe3e1); border-radius: 26px; box-shadow: 0 4px 0 rgba(0,0,0,.06); padding: 14px; }
+.me3-row { display: flex; align-items: center; gap: 12px; }
+.me3-face.me-face { width: 96px; height: 96px; background: none; font-size: 56px; border-radius: 0; }
+.me3-face img { width: 96px; height: 96px; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.me3-info { flex: 1; min-width: 0; }
+.me3 .me-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.me3 .me-name h2 { margin: 0; font: 900 26px/1.1 Nunito, sans-serif; color: var(--ink, #8a2a22); }
+.me3-star { background: #fff; color: #b8325a; border-radius: 999px; padding: 3px 10px; font: 900 12px Nunito, sans-serif; letter-spacing: .5px; }
+.me3-role { font: 700 14px Nunito, sans-serif; color: #7a6656; }
+.me3-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+.me3-stats span { background: #fff; border-radius: 14px; padding: 7px 4px; text-align: center; }
+.me3-stats b { display: block; font: 900 20px/1.1 Nunito, sans-serif; color: #3b2a1e; } .me3-stats small { font: 700 11px Nunito, sans-serif; color: #7a6656; }
+.me3 .me-spark, .me3 .me-kinds { margin-top: 10px; }
+.me3-pick { margin: 16px 0; }
+.me3-ph { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 2px 6px; }
+.me3-ph h2 { margin: 0; font: 900 21px Nunito, sans-serif; color: #3b2a1e; } .me3-ph span { font: 800 14px Nunito, sans-serif; color: #7a6656; white-space: nowrap; }
+.me3-pick .av-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.me3-pick .av-opt { position: relative; aspect-ratio: 1; width: auto; height: auto; padding: 8px; border-radius: 24px; background: #fff; border: 3px solid transparent; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.me3-pick .av-opt img { width: 100%; height: 100%; object-fit: contain; border-radius: 16px; background: #f8efe4; }
+.me3-pick .av-opt.on { border-color: #e98a80; }
+.me3-pick .av-opt.on::after { content: "✓"; position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; background: #e98a80; color: #fff; border: 3px solid #fff; display: grid; place-items: center; font: 900 14px Nunito, sans-serif; }
+.me3-pick .av-group { font: 800 14px Nunito, sans-serif; color: #7a6656; margin: 10px 2px 6px; }
+button.me3-save { width: 100%; min-height: 56px; margin-top: 14px; border: 0; border-radius: 26px; background: #ee8a7d; color: #7a1f17; font: 900 18px Nunito, sans-serif; box-shadow: 0 4px 0 #d06a5e; }
+.me3 .me-spark { width: 100%; flex-wrap: nowrap; gap: 12px; padding: 8px 12px; background: rgba(255,255,255,.75); border: 0; border-radius: 18px; text-align: left; min-height: 0; }
+.me3 .me-spark .bu-big { width: 60px; height: 60px; flex: none; } .me3 .me-spark .bu-big .e { font-size: 22px; } .me3 .me-spark .bu-big b { font-size: 11px; margin-top: 0; }
+.me3 .me-spark .bu-text b { font-size: 16px; } .me3 .me-spark .bu-text small { font-size: 12px; }
+.me3-stats small { white-space: nowrap; font-size: 10.5px; }
+.me3 .me-kinds { font-size: 13px; }
