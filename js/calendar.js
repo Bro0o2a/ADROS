@@ -1433,7 +1433,13 @@ function drawMine() {
   // 🌈 v233 (Broo2a's picture): the Week view = a grid (Morning · Day · Evening × 7 days, a picture per activity), the names under it,
   //   then the chosen day's list (tap a day). ✏️ Edit calendar still uses the hour grid (dragging works there).
   const glance = wk && !editing;
-  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + (glance ? glanceHtml(wdays, who, subj) : weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj })); }
+  // 🎨 v236 (Broo2a: "the calendar per day, like the one big day"): the Day view of ONE person = the big day card
+  //   (the days row stays on top; Everyone and ✏️ Edit calendar keep the hour grid)
+  const bigDay = !wk && !editing && !!who && exists(who) && !!wdays[viewDay];
+  const sm = document.getElementById("scr-mine"); if (sm && !glance) sm.classList.toggle("gd-open", bigDay);
+  try { $("mineWeek").innerHTML = editBarHtml() + (editing ? "" : freeNowHtml(who)) + (glance ? glanceHtml(wdays, who, subj)
+      : bigDay ? (() => { const page = glDayPage(wdays[viewDay].date, who, subj, true); return navHtml(wdays.map(d => d.date)) + page; })()
+      : weekHtml(wdays, { only: who, readOnly: editing, drag: editing, subj })); }
   finally { viewDay = keepDay; navSubj = ""; wholeWeek = wk; }
   putCalScroll("mineWeek");   // (📅 opens with today in view; a tick or a tap keeps it where it was)
   $("mineSubj").innerHTML = sk ? subjFilterHtml(sk, who) : "";   // (v180: only the picked subject's summary; the picker is in the days row)
@@ -1503,7 +1509,7 @@ function pathHtml(wdays, who, subj) {
       <div class="gp-weeknav"><button class="k-arrow" data-kprev aria-label="Previous week">‹</button><span>${safe(dayHead(wdays[0].date))} – ${safe(dayHead(wdays[wdays.length - 1].date))}</span><button class="k-arrow" data-knext aria-label="Next week">›</button></div>
       ${rows}</div>`;
 }
-function glDayPage(ds, who, subj) {
+function glDayPage(ds, who, subj, inDay) {   // (inDay: inside the 📆 Day view: its days row is on top, a day link = that day)
   const today = todayYmd(), u = userById(who), wd = weekdayOf(ds), num = fromYmd(ds).getDate();
   const head = ds === today ? `Today, ${DAYS[wd]} ${num}` : ds === addDaysYmd(today, 1) ? `Tomorrow, ${DAYS[wd]} ${num}` : `${DAYS[wd]} ${num}`;
   // the usual day list (so ticks, 🔒 times and 📚 sessions work as always), then its cards are sorted into Morning · Day · Evening
@@ -1544,13 +1550,16 @@ function glDayPage(ds, who, subj) {
   const nextRow = (d, l, title) => `<button class="gd-next" data-glopen="${d}">${l.length ? actIcon3d(l[0].name, l[0].type, "gd-nic") : `<span class="gd-nic gd-clock">🕒</span>`}
       <span><b>${safe(title)}, ${DAYS[weekdayOf(d)]} ${fromYmd(d).getDate()}</b><small>${l.length ? safe(l.slice(0, 2).map(it => `${it.name} · ${clock(it.start)}`).join(" · ")) + (l.length > 2 ? ` +${l.length - 2}` : "") : "Free day · plan something fun?"}</small></span><span class="kc-go">›</span></button>`;
   const next = `<h2 class="gd-nexth">Coming next</h2>${nextRow(nextD, nl, nextD === addDaysYmd(today, 1) ? "Tomorrow" : "Next")}${freeD ? nextRow(freeD, [], "Free day") : ""}`;
-  return `<div class="gd-top"><button class="pill small" data-glopen="">‹ My week</button>
+  const out = `<div class="gd-top"><button class="pill small" data-glopen="">‹ My week</button>
       <button class="pill small k-planbtn" data-dayplan="${ds}" aria-label="Day plan">📋 Plan</button></div>
     <div class="gd3-buddy">${pic ? `<img src="${pic}" alt="">` : ""}<p>${safe(say)}</p></div>
     <div class="gd-card gd3"><div class="gd3-head"><div class="gd3-date"><b>${fromYmd(ds).getDate()}</b><small>${safe(mon)}</small></div>
       <div><h2 class="gd-title">${ds === today ? "Today" : ds === addDaysYmd(today, 1) ? "Tomorrow" : safe(DAYS[wd])}</h2><p class="gd-sub">${ds === today || ds === addDaysYmd(today, 1) ? `${safe(DAYS[wd])} · ` : ""}${safe(subTxt)}</p></div></div>
       ${list || `<div class="gd-none">Nothing planned. Enjoy your free day!</div>`}</div>
     ${glDayChips(ds)}${next}`;
+  if (!inDay) return out;
+  const all = calDates();
+  return out.replace(/<div class="gd-top">[\s\S]*?<\/div>/, "").replace(/data-glopen="([^"]*)"/g, (m, d) => `data-kday="${all.indexOf(d)}"`);
 }
 // the 7 day chips under the day card (Mo 23 … Su 29): tap = that day
 function glDayChips(ds) {
