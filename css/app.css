@@ -4680,3 +4680,18 @@ button.set3-out { display: flex; align-items: center; justify-content: center; g
 button.set3-out svg { width: 26px; height: 26px; }
 #scr-settings .two-col:not(:has(.card)) { display: none; }
 .set3-app button.set3-row, .set3-grp button.set3-row { border-radius: 0 !important; box-shadow: none !important; background: none !important; }
+/* v236 report kid card (Broo2a's picture): one compact row: big character left, name + bubble in the middle, score right */
+.rp3-kid { display: grid !important; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: 10px; row-gap: 6px; align-items: center; padding: 12px 14px 14px 8px !important; }
+.rp3-kid .kc-head, .rp3-kid .kc-mid { display: contents !important; }
+.rp3-kid .kc-big { grid-column: 1; grid-row: 1 / 3; width: 112px !important; height: 128px !important; margin: -6px 0 -10px !important; object-fit: contain; align-self: end; }
+.rp3-kid .kc-bigface { width: 84px !important; height: 84px !important; }
+.rp3-kid .kc-name { grid-column: 2; grid-row: 1; justify-self: start; align-self: end; margin: 0 !important; }
+.rp3-kid .kc-bub { grid-column: 2; grid-row: 2; align-self: start; margin: 0 !important; min-width: 0; }
+.rp3-kid .kc-bub::before { display: none !important; }
+.rp3-kid .kc-pts { grid-column: 3; grid-row: 1 / 3; align-self: center; margin: 0 !important; }
+@media (max-width: 380px) { .rp3-kid .kc-big { width: 92px !important; height: 110px !important; } .rp3-kid { column-gap: 6px; } }
+.rp3-kid .kc-bub { grid-column: 2 / 4 !important; }
+.rp3-kid .kc-pts { grid-row: 1 !important; align-self: end !important; width: 64px !important; height: 64px !important; }
+.rp3-kid .kc-big { width: 124px !important; height: 140px !important; }
+@media (max-width: 380px) { .rp3-kid .kc-big { width: 108px !important; height: 124px !important; } }
+.rp3-kid .kc-big:not(.kc-bigface) { transform: scale(1.18); transform-origin: 50% 100%; }
