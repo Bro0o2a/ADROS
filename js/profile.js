@@ -628,7 +628,7 @@ function maybeShowStar() {
   const win = stars(w), board = rec.board.filter(x => exists(x.id)).slice(0, Math.max(3, win.length));
   const rows = board.map((x, i) => { const u = userById(x.id);
     return `<div class="sp3-row${win.includes(x.id) ? " win" : ""}"><span class="sp3-n n${Math.min(i + 1, 4)}">${i + 1}</span><span class="sp3-face">${charPic(u) ? `<img src="${charPic(u, win.includes(x.id) ? "confetti" : "happy")}" alt="">` : safe(u.emoji)}</span><b class="sp3-nm">${safe(u.name)}</b><b class="sp3-s">${x.s}</b></div>`; }).join("");
-  const pics = win.map(id => charPic(userById(id), "full") || charPic(userById(id), "confetti")).filter(Boolean);
+  const pics = win.map(id => charPic(userById(id), "stand") || charPic(userById(id), "confetti")).filter(Boolean);
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
   $("kCard").innerHTML = `<div class="sp3-bunting" aria-hidden="true">${["#f2a7c3", "#f2c14e", "#8fcf8a", "#b9a3e8", "#7fc4d6", "#ee8a7d", "#f2c14e"].map(c => `<i style="--b:${c}"></i>`).join("")}</div>
     <div class="sp3-star" aria-hidden="true"><img src="icons/3d/k-stars.png" alt=""></div>

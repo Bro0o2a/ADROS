@@ -1562,6 +1562,7 @@ const CHARS = [["c01", "Giggle Girl", "g"], ["c02", "Surprised Boy", "b"], ["c03
 const CHAR_DARK = ["c01", "c02", "c03", "c04", "c05", "c06", "c07", "c08", "c09", "c10", "c11", "c12", "c13"];   // the ones with a darker-skin version too
 // 🎭 v233: 7 more feelings (Broo2a's pictures, 26 Nov): wave (hello) · point (tips) · think (hints, making) · sad (missed) · proud (good work) · jump (all done) · confetti (big win)
 const CHAR_NEW_MOODS = ["wave", "point", "think", "sad", "proud", "jump", "confetti"];
+const CHAR_STAND = ["c01", "c02", "c03", "c05", "c06", "c07", "c08", "c09", "c11", "c13"];   // (🧍 who has a standing picture)
 const CHAR_MOODS = ["happy", "star", "thumbs", "wow", "oops", "confused", "sleepy", "reading", ...CHAR_NEW_MOODS];
 const CHAR_NEW_DARK = { c10d: CHAR_NEW_MOODS, c12d: CHAR_NEW_MOODS, c04d: CHAR_NEW_MOODS };   // darker kids that already have new feelings (the rest: the closest old one)
 const MOOD_BACKUP = { wave: "happy", point: "thumbs", think: "confused", sad: "oops", proud: "thumbs", jump: "star", confetti: "star" };
@@ -1572,6 +1573,7 @@ const isCharId = id => /^(c\d{2}d?|mum|dad)$/.test(id || "");
 // the picture of a character in a mood (a mood it doesn't have → its happy face; full body: only the lighter-skin kids + mum/dad, else the round star)
 function avatarSrc(id, mood = "happy") {
   if (!isCharId(id)) return `icons/avatars/${id}.jpg`;
+  if (mood === "stand") { if (CHAR_STAND.includes(id)) return `icons/chars/${id}/stand.webp`; mood = "full"; }   // (🧍 v233 standing, drawn so far for 10 lighter kids)
   if (mood === "full" && /d$/.test(id)) mood = "star";
   if (mood !== "full" && !CHAR_MOODS.includes(mood)) mood = "happy";
   if (/d$/.test(id) && CHAR_NEW_MOODS.includes(mood) && !(CHAR_NEW_DARK[id] || []).includes(mood)) mood = MOOD_BACKUP[mood];   // (not drawn yet)
