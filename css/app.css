@@ -4196,3 +4196,35 @@ button.primary, .tile.primary { background: var(--kc, var(--coral)) !important; 
 /* v233 softer form fields in cards */
 .card input[type=text], .card input[type=number], .card input[type=time], .card input[type=date], .card select, .card textarea, .kd3-card input, .wish-card input {
   background: #fbf1e6; border: 2px solid #efdcc6; border-radius: 16px; padding: 10px 14px; font: 700 15px Nunito, sans-serif; color: #3b2a1e; min-height: 46px; }
+
+/* 🎨 v233 marked homework (Broo2a's picture): buddy bubble, score ring, numbered answers with ✓ / ✕ and Why?, Fix with my buddy */
+.ws-res3 { display: flex; flex-direction: column; gap: 12px; }
+.ws-buddy3 { display: flex; align-items: center; gap: 12px; background: #fbe3e1; border-radius: 26px; padding: 12px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ws-buddy3 img { width: 92px; height: 92px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.ws-bud-e { font-size: 54px; flex: none; }
+.ws-buddy3 p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 12px 14px; font: 800 16px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.ws-buddy3 p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.ws-ring3 { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 26px; padding: 14px 16px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ws-ring { width: 78px; height: 78px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--rc) calc(var(--p) * 1%), #efe6da 0); }
+.ws-ring b { width: 60px; height: 60px; border-radius: 50%; background: #fff; display: grid; place-items: center; font: 900 19px Nunito, sans-serif; color: #2f4a2a; }
+.ws-ring3 > div:last-child b { display: block; font: 900 19px Nunito, sans-serif; color: #3b2a1e; }
+.ws-ring3 small { display: block; font: 600 14px/1.35 Nunito, sans-serif; color: #7a6656; }
+.ws-alist { background: #fff; border-radius: 26px; padding: 4px 14px; box-shadow: 0 4px 0 rgba(0,0,0,.06); }
+.ws-arow { display: flex; align-items: center; gap: 10px; padding: 12px 0; }
+.ws-arow + .ws-arow { border-top: 2px solid #f3ebe2; }
+.ws-anum { width: 30px; height: 30px; flex: none; border-radius: 50%; background: #f3ebe2; display: grid; place-items: center; font: 800 14px Nunito, sans-serif; color: #8a7666; }
+.ws-atxt { flex: 1; min-width: 0; }
+.ws-atxt b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font: 800 16px/1.3 Nunito, sans-serif; color: #3b2a1e; }
+.ws-atxt small { display: block; font: 600 13px/1.35 Nunito, sans-serif; color: #7a6656; overflow-wrap: anywhere; }
+button.ws-why { flex: none; min-height: 32px; padding: 4px 12px; border: 0; border-radius: 999px; background: #e3eefc; color: #1f4f8a; font: 800 14px Nunito, sans-serif; box-shadow: none; }
+.ws-amk { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 900 17px Nunito, sans-serif; }
+.ws-amk.ok { background: #6cc070; } .ws-amk.no { background: #ee8a7d; } .ws-amk.part { background: #f2b84b; }
+button.ws-fixbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px; border: 0; border-radius: 26px;
+  background: #dff0da; color: #2f5a2a; font: 900 16px Nunito, sans-serif; box-shadow: 0 4px 0 #b9dcb1; padding: 8px 14px; }
+button.ws-fixbtn img { width: 40px; height: 40px; object-fit: contain; }
+.ws-res3 .mist-card { border-radius: 26px; }
+.ws-donebox { margin: 6px auto 14px; }
+.ws-done-h { margin: 2px 2px 10px; } .ws-done-h h2 { margin: 0; font: 900 26px/1.15 Nunito, sans-serif; color: #3b2a1e; }
+.ws-done-h small { display: block; margin-top: 2px; font: 700 14px Nunito, sans-serif; color: #8a7666; }
+.ws-donebox .ans-thumbs { margin-top: 12px; }

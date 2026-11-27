@@ -1959,22 +1959,12 @@ document.addEventListener("change", e => {
 });
 function wsViewNode(w, id, s, isDad) {
   const done = !!w.check, canAct = isDad || !done, files = answerIdsOf(w, id, s), open = answersOpen(w), show = wsAnswers && open;
-  return h("div", null,
-    h("div", { class: "ai-toolbar" },
-      // (🔒 a kid before the check: the button is there, a tap says why)
-      h("button", { class: show ? "primary" : null, "aria-pressed": String(show), data: { wsact: "answers" } }, show ? "🔑 Hide answers" : open ? "🔑 Show answers" : "🔒 Show answers"),
-      // (📄 worksheets are PDF only, no printing from the app)
-      h("button", { data: { wsact: "pdf" } }, "📄 Download PDF"),
-      h("button", { data: { wsact: "key" } }, open ? "📄 Answer key PDF" : "🔒 Answer key PDF"),
-      h("button", { data: { wsact: "again" } }, "🔁 Make another"),
-      h("button", { data: { aireport: "worksheet|" + id } }, "🚩 Report"),
-      isDad ? h("button", { class: "danger-text", data: { wsact: "delete" } }, "🗑️ Delete") : null),
-    wsLevelNode(w),
-    isDad ? wsKeyEditNode(w, id) : null,
-    wsSheetNode(w, show),
+  // 🎨 v233: once checked, the marked homework comes FIRST (Broo2a's picture), the paper below it
+  const checkCard =
     // ✅ Upload the answers → 🤖 Check
-    h("div", { class: "card bd-card ai-narrow" },
-      h("div", { class: "sc-head" }, h("h2", null, done ? "✅ Checked" : "✅ Finished? Check it!"), h("span", { class: "ai-status " + (done ? "done" : files.length ? "up" : "") }, w.status)),
+    h("div", { class: done ? "ws-donebox ai-narrow" : "card bd-card ai-narrow" },
+      done ? h("div", { class: "ws-done-h" }, h("h2", null, "Marked homework"), h("small", null, [w.subject, w.title, kidNameOf(w.kid)].filter(Boolean).join(" · ")))
+        : h("div", { class: "sc-head" }, h("h2", null, "✅ Finished? Check it!"), h("span", { class: "ai-status " + (files.length ? "up" : "") }, w.status)),
       done ? resultNode(w) : h("p", { class: "hint" }, files.length
         ? "The answers are uploaded. Tap ✅ Check now!"
         : "Do the worksheet on paper, then upload a photo (or PDF) of your answers."),
@@ -1991,7 +1981,22 @@ function wsViewNode(w, id, s, isDad) {
         canAct && files.length ? h("button", { class: "primary", data: { wsact: "check", aiwait: "check|" + id } }, done ? "🤖 Check again" : "✅ Check now") : null,
         isDad ? h("button", { data: { wsact: "fix" } }, done ? "✏️ Change score" : "✏️ Add score") : null),
       aiFailFor("check|" + id) ? h("p", { class: "ai-failnote" }, aiFailFor("check|" + id)) : null,   // (⚠️ why the last check didn't work)
-      isDad && wsFix ? fixFormNode(w) : null),
+      isDad && wsFix ? fixFormNode(w) : null);
+  return h("div", null,
+    done ? checkCard : null,
+    h("div", { class: "ai-toolbar" },
+      // (🔒 a kid before the check: the button is there, a tap says why)
+      h("button", { class: show ? "primary" : null, "aria-pressed": String(show), data: { wsact: "answers" } }, show ? "🔑 Hide answers" : open ? "🔑 Show answers" : "🔒 Show answers"),
+      // (📄 worksheets are PDF only, no printing from the app)
+      h("button", { data: { wsact: "pdf" } }, "📄 Download PDF"),
+      h("button", { data: { wsact: "key" } }, open ? "📄 Answer key PDF" : "🔒 Answer key PDF"),
+      h("button", { data: { wsact: "again" } }, "🔁 Make another"),
+      h("button", { data: { aireport: "worksheet|" + id } }, "🚩 Report"),
+      isDad ? h("button", { class: "danger-text", data: { wsact: "delete" } }, "🗑️ Delete") : null),
+    wsLevelNode(w),
+    isDad ? wsKeyEditNode(w, id) : null,
+    wsSheetNode(w, show),
+    done ? null : checkCard,
     sessionBarNode(w, id),
     aiLinksNode(w));
 }
@@ -2008,12 +2013,12 @@ function sessionBarNode(w, id) {
 // ❌ MISTAKES ONE BY ONE (after the check): the score card first, then each wrong answer in its own card — the question,
 // "Your answer", "Correct answer", a short explanation — with "Next mistake ➡️ (2 of 5)" and "Done". Right answers aren't repeated.
 // 👨‍👩‍👧 Parents also have "See all answers" (every question with ✓ / ✗).
-let wsMist = { id: null, i: 0, done: false }, wsAllAns = false;
+let wsMist = { id: null, i: 0, done: false, show: false }, wsAllAns = false;
 function mistakesNode(w, c) {
   const wrong = c.questions.filter(q => !q.correct);
-  if (wsMist.id !== schoolDoc) { wsMist = { id: schoolDoc, i: 0, done: false }; wsAllAns = false; }
+  if (wsMist.id !== schoolDoc) { wsMist = { id: schoolDoc, i: 0, done: false, show: false }; wsAllAns = false; }
   if (!wrong.length) return h("p", { class: "ai-note mist-none" }, "🌟 No mistakes! Every answer is right.");
-  if (wsMist.done) return h("div", { class: "btnrow" }, h("button", { data: { wsact: "mistagain" } }, `❌ See my mistakes again (${wrong.length})`));
+  if (!wsMist.show) return null;
   const i = Math.min(wsMist.i, wrong.length - 1), q = wrong[i], wq = w.questions.find(x => x.number === q.number) || {}, rtl = isArabicWs(w);
   return h("div", { class: "card mist-card" + (rtl ? " ws-rtl" : ""), dir: rtl ? "rtl" : null },
     h("div", { class: "mist-head", dir: "ltr" }, h("b", null, q.points > 0 ? `🟡 Almost! ${i + 1} of ${wrong.length}` : `❌ Mistake ${i + 1} of ${wrong.length}`),
@@ -2029,7 +2034,7 @@ function mistakesNode(w, c) {
       : askButtonsNode(q.number),
     h("div", { class: "btnrow", dir: "ltr" },
       i < wrong.length - 1 ? h("button", { class: "primary", data: { wsact: "mistnext" } }, `Next mistake ➡️ (${i + 2} of ${wrong.length})`) : null,
-      h("button", { data: { wsact: "mistdone" } }, "Done")));
+      h("button", { data: { wsact: "mistdone" } }, "‹ Back to all answers")));
 }
 // ✏️ Words to spell right (from the check notes "Spelling: wrong → right"): shown with the result; no marks were taken off
 const spellsOf = (c, tag = "Spelling") => c.questions.flatMap(q => [...String(q.note || "").replace(/->/g, "→").matchAll(new RegExp(tag + ":\\s*([^.;\\n]+)", "gi"))].flatMap(m => m[1].split(/,\s*(?=[^,]*→)/)))
@@ -2061,11 +2066,39 @@ function levelUpNode(w, pct) {
   return h("p", { class: "ai-note ws-lvl-tip" }, isParentDevice() ? `🚀 ${kidNameOf(w.kid)} got ${pct}%! Time to move the ${w.subject} level up to ${lv + 1}? (🎚️ Worksheet level)`
     : `🚀 Great mark! You're ready for harder work. Ask your parents to move your ${w.subject} level up${k === "normal" && lv >= 6 ? ": Hard worksheets give bonus points!" : " to earn more points!"}`);
 }
+// 🎨 v233 (Broo2a's picture): the buddy says the mark ("4 of 5, Bana! One little fix and it is perfect."),
+// a ring with the score, then every question in a numbered list with ✓ / ✗ and "Why?" (opens that mistake)
+function wsResTopNode(w, c, pct) {
+  const u = userById(w.kid), name = kidNameOf(w.kid), wrong = c.questions.filter(q => !q.correct).length;
+  const mood = pct >= 85 ? "proud" : pct >= 60 ? "happy" : pct >= 40 ? "point" : "think", src = charPic(u, mood);
+  const say = !c.questions.length ? (pct >= 85 ? "Brilliant work!" : pct >= 60 ? "Good work! Keep going." : "Let's practise this together.")
+    : !wrong ? "Every answer is right!" : wrong === 1 ? "One little fix and it is perfect." : pct >= 60 ? `${wrong} little fixes and it is perfect.` : "Let's fix them together, one by one.";
+  const col = pct >= 70 ? "#6cc070" : pct >= 40 ? "#f2b84b" : "#ee8a7d";
+  return [h("div", { class: "ws-buddy3" }, src ? h("img", { src, alt: "" }) : h("span", { class: "ws-bud-e" }, (u && u.emoji) || "🙂"),
+      h("p", null, `${num(c.score)} of ${num(c.max_score)}, ${name}! ${say}`)),
+    h("div", { class: "ws-ring3" }, h("div", { class: "ws-ring", style: `--p:${pct};--rc:${col}` }, h("b", null, `${num(c.score)}/${num(c.max_score)}`)),
+      h("div", null, h("b", null, "Checked!"), h("small", null, `${pct}%. ${wrong ? "Tap Why? to learn from a mistake." : "No mistakes at all."}`)))];
+}
+function wsAnsListNode(w, c) {
+  const wrong = c.questions.filter(q => !q.correct);
+  return h("div", { class: "ws-alist" }, c.questions.map(q => {
+    const wq = w.questions.find(x => x.number === q.number) || {}, t = String(wq.prompt || `Question ${q.number}`), part = !q.correct && q.points > 0;
+    return h("div", { class: "ws-arow" }, h("span", { class: "ws-anum" }, String(q.number)),
+      h("div", { class: "ws-atxt" }, h("b", null, t.length > 70 ? t.slice(0, 68) + "…" : t), h("small", null, "Your answer: " + (q.your_answer || "—"))),
+      q.correct ? null : h("button", { class: "ws-why", data: { wsact: "mistgo:" + wrong.indexOf(q) } }, "Why?"),
+      h("span", { class: "ws-amk " + (q.correct ? "ok" : part ? "part" : "no"), "aria-label": q.correct ? "Right" : part ? "Part marks" : "Not right yet" }, q.correct ? "✓" : part ? "½" : "✕"));
+  }));
+}
 // The score big, the notes, then the mistakes one by one (parents: "See all answers" for ✓ / ✗ on every question)
 function resultNode(w) {
   const c = w.check, most = Object.fromEntries(w.questions.map(q => [q.number, q.points])), pct = Math.round(c.score / c.max_score * 100), parent = isParentDevice();
-  return h("div", null,
-    h("div", { class: "ai-score" }, `${num(c.score)} / ${num(c.max_score)}`, h("small", null, `${pct}%`)),
+  if (wsMist.id !== schoolDoc) { wsMist = { id: schoolDoc, i: 0, done: false, show: false }; wsAllAns = false; }
+  return h("div", { class: "ws-res3" },
+    wsResTopNode(w, c, pct),
+    c.questions.length && !wsMist.show ? wsAnsListNode(w, c) : null,
+    c.questions.length ? mistakesNode(w, c) : null,
+    c.questions.some(q => !q.correct) && !wsMist.show ? h("button", { class: "ws-fixbtn", data: { wsact: "mistfix" } },
+      charPic(userById(w.kid), "point") ? h("img", { src: charPic(userById(w.kid), "point"), alt: "" }) : "🧑‍🏫", isParentDevice() ? "Go through the mistakes" : "Fix the mistakes with my buddy") : null,
     c.overall_note ? h("p", { class: "ai-note" }, c.overall_note) : null,
     levelUpNode(w, pct),
     c.dadNote ? h("p", { class: "ai-note dad" }, `${userById(DAD).emoji} ${dadName()}: ${c.dadNote}`) : null,
@@ -2073,7 +2106,6 @@ function resultNode(w) {
     c.weak_points && c.weak_points.length ? h("p", { class: "ai-note" }, "Practise: " + c.weak_points.join(" · ")) : null,
     c.coach_tip ? h("p", { class: "ai-note" }, "Coach tip: " + c.coach_tip) : null,
     spellingNode(c),
-    c.questions.length ? mistakesNode(w, c) : null,
     parent && c.questions.length ? h("div", { class: "btnrow" }, h("button", { data: { wsact: "allans" }, "aria-expanded": String(wsAllAns) }, wsAllAns ? "Hide all answers" : "📋 See all answers")) : null,
     fixedNode(c),
     parent && wsAllAns && c.questions.length ? h("ul", { class: "list" }, c.questions.map(q => h("li", { class: q.ask && !q.fixed ? "ws-asked" : null },
@@ -2190,8 +2222,9 @@ function wsAction(act) {
   if ((act === "answers" || act === "key") && !answersOpen(w)) { wsAnswers = false; return answersLocked(id); }   // 🔒 a kid before the check
   // ❌ the mistakes one by one · 📋 all answers (parents)
   if (act === "mistnext") { wsMist.i++; schoolFresh = true; return render(); }
-  if (act === "mistdone") { wsMist.done = true; schoolFresh = true; return render(); }
-  if (act === "mistagain") { wsMist = { id: id, i: 0, done: false }; schoolFresh = true; return render(); }
+  if (act === "mistdone") { wsMist.show = false; schoolFresh = true; return render(); }
+  if (act === "mistagain" || act === "mistfix") { wsMist = { id: id, i: 0, done: false, show: true }; schoolFresh = true; return render(); }
+  if (act.startsWith("mistgo:")) { wsMist = { id: id, i: Math.max(0, Number(act.slice(7)) || 0), done: false, show: true }; schoolFresh = true; return render(); }
   if (act === "allans" && isParentDevice()) { wsAllAns = !wsAllAns; schoolFresh = true; return render(); }
   if (act === "answers") { wsAnswers = !wsAnswers; return render(); }
   if (act === "pdf") return worksheetPdf(w);                     // (never with the answers, even when 🔑 is open)
