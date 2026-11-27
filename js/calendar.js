@@ -1439,6 +1439,7 @@ const GL_PARTS = [["morning", "☀", "Morning"], ["day", "☁", "Day"], ["evenin
 // which part of the day an activity is in, by its middle: before 10:00 morning · before 16:30 day · else evening
 const glPart = it => { const mid = (it.start + it.end) / 2; return mid < 600 ? "morning" : mid < 990 ? "day" : "evening"; };
 function glanceHtml(wdays, who, subj) {
+  const smx = document.getElementById("scr-mine"); if (smx) smx.classList.remove("gd-open");
   if (who && !isParentId(who)) return pathHtml(wdays, who, subj);   // 🛤️ one kid: the path (Broo2a's 2nd picture)
   const today = todayYmd(), dates = wdays.map(d => d.date);
   if (!glDay || !dates.includes(glDay)) glDay = dates.includes(today) ? today : dates[0];
@@ -1473,6 +1474,7 @@ let glOpen = null;   // the day whose page is open (a date) · null = the path
 const GL_TINTS = ["#fff1c9", "#d9f0d3", "#fde0dc", "#dbe9fb", "#ffe3cc", "#e9e0fb", "#fbe3ec"];
 function pathHtml(wdays, who, subj) {
   const today = todayYmd(), u = userById(who);
+  const sm = document.getElementById("scr-mine"); if (sm) sm.classList.toggle("gd-open", !!glOpen);   // (a day is open: its own buddy, not the week's)
   if (glOpen) return glDayPage(glOpen, who, subj);
   const itemsOf = d => d.items.filter(it => it.people.includes(who)).sort((a, b) => a.start - b.start);
   const rows = wdays.map((d, i) => {
@@ -1498,18 +1500,32 @@ function glDayPage(ds, who, subj) {
   wholeWeek = false; viewDay = 0;
   try { html = weekHtml([planDay(ds)], { only: who, subj }); } finally { wholeWeek = keepW; viewDay = keepV; }
   const tpl = document.createElement("template"); tpl.innerHTML = html;
-  const groups = { morning: [], day: [], evening: [] };
+  // 🎨 v233 (Broo2a's picture, choice B): one big day card: the date box, the weekday, "3 activities · all ticked!",
+  // each activity its own soft colour card (icon, name, time, the tick on the right), the prayer times strip at noon, bedtime last
+  const cards = [];
   tpl.content.querySelectorAll(".k-block[data-kblock]").forEach(el => {
     const b = blocks[Number(el.dataset.kblock)] || {}, st = b.start != null ? b.start : b.oneDay ? toMin(b.oneDay.from) : null;
     const tf = el.querySelector(".t-full"), sj = b.name && findSubject(b.name);   // (the activity's own name, not the kid's: it's their page)
     if (tf && b.name && !b.fixed && (b.users || []).length === 1) tf.textContent = sj ? sj.name : b.name;
     const wh = el.querySelector(".k-sub .what"); if (tf && wh && wh.textContent.trim() === tf.textContent.trim()) wh.remove();
-    if (st != null) { const at = document.createElement("span"); at.className = "gl-at"; at.textContent = clock(st); el.appendChild(at); }
-    groups[st == null ? "day" : glPart({ start: st, end: b.end != null ? b.end : st })].push(el.outerHTML);
+    cards.push({ st: st == null ? -1 : st, html: el.outerHTML });
   });
-  const n = groups.morning.length + groups.day.length + groups.evening.length;
-  const secs = GL_PARTS.map(([part, ic, label]) => `<div class="gd-sec gl-${part}"><div class="gd-lab"><i>${ic}</i>${label}</div>${
-    groups[part].join("") || `<div class="gd-none">Nothing here</div>`}</div>`).join("");
+  cards.sort((x, y) => x.st - y.st);
+  const n = cards.length, items = planDay(ds).items.filter(it => it.people.includes(who));
+  const ticked = items.filter(it => isDone(ds, it.id, who)).length;
+  const pr = prayersOn(ds), noon = 12 * 60;
+  const strip = pr.length ? `<div class="gd3-pray">${pr.filter(x => x.start >= noon - 60).map(x => `<span><b>${safe(x.name)}</b> ${clock(x.start)}</span>`).join("")}</div>` : "";
+  let list = "", stripDone = !strip;
+  cards.forEach((c, i) => { if (!stripDone && c.st >= noon) { list += strip; stripDone = true; }
+    list += `<div class="gd3-item" style="--t:${GL_TINTS[(i + 2) % GL_TINTS.length]}">${c.html}</div>`; });
+  if (!stripDone) list += strip;
+  const bed = bedMin(who, ds);
+  if (bed != null) list += `<div class="gd3-item gd3-bed"><span class="gd3-moon" aria-hidden="true">☾</span><span><b>Bedtime</b><small>${clock(bed, true)}</small></span></div>`;
+  const mon = fromYmd(ds).toLocaleDateString("en-GB", { month: "short" });
+  const say = !n ? "A free day! Plan something fun?" : ds === today ? (n >= 3 ? "Today is a big one. You can do it!" : "A nice easy day today!")
+    : `Here is your ${DAYS[wd]}!`;
+  const subTxt = !n ? "Free day" : `${n} ${n === 1 ? "activity" : "activities"}${ticked && ticked >= items.length ? " · all ticked!" : ticked ? ` · ${ticked} ticked` : ""}`;
+  const pic = charPic(u, n >= 3 ? "jump" : "happy");
   // Coming next: the next day + the next free day (no activities) in the coming week
   const sumOf = d => { const l = planDay(d).items.filter(it => it.people.includes(who)).sort((a, b) => a.start - b.start); return l; };
   const nextD = addDaysYmd(ds, 1), nl = sumOf(nextD);
@@ -1519,7 +1535,17 @@ function glDayPage(ds, who, subj) {
   const next = `<h2 class="gd-nexth">Coming next</h2>${nextRow(nextD, nl, nextD === addDaysYmd(today, 1) ? "Tomorrow" : "Next")}${freeD ? nextRow(freeD, [], "Free day") : ""}`;
   return `<div class="gd-top"><button class="pill small" data-glopen="">‹ My week</button>
       <button class="pill small k-planbtn" data-dayplan="${ds}" aria-label="Day plan">📋 Plan</button></div>
-    <div class="gd-card"><h2 class="gd-title">${safe(head)}</h2><p class="gd-sub">${safe(`${u.name} has ${n ? `${n} thing${n === 1 ? "" : "s"}` : "nothing"} ${ds === today ? "today" : "this day"}`)}</p>${secs}</div>${next}`;
+    <div class="gd3-buddy">${pic ? `<img src="${pic}" alt="">` : ""}<p>${safe(say)}</p></div>
+    <div class="gd-card gd3"><div class="gd3-head"><div class="gd3-date"><b>${fromYmd(ds).getDate()}</b><small>${safe(mon)}</small></div>
+      <div><h2 class="gd-title">${ds === today ? "Today" : ds === addDaysYmd(today, 1) ? "Tomorrow" : safe(DAYS[wd])}</h2><p class="gd-sub">${ds === today || ds === addDaysYmd(today, 1) ? `${safe(DAYS[wd])} · ` : ""}${safe(subTxt)}</p></div></div>
+      ${list || `<div class="gd-none">Nothing planned. Enjoy your free day!</div>`}</div>
+    ${glDayChips(ds)}${next}`;
+}
+// the 7 day chips under the day card (Mo 23 … Su 29): tap = that day
+function glDayChips(ds) {
+  const start = addDaysYmd(ds, -weekdayOf(ds));
+  return `<div class="gd3-chips">${[0, 1, 2, 3, 4, 5, 6].map(k => { const d = addDaysYmd(start, k);
+    return `<button class="gd3-chip${d === ds ? " on" : ""}" data-glopen="${d}">${SHORT[weekdayOf(d)].slice(0, 2)} ${fromYmd(d).getDate()}</button>`; }).join("")}</div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-glopen]"); if (!b) return;
   glOpen = b.dataset.glopen || null; render(); window.scrollTo({ top: glOpen ? (document.querySelector(".gd-top") || {}).offsetTop - 70 || 0 : 0, behavior: "smooth" }); });

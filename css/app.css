@@ -4299,3 +4299,39 @@ button.me3-save { width: 100%; min-height: 56px; margin-top: 14px; border: 0; bo
 .me3 .me-spark .bu-text b { font-size: 16px; } .me3 .me-spark .bu-text small { font-size: 12px; }
 .me3-stats small { white-space: nowrap; font-size: 10.5px; }
 .me3 .me-kinds { font-size: 13px; }
+
+/* 🎨 v233 the kid's one big day (Broo2a's picture, choice B): buddy + bubble, date box, colour cards with the tick on the right, prayer strip, bedtime, day chips */
+.gd3-buddy { display: flex; align-items: center; gap: 10px; margin: 8px 0 10px; }
+.gd3-buddy img { width: 84px; height: 84px; object-fit: contain; flex: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); }
+.gd3-buddy p { position: relative; flex: 1; margin: 0; background: #fff; border-radius: 18px; padding: 12px 14px; font: 800 15px/1.35 Nunito, sans-serif; color: #3b2a1e; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.gd3-buddy p::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -8px; border: 8px solid transparent; border-right-color: #fff; border-left: 0; }
+.gd-card.gd3 { background: #fff; border-radius: 28px; padding: 16px 14px; text-align: left; box-shadow: 0 5px 0 rgba(0,0,0,.06); }
+.gd3-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.gd3-date { width: 74px; height: 74px; flex: none; border-radius: 20px; border: 3px solid #f2c14e; background: #fdf3d6; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.gd3-date b { font: 900 28px/1 Nunito, sans-serif; color: #3b2a1e; } .gd3-date small { font: 800 14px Nunito, sans-serif; color: #7a5a1e; }
+.gd3 .gd-title { margin: 0; font: 900 26px/1.1 Nunito, sans-serif; color: #3b2a1e; text-align: left; }
+.gd3 .gd-sub { margin: 3px 0 0; font: 700 14px Nunito, sans-serif; color: #7a6656; text-align: left; }
+.gd3-item { margin-top: 10px; }
+.gd3 .gd3-item .k-block { display: grid; grid-template-columns: 52px 1fr auto; grid-template-areas: "ic nm ck" "ic sb ck"; align-items: center; column-gap: 12px; row-gap: 2px;
+  background: var(--t) !important; border: 0 !important; border-radius: 22px; padding: 12px 14px; margin: 0; box-shadow: 0 3px 0 rgba(0,0,0,.05); min-height: 0; width: auto; position: relative; }
+.gd3 .gd3-item .k-block .who { display: contents; }
+.gd3 .gd3-item .k-block .k-ic { grid-area: ic; width: 52px; height: 52px; padding: 6px; border-radius: 16px; background: rgba(255,255,255,.75); object-fit: contain; }
+.gd3 .gd3-item .k-block .t-full { grid-area: nm; display: block !important; font: 900 18px/1.2 Nunito, sans-serif; color: var(--ink, #3b2a1e); overflow-wrap: normal; }
+.gd3 .gd3-item .k-block .t-short, .gd3 .gd3-item .k-block .gl-at, .gd3 .gd3-item .k-block .k-dots { display: none !important; }
+.gd3 .gd3-item .k-block .k-sub { grid-area: sb; display: block; font: 700 14px Nunito, sans-serif; color: var(--ink, #6a5646); opacity: .85; }
+.gd3 .gd3-item .k-block .k-sub .what { display: block; font-size: 12px; }
+.gd3 .gd3-item .k-block .k-checks { grid-area: ck; position: static; display: flex; gap: 4px; }
+.gd3 .gd3-item .k-block .k-check { width: 40px; height: 40px; min-height: 0; border-radius: 50%; border: 3px solid rgba(255,255,255,.95); background: rgba(255,255,255,.7); font-size: 15px; }
+.gd3 .gd3-item .k-block .k-check.on { background: #6cc070; border-color: #6cc070; color: #fff; }
+.gd3-pray { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-top: 10px; background: #dff0da; border-radius: 16px; padding: 9px 14px; font: 700 13px Nunito, sans-serif; color: #2f5a2a; }
+.gd3-pray b { font-weight: 900; }
+.gd3-bed { display: flex; align-items: center; gap: 12px; background: #e3e7f7; border-radius: 22px; padding: 12px 14px; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.gd3-moon { width: 52px; height: 52px; border-radius: 16px; background: rgba(255,255,255,.75); display: grid; place-items: center; font-size: 26px; color: #6d78b8; }
+.gd3-bed b { display: block; font: 900 18px Nunito, sans-serif; color: #34407a; } .gd3-bed small { font: 700 14px Nunito, sans-serif; color: #5a6496; }
+.gd3-chips { display: flex; gap: 5px; margin: 14px 0 6px; overflow-x: auto; scrollbar-width: none; }
+.gd3-chip { flex: 1 0 auto; min-height: 36px; padding: 4px 9px; border-radius: 999px; border: 2px solid transparent; background: #fff; font: 800 13px Nunito, sans-serif; color: #6a5646; box-shadow: 0 2px 0 rgba(0,0,0,.05); white-space: nowrap; }
+.gd3-chip.on { border-color: #f2c14e; background: #fdf3d6; color: #3b2a1e; }
+.gd3 .gd3-item .k-block .k-sub .when { font: 800 15px Nunito, sans-serif; }
+.gd3-chip { padding: 4px 7px; font-size: 12px; }
+#scr-mine.gd-open .buddy-row, #scr-mine.gd-open .free-ask, #scr-mine.gd-open .pb-char { display: none !important; }
+.gd3-chip { flex: 1 1 0; min-width: 0; padding: 4px 2px; font-size: 11.5px; }
