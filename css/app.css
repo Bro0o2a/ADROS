@@ -4731,14 +4731,17 @@ button.ty4-del { position: absolute; top: 4px; right: 4px; width: 26px; height: 
 body, body * { color-scheme: light; }
 html, body { background-color: #f6eadc; }
 
-/* 🎨 v238 (Broo2a 28 Nov picture): calmer, muted colours for the whole app: cream page, sage, peach, coral, butter, soft blue, brown text */
-:root { --bg: #f5ebdf; --card: #fffaf4; --text: #4a3426; --muted: #8a6f5c; --line: #eadccb; }
-body { background: radial-gradient(55% 35% at 100% 0%, #fbe1d2 0, rgba(251, 225, 210, 0) 100%),
-  radial-gradient(50% 40% at 0% 50%, #e3ecdf 0, rgba(227, 236, 223, 0) 100%), #f5ebdf !important; background-attachment: fixed !important; }
-.bar.bar3 [data-navback] { background: #8fb0d1 !important; }
-.bar.bar3 .rb-home { background: #a9c4a8 !important; color: #2f4a33 !important; }
-.bar.bar3 .sch-btn { background: #f3d690 !important; color: #5c422b !important; }
-.bar.bar3 .rb.cal-btn, .bar.bar3 .rb:not([data-signout]):not(.bell-btn):not(.cal-btn) { background: #a9c1d9 !important; }
-.bar.bar3 .bell-btn { background: #f4c3a8 !important; }
-.bar.bar3 [data-signout] { background: #ec8f78 !important; }
-.p-home3 #homeHello, .kh3-top h1 { background: none !important; -webkit-text-fill-color: currentColor; color: #4a3426 !important; }
+/* 🎨 v238 (Broo2a 28 Nov picture): richer colours taken from the picture: cream page, sage, coral, peach, butter, dusty blue, brown text */
+:root { --bg: #fbeddb; --card: #fffaf3; --text: #492d15; --muted: #8a6a52; --line: #f0dcc4; }
+body { background: radial-gradient(60% 35% at 100% 0%, #fcd9c2 0, rgba(252, 217, 194, 0) 100%),
+  radial-gradient(50% 40% at 0% 55%, #dfe6d6 0, rgba(223, 230, 214, 0) 100%), #fbeddb !important; background-attachment: fixed !important; }
+.bar.bar3 [data-navback] { background: #8fb0c8 !important; }
+.bar.bar3 .rb-home { background: #7fad9c !important; color: #fff !important; }
+.bar.bar3 .sch-btn { background: #f5bd55 !important; color: #492d15 !important; }
+.bar.bar3 .rb.cal-btn, .bar.bar3 .rb:not([data-signout]):not(.bell-btn):not(.cal-btn) { background: #8fb0c8 !important; }
+.bar.bar3 .bell-btn { background: #f6a96f !important; }
+.bar.bar3 [data-signout] { background: #f78a63 !important; }
+.p-home3 #homeHello, .kh3-top h1 { background: none !important; -webkit-text-fill-color: currentColor; color: #492d15 !important; }
+.kt3-blue { background: #d8e3ea !important; color: #2f5470 !important; } .kt3-yellow { background: #fde0b7 !important; color: #7a5410 !important; }
+.kt3-pink { background: #fccfb6 !important; color: #8a3a1c !important; } .kt3-green { background: #dce8d8 !important; color: #2e5a4b !important; }
+.kc-btns button:nth-child(1) { background: #d8e3ea !important; color: #2f5470 !important; } .kc-btns button:nth-child(2) { background: #dce8d8 !important; color: #2e5a4b !important; } .kc-btns button:nth-child(3) { background: #fccfb6 !important; color: #8a3a1c !important; }

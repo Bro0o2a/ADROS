@@ -282,14 +282,14 @@ const GET_READY = [0, 5, 10, 15, 20, 30];        // "Get ready before" / "Break 
 // (calendar blocks, name buttons, ticks, legend, print). ink = dark, easy-to-read text for that color.
 const PALETTE = {
   // 🎨 v238 (Broo2a 28 Nov picture): calmer, muted ADROS colours (sage, peach, coral, butter, soft blue). v233: the soft ADROS colours (blue · coral · green · purple …), same names so nobody's colour changes
-  blue:   { color: "#8fb0d1", soft: "#dfe8f1", ink: "#2f527a" },
-  green:  { color: "#8fb38e", soft: "#dfe9dc", ink: "#335c3a" },
-  pink:   { color: "#e98a72", soft: "#f9ddd3", ink: "#8d3a26" },
-  orange: { color: "#eea47e", soft: "#fbe5d7", ink: "#8a4a22" },
-  teal:   { color: "#7fb3aa", soft: "#dcece8", ink: "#2a5f57" },
-  purple: { color: "#a99ad0", soft: "#ebe5f4", ink: "#4f4387" },
-  red:    { color: "#d97c74", soft: "#f6dcd8", ink: "#8b3530" },
-  yellow: { color: "#e8c06a", soft: "#fbefcf", ink: "#6d5214" }
+  blue:   { color: "#8fb0c8", soft: "#d8e3ea", ink: "#2f5470" },
+  green:  { color: "#7fad9c", soft: "#dce8d8", ink: "#2e5a4b" },
+  pink:   { color: "#f78a63", soft: "#fccfb6", ink: "#8a3a1c" },
+  orange: { color: "#f6a96f", soft: "#fde2c6", ink: "#8a4a1c" },
+  teal:   { color: "#79b4aa", soft: "#d6ebe5", ink: "#245e55" },
+  purple: { color: "#b39bd6", soft: "#ece2f6", ink: "#4f3f86" },
+  red:    { color: "#e9776a", soft: "#f9d3cc", ink: "#8b3027" },
+  yellow: { color: "#f5bd55", soft: "#fde0b7", ink: "#7a5410" }
 };
 // The grey for fixed and shared activities
 const GREY = { color: "#a9aebb", soft: "#f2f3f6", ink: "#4b5263" };
