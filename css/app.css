@@ -4921,3 +4921,12 @@ button.kh6-tile { all: unset; box-sizing: border-box; cursor: pointer; display: 
 .kh6-tile b { font: 800 17px/1.15 Fredoka, Nunito, sans-serif; color: #492d15; } .kh6-tile small { color: #8a6f58; font-weight: 700; font-size: 13px; }
 @media (max-width: 370px) { .kh6-hero { grid-template-columns: 96px 1fr; } .kh6-pic { width: 96px; height: 150px; } h1.kh6-hi { font-size: 29px; }
   .kh6-stat b { font-size: 38px; } .kh6-ti { width: 58px; height: 58px; } .kh6-tile b { font-size: 15px; } }
+/* 🧸 v239 clay icons on soft squares */
+.kh6-ic.sq-g { background: #cfe3c4; } .kh6-ic.sq-b { background: #cfe0ef; } .kh6-ic.sq-p { background: #f6d0cc; }
+.kh6-ic.sq-y { background: #fde3a8; } .kh6-ic.sq-l { background: #e4d6f5; } .kh6-ic.sq-r { background: #f9d3cc; }
+.kh6-ci { width: 20px; height: 20px; vertical-align: -4px; margin-right: 5px; }
+.kh6-ck { width: 30px; height: 30px; } .kh6-box.ok { background: #fff; box-shadow: inset 0 0 0 2px #cfe3c4, 0 3px 0 #cfe3c4; }
+.kh6-gi { width: 30px; height: 30px; } .kh6-go { padding: 0; }
+.kh6-bed .kh6-ic.sq-l { background: #e4d6f5; }
+.kh6-chip { display: inline-flex; align-items: center; white-space: nowrap; }
+.kh6-chip .kh6-ci { margin-right: 6px; vertical-align: 0; }

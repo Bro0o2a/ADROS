@@ -90,6 +90,13 @@ function kidPlannerHtml(u, today, hb) {
       <span class="pl-cups">${Array.from({ length: cups }, (_, i) => cup(i < full)).join("")}</span><small>${hb.all <= 10 ? `${hb.done} of ${hb.all} good habits today` : `${Math.round(hb.done / hb.all * 100)}% of today's habits done`}</small></button>` : ""}
     <div class="pl-quote">${ico3d("idea", "pl-qi")}<p>${quote}</p></div>`;
 }   // the part opened from the bottom bar on the home: "habits" | null
+// 🧸 v239 the clay icons (Broo2a's set, icons/3d/c-*.png) on a soft coloured square, by what the activity is
+const CLAY_ACT = [[/read|book|quran|story/i, "book", "g"], [/sheet|math|study|homework|revis|spell|english|science|arabic|lesson|tutor/i, "pencil", "b"],
+  [/foot|ball|swim|sport|gym|run|karate|tennis|bike|play/i, "football", "p"], [/school/i, "backpack", "y"], [/bed|sleep|prayer|pray/i, "clock", "l"], [/fun|game|free|party|gift/i, "star", "y"]];
+function clayAct(name, type) {
+  const hit = CLAY_ACT.find(([re]) => re.test(name || "")) || (type === "study" ? CLAY_ACT[1] : type === "sport" ? CLAY_ACT[2] : type === "free" || type === "family" ? CLAY_ACT[5] : null);
+  return hit ? `<span class="kh6-ic sq-${hit[2]}">${ico3d("c-" + hit[1], "kh6-i3")}</span>` : `<span class="kh6-ic">${actIcon3d(name, type, "kh6-i3")}</span>`;
+}
 function drawKidHome(u) {
   const p = lifetimePoints(u.id), L = levelOf(p), pct = levelPct(p), from = data.points.week, to = weekEnd();
   const today = todayItems(u.id), doneToday = today.filter(x => isDone(todayYmd(), x.id, u.id)).length;
@@ -119,23 +126,23 @@ function drawKidHome(u) {
   const stand = faceAvatar(u) ? (heroMood === "wave" ? charPic(u, "stand") : "") || charPic(u, heroMood) || avatarSrc(u.avatar) : "";
   const row6 = x => { const ok = isDone(d0, x.id, u.id), isNext = next && x.id === next.id, len = x.start >= 0 && x.end > x.start ? x.end - x.start : 0;
     const when = x.start >= 0 ? (isNext && !ok ? `Next up · ${clock(x.start)}` : `${clock(x.start)}${len ? ` · ${len} min` : ""}`) : isNext && !ok ? "Next up · any time" : "Any time";
-    return `<button class="kh6-row ${ok ? "done" : ""}" data-kidcal><span class="kh6-ic">${actIcon3d(x.name, x.type, "kh6-i3")}</span><span class="kh6-t"><b>${safe(x.name)}</b><small>${when}</small></span><span class="kh6-box ${ok ? "ok" : ""}" aria-label="${ok ? "Done" : "Not done yet"}">${ok ? "✓" : ""}</span></button>`; };
+    return `<button class="kh6-row ${ok ? "done" : ""}" data-kidcal>${clayAct(x.name, x.type)}<span class="kh6-t"><b>${safe(x.name)}</b><small>${when}</small></span><span class="kh6-box ${ok ? "ok" : ""}" aria-label="${ok ? "Done" : "Not done yet"}">${ok ? ico3d("c-check", "kh6-ck") : ""}</span></button>`; };
   const tile6 = (cls, attr, icon, title, sub2) => `<button class="kh6-tile ${cls}" ${attr}><span class="kh6-ti">${icon}</span><b>${title}</b><small>${sub2}</small></button>`;
   $("homeBig").innerHTML = `<div class="kh6-hero" style="--soft:${c.soft};--c:${c.color}">${SPARKLES}
       ${stand ? `<img class="kh6-pic" src="${stand}" alt="">` : `<button class="kh6-pic k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
       <div class="kh6-mid"><span class="kh6-date"><b>${dz({ weekday: "long" })}</b>${dz({ day: "numeric", month: "long" })}</span>
         <h1 class="kh6-hi">Hi <em>${safe(u.name)}!</em></h1><p class="kh6-sub">${safe(head)}</p>
-        <div class="kh6-chips">${streak ? `<span class="kh6-chip fire">🔥 ${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}<button class="kh6-chip pts" data-go="points">★ +${pts} this week</button>${
+        <div class="kh6-chips">${streak ? `<span class="kh6-chip fire">${ico3d("c-flame", "kh6-ci")}${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}<button class="kh6-chip pts" data-go="points">${ico3d("c-star", "kh6-ci")}+${pts} this week</button>${
           feat("buddy") && hasSpark(u.id) ? `<button class="kh6-chip spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}">✨ Lv ${L} · ${pct}%</button>` : ""}</div></div></div>
     <div class="kh6-two">${scored ? `<button class="kh6-stat sc" data-sdpop="${safe(u.id)}"><small>My score</small><b>${sc.overall}</b><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i></button>` : ""}
       <button class="kh6-stat td" data-kidcal><small>Today</small><b>${doneToday}<span> of ${today.length}</span></b><i><em style="width:${today.length ? Math.round(doneToday / today.length * 100) : 0}%"></em></i></button></div>
     ${comingCardHtml(comingUp(u.id), false)}
     ${today.length || bedM != null ? `<div class="kh6-card"><div class="kh6-h"><b>My day</b><small>${today.length} ${today.length === 1 ? "thing" : "things"}</small></div>${today.slice(0, 8).map(row6).join("")}${today.length > 8 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}
-      ${bedM != null ? `<div class="kh6-bed"><span class="kh6-ic">🌙</span><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : `<div class="kh6-card"><p class="kh6-sub">${safe(sub)}</p></div>`}
-    <div class="kh6-tiles">${tile6("y", `data-go="points"`, ico3d("k-stars"), "My Stars", `${pts} this week`)}
-      ${tile6("b", `data-school="${safe(u.id)}"`, ico3d("k-study"), "School", "My subjects")}
-      ${tile6("p", "data-kidcal", ico3d("k-calendar"), "Calendar", "This week")}</div>
-    <div class="kh6-more"><button class="kh6-row" data-kidpanel="habits"><span class="kh6-ic">${ico3d("k-habits", "kh6-i3")}</span><span class="kh6-t"><b>Good habits</b><small>${hb.all ? `${hb.done} of ${hb.all} done today` : "None today"}</small></span><span class="kh6-go">›</span></button></div>
+      ${bedM != null ? `<div class="kh6-bed"><span class="kh6-ic sq-l">${ico3d("c-clock", "kh6-i3")}</span><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : `<div class="kh6-card"><p class="kh6-sub">${safe(sub)}</p></div>`}
+    <div class="kh6-tiles">${tile6("y", `data-go="points"`, ico3d("c-star"), "My Stars", `${pts} this week`)}
+      ${tile6("b", `data-school="${safe(u.id)}"`, ico3d("c-backpack"), "School", "My subjects")}
+      ${tile6("p", "data-kidcal", ico3d("c-calendar"), "Calendar", "This week")}</div>
+    <div class="kh6-more"><button class="kh6-row" data-kidpanel="habits"><span class="kh6-ic sq-r">${ico3d("c-heart", "kh6-i3")}</span><span class="kh6-t"><b>Good habits</b><small>${hb.all ? `${hb.done} of ${hb.all} done today` : "None today"}</small></span><span class="kh6-go">${ico3d("c-chevron", "kh6-gi")}</span></button></div>
     <div class="kh3-say">${sayBoxHtml(u)}</div>
     ${familySaysHtml(u.id)}
     ${wishCardHtml(u)}`;
