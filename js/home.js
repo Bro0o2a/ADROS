@@ -281,16 +281,18 @@ function kidCardColors() {
     used.push(c); out[k.id] = c; });
   return out;
 }
-// 🧩 v238 (Broo2a 28 Nov: "a lot of space between kids"): each kid = a small tile, 2 per row, like the number cards in her picture:
-// the character, name, big score, today's progress bar + "2 of 4 today"; the tile opens the kid page (School · Calendar · Report are there).
-function kidTileHtml(k) {
+// 🧩 v238 (Broo2a 28 Nov: "a lot of space between kids"; she chose ONE SLIM ROW per kid, like "Recently played" in her picture):
+// small character · name + today's line + progress bar · score circle, and 3 small buttons School · Calendar · Report under it.
+function kidRowHtml(k) {
   const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), date = todayYmd(), items = todayItems(k.id), done = items.filter(x => isDone(date, x.id, k.id)).length;
   const pct = items.length ? Math.round(done / items.length * 100) : 0, all = items.length && done === items.length, pic = charPic(k, all ? "proud" : "happy");
-  return `<button class="kt4" data-kidpage="${safe(k.id)}" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}" aria-label="${safe(k.name)}: score ${sc.overall}, ${done} of ${items.length} done today">
-    <span class="kt4-top">${pic ? `<img class="kt4-pic" src="${pic}" alt="">` : `<span class="kt4-pic kt4-face">${faceHtml(k)}</span>`}<span class="kt4-sc"><b>${sc.overall}</b><small>score</small></span></span>
-    <b class="kt4-name">${safe(k.name)}${stars().includes(k.id) ? " 🌟" : ""}</b>
-    <span class="kt4-bar"><i style="width:${pct}%"></i></span>
-    <small class="kt4-line">${!items.length ? "Nothing today" : all ? "All done today ✓" : `${done} of ${items.length} today`}</small></button>`;
+  const line = kidTodayLine(k.id).replace(" · next ", " · Next: ");
+  return `<div class="kr4" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
+    <button class="kr4-main" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">
+      <span class="kr4-pic">${pic ? `<img src="${pic}" alt="">` : faceHtml(k)}</span>
+      <span class="kr4-t"><b>${safe(k.name)}${kidCardTags(k.id)}</b><small>${safe(line)}</small><span class="kr4-bar"><i style="width:${pct}%"></i></span></span>
+      <span class="kr4-sc" data-sdpop="${safe(k.id)}"><b>${sc.overall}</b><small>score</small></span></button>
+    <div class="kr4-btns"><button data-school="${safe(k.id)}">School</button><button data-viewcal="${safe(k.id)}">Calendar</button><button data-kidreport="${safe(k.id)}">Report</button></div></div>`;
 }
 function kidCardHtml(k) {
   const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);

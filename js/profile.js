@@ -1074,7 +1074,7 @@ function drawHome() {
   $("homeNote").hidden = true;
   $("homeBig").hidden = false;
   $("homeBig").className = "p-home";
-  $("homeBig").innerHTML = needsLineHtml() + `<div class="kid-cards kt4-grid">${kidsList().map(kidTileHtml).join("")}</div>${kidsList().length ? "" : kidSetupHtml()}`
+  $("homeBig").innerHTML = needsLineHtml() + `<div class="kid-cards kr4-list">${kidsList().map(kidRowHtml).join("")}</div>${kidsList().length ? "" : kidSetupHtml()}`
     + familyRowHtml();
   $("homeMenu").hidden = true;   // (v155: no ☰ More / ✏️ Add menus on a parent's home: everything is in the list above)
   $("homeMenu").innerHTML = "";
