@@ -281,15 +281,15 @@ const GET_READY = [0, 5, 10, 15, 20, 30];        // "Get ready before" / "Break 
 // Soft, calm colors that look good together. Each person has ONE of them, used everywhere
 // (calendar blocks, name buttons, ticks, legend, print). ink = dark, easy-to-read text for that color.
 const PALETTE = {
-  // 🎨 v233 (Broo2a's pictures): the soft ADROS colours (blue · coral · green · purple …), same names so nobody's colour changes
-  blue:   { color: "#6fa6e0", soft: "#dceaf8", ink: "#1f4a8f" },
-  green:  { color: "#86bb74", soft: "#dfead3", ink: "#2f5f22" },
-  pink:   { color: "#e8837a", soft: "#f8dcd6", ink: "#8e2f27" },
-  orange: { color: "#eb9a5a", soft: "#fce6d3", ink: "#8a4510" },
-  teal:   { color: "#62b3aa", soft: "#d8efeb", ink: "#14615b" },
-  purple: { color: "#a68bdb", soft: "#ece2f8", ink: "#4f3796" },
-  red:    { color: "#df7474", soft: "#f8dede", ink: "#922f2f" },
-  yellow: { color: "#e2b443", soft: "#fbeac0", ink: "#6e5006" }
+  // 🎨 v238 (Broo2a 28 Nov picture): calmer, muted ADROS colours (sage, peach, coral, butter, soft blue). v233: the soft ADROS colours (blue · coral · green · purple …), same names so nobody's colour changes
+  blue:   { color: "#8fb0c8", soft: "#d8e3ea", ink: "#2f5470" },
+  green:  { color: "#7fad9c", soft: "#dce8d8", ink: "#2e5a4b" },
+  pink:   { color: "#f78a63", soft: "#fccfb6", ink: "#8a3a1c" },
+  orange: { color: "#f6a96f", soft: "#fde2c6", ink: "#8a4a1c" },
+  teal:   { color: "#79b4aa", soft: "#d6ebe5", ink: "#245e55" },
+  purple: { color: "#b39bd6", soft: "#ece2f6", ink: "#4f3f86" },
+  red:    { color: "#e9776a", soft: "#f9d3cc", ink: "#8b3027" },
+  yellow: { color: "#f5bd55", soft: "#fde0b7", ink: "#7a5410" }
 };
 // The grey for fixed and shared activities
 const GREY = { color: "#a9aebb", soft: "#f2f3f6", ink: "#4b5263" };

@@ -41,13 +41,15 @@ function drawBuddies() {
   const id = buddyId(), u = userById(id), h = scr.querySelector("h1.page-title, .home-date");
   const old = scr.querySelector(":scope .buddy-row"); if (old) old.remove();
   const subj = screen === "school" && typeof schoolView !== "undefined" && schoolView === "subject" ? plainWords((h && h.dataset.puffed) || "") : "";
-  const line = subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
+  const gapV = screen === "school" && typeof schoolView !== "undefined" && schoolView === "gaps";   // (🧭 v239: that page has its own thinking character)
+  const line = gapV ? null : subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
   if (h && pic && screen !== "home") h.insertAdjacentHTML("afterend", `<div class="buddy-row"><img src="${pic}" alt=""><div class="buddy-bub"><b>${safe(line[1].replace("{n}", u.name))}</b>${line[2] ? `<small>${safe(line[2].replace("{n}", u.name))}</small>` : ""}</div></div>`);
   const oldS = scr.querySelector(":scope > .buddy-strip"); if (oldS) oldS.remove();
   const words = STRIP_WORDS[screen], kids = (screen === "home" ? [u, ...otherKids(id)] : [u]).filter(k => charPic(k));   // (only my character, except on home)
-  if (words && kids.length) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
+  if (words && kids.length && !gapV) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
     `<figure><img src="${charPic(kids[i % kids.length], m)}" alt=""><figcaption>${w}</figcaption></figure>`).join("")}</div>`);
 }
+const gapsPill = () => { const k = userById(schoolKid) || {}; return [k.curriculum ? `${k.curriculum} curriculum` : "", gradeOf(schoolKid)].filter(Boolean).join(", ") || "what needs a little help"; };
 const plainWords = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F⬅️➡️›‹·]/gu, "").replace(/\s+/g, " ").trim();
 function puffBannerHtml(title, pill, mood) {
   const w = plainWords(title).split(" "), last = w.pop();
@@ -58,17 +60,21 @@ function puffTitles() {
   const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
   scr.querySelectorAll("h1.page-title").forEach(h => {
     const raw = h.dataset.puffed && h.querySelector(".pb-t") ? h.dataset.puffed : h.textContent, t = plainWords(raw);
-    const who = `${buddyId()}|${userById(buddyId()).avatar || ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
+    const who = `${buddyId()}|${userById(buddyId()).avatar || ""}|${screen === "school" && schoolView === "gaps" ? schoolKid : ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
     if (!t || (h.dataset.puffed === raw && h.dataset.puffWho === who && h.querySelector(".pb-t"))) return;
     h.dataset.puffWho = who;
-    const sub = screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
+    const sub = screen === "school" && schoolView === "gaps" ? gapsPill() : screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
     h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub); h.dataset.puffed = raw;
   });
   drawBuddies();   // 🌈 v233
 }
 // 🧸 v159 planner style (Broo2a's "Daily Planner" picture): 3D icons (icons/3d/<name>.png, cut from their icon set),
 //   ribbon titles, lined paper cards: ❤️ Top 3 (must-do habits first, then what's next) · 🕒 My schedule (+ a sticky note) · 💧 Habit tracker · a kind quote
-const ico3d = (n, cls = "") => `<img class="i3d ${cls}" src="icons/3d/${n}.png" alt="">`;
+// 🧸 v239 (Broo2a: "use all new icons"): old 3D icons swap to the new clay set wherever one fits
+const CLAY_SWAP = { calendar: "c-calendar", "k-calendar": "c-calendar", heart: "c-heart", "k-habits": "c-heart", excellent: "c-trophy", achieve: "c-trophy", medal: "c-trophy", milestone: "c-trophy",
+  paper: "c-shield", "k-stars": "c-star", school: "c-school", read: "c-book", study: "c-book", "k-study": "c-book", lesson: "c-book", time: "c-clock",
+  homework: "c-pencil", "k-ws": "c-pencil", practice: "c-pencil", exam: "c-pencil", basketball: "c-football", goal: "c-rocket", "k-goal": "c-rocket", "k-upload": "c-plus" };
+const ico3d = (n, cls = "") => `<img class="i3d ${cls} ${CLAY_SWAP[n] ? "i3d-clay" : ""}" src="icons/3d/${CLAY_SWAP[n] || n}.png" alt="">`;
 const ribbon = (txt, tone) => `<span class="pl-rib pl-rib-${tone}">${txt}</span>`;
 const KID_QUOTES = ["Small steps every day lead to big changes", "You are braver than you think", "Mistakes help you learn", "Try your best, that is enough", "Every day is a fresh start"];
 function kidPlannerHtml(u, today, hb) {
@@ -88,6 +94,14 @@ function kidPlannerHtml(u, today, hb) {
       <span class="pl-cups">${Array.from({ length: cups }, (_, i) => cup(i < full)).join("")}</span><small>${hb.all <= 10 ? `${hb.done} of ${hb.all} good habits today` : `${Math.round(hb.done / hb.all * 100)}% of today's habits done`}</small></button>` : ""}
     <div class="pl-quote">${ico3d("idea", "pl-qi")}<p>${quote}</p></div>`;
 }   // the part opened from the bottom bar on the home: "habits" | null
+// 🧸 v239 the clay icons (Broo2a's set, icons/3d/c-*.png) on a soft coloured square, by what the activity is
+const CLAY_ACT = [[/read|book|quran|story/i, "book", "g"], [/sheet|math|study|homework|revis|spell|english|science|arabic|lesson|tutor/i, "pencil", "b"],
+  [/foot|ball|swim|sport|gym|run|karate|tennis|bike|play/i, "football", "p"], [/school/i, "backpack", "y"], [/bed|sleep|prayer|pray/i, "clock", "l"], [/fun|game|free|party|gift/i, "star", "y"]];
+function clayAct(name, type) {
+  const hit = CLAY_ACT.find(([re]) => re.test(name || "")) || (type === "study" ? CLAY_ACT[1] : type === "sport" ? CLAY_ACT[2] : type === "free" || type === "family" ? CLAY_ACT[5] : null);
+  return hit ? `<span class="kh6-ic sq-${hit[2]}">${ico3d("c-" + hit[1], "kh6-i3")}</span>` : `<span class="kh6-ic">${actIcon3d(name, type, "kh6-i3")}</span>`;
+}
+const KID_BAR_CLAY = { Points: "c-trophy", Habits: "c-heart", "My day": "c-book", Community: "c-gift", Me: "c-starbox", More: "c-plus" };   // 🧸 v239 clay icons in the kid's menu
 function drawKidHome(u) {
   const p = lifetimePoints(u.id), L = levelOf(p), pct = levelPct(p), from = data.points.week, to = weekEnd();
   const today = todayItems(u.id), doneToday = today.filter(x => isDone(todayYmd(), x.id, u.id)).length;
@@ -111,27 +125,38 @@ function drawKidHome(u) {
   const row = x => { const ok = isDone(d0, x.id, u.id), isNext = next && x.id === next.id;
     return `<button class="kd3-row ${ok ? "done" : ""}" data-kidcal>${actIcon3d(x.name, x.type, "kd3-ic")}<span class="kd3-t"><b>${safe(x.name)}</b><small>${x.start >= 0 ? `${clock(x.start)} - ${clock(x.end)}` : "Any time"}</small></span>${
       ok ? `<span class="kd3-ok" aria-label="Done">✓</span>` : isNext && x.start >= 0 ? `<span class="kd3-at">${clock(x.start, true).toUpperCase()}</span>` : `<span class="kd3-todo"></span>`}</button>`; };
-  $("homeBig").innerHTML = `<div class="kh3-top"><h1>Hi ${safe(u.name)}!</h1><span>${dz({ weekday: "long" })}<br>${dz({ day: "numeric", month: "long" })}</span></div>
-    <div class="kh3-hero" style="--soft:${c.soft};--c:${c.color}">${faceAvatar(u) ? `<img class="k-hero-pic" src="${charPic(u, heroMood) || avatarSrc(u.avatar)}" alt="">` : `<button class="k-hero-pic k-hero-emoji k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
-      <div class="kh3-bub"><b>${safe(head)}</b><small>${safe(sub)}</small></div>
-      <div class="kh3-stats">${scoredUsers().some(x => x.id === u.id) ? `<button class="kh3-bar" data-sdpop="${safe(u.id)}" aria-label="My score this week: ${sc.overall}"><span>SCORE</span><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i><b>${sc.overall}</b></button>` : ""}
-      ${feat("buddy") && hasSpark(u.id) ? `<button class="kh3-spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}">${buddyRingSvg(pct)}<span class="ks-in"><small>✨ Spark</small><b>Lv ${L}</b><small>${pct}%</small></span></button>` : ""}</div>
-      <div class="kh3-say">${sayBoxHtml(u)}</div></div>
+  // 🌈 v239 (Broo2a's kid-home design, 28 Nov): hero (standing me · date pill · Hi Name! · today's line · 🔥 days · ★ +N this week · ✨ Lv) ·
+  //   MY SCORE + TODAY cards · My day list · 3 tiles (My Stars · School · Calendar). ⭐ points and 🎯 score stay apart (two different numbers).
+  const streak = dayStreak(u.id), pts = pointsByUser()[u.id] || 0, scored = scoredUsers().some(x => x.id === u.id);
+  const stand = faceAvatar(u) ? charPic(u, heroMood === "sleepy" ? "sleepy" : "happy") || avatarSrc(u.avatar) : "";   // v239 (Broo2a): just the face, small
+  const row6 = x => { const ok = isDone(d0, x.id, u.id), isNext = next && x.id === next.id, len = x.start >= 0 && x.end > x.start ? x.end - x.start : 0;
+    const when = x.start >= 0 ? (isNext && !ok ? `Next up · ${clock(x.start)}` : `${clock(x.start)}${len ? ` · ${len} min` : ""}`) : isNext && !ok ? "Next up · any time" : "Any time";
+    return `<button class="kh6-row ${ok ? "done" : ""}" data-kidcal>${clayAct(x.name, x.type)}<span class="kh6-t"><b>${safe(x.name)}</b><small>${when}</small></span><span class="kh6-box ${ok ? "ok" : ""}" aria-label="${ok ? "Done" : "Not done yet"}">${ok ? ico3d("c-check", "kh6-ck") : ""}</span></button>`; };
+  const tile6 = (cls, attr, icon, title, sub2) => `<button class="kh6-tile ${cls}" ${attr}><span class="kh6-ti">${icon}</span><b>${title}</b><small>${sub2}</small></button>`;
+  $("homeBig").innerHTML = `${homeLogoHtml()}<div class="kh6-hero" style="--soft:${c.soft};--c:${c.color}">${SPARKLES}${calTileHtml()}
+      ${stand ? `<img class="kh6-pic" src="${stand}" alt="">` : `<button class="kh6-pic k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
+      <div class="kh6-mid">
+        <h1 class="kh6-hi">Hi <em>${safe(u.name)}!</em></h1><p class="kh6-sub">${safe(head)}</p>
+        <div class="kh6-chips">${streak ? `<span class="kh6-chip fire">${ico3d("c-flame", "kh6-ci")}${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}<button class="kh6-chip pts" data-go="points">${ico3d("c-star", "kh6-ci")}+${pts} this week</button>${
+          feat("buddy") && hasSpark(u.id) ? `<button class="kh6-chip spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}">✨ Lv ${L} · ${pct}%</button>` : ""}</div></div></div>
+    <div class="kh6-two">${scored ? `<button class="kh6-stat sc" data-sdpop="${safe(u.id)}"><small>My score</small><b>${sc.overall}</b><i><em style="width:${Math.min(100, Math.round(sc.overall / (sc.max || 100) * 100))}%"></em></i></button>` : ""}
+      <button class="kh6-stat td" data-kidcal><small>Today</small><b>${doneToday}<span> of ${today.length}</span></b><i><em style="width:${today.length ? Math.round(doneToday / today.length * 100) : 0}%"></em></i></button></div>
     ${comingCardHtml(comingUp(u.id), false)}
-    <div class="kt3-grid">${tile3("kt3-blue", `data-school="${safe(u.id)}"`, ico3d("k-study"), "Study", "My school")}
-      ${tile3("kt3-yellow", "data-kidcal", ico3d("k-calendar"), "Calendar", "Today's plan")}
-      ${tile3("kt3-pink", `data-kidpanel="habits"`, ico3d("k-habits"), "Good habits", hb.all ? `${hb.done} of ${hb.all} done` : "None today")}
-      ${tile3("kt3-green", `data-go="points"`, ico3d("k-stars"), "My stars", `${pointsByUser()[u.id] || 0} this week`)}</div>
+    ${today.length || bedM != null ? `<div class="kh6-card"><div class="kh6-h"><b>My day</b><small>${today.length} ${today.length === 1 ? "thing" : "things"}</small></div>${today.slice(0, 8).map(row6).join("")}${today.length > 8 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}
+      ${bedM != null ? `<div class="kh6-bed"><span class="kh6-ic sq-l">${ico3d("c-clock", "kh6-i3")}</span><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : `<div class="kh6-card"><p class="kh6-sub">${safe(sub)}</p></div>`}
+    <div class="kh6-tiles">${tile6("y", `data-go="points"`, ico3d("c-star"), "My Stars", `${pts} this week`)}
+      ${tile6("b", `data-school="${safe(u.id)}"`, ico3d("c-backpack"), "School", "My subjects")}
+      ${tile6("p", "data-kidcal", ico3d("c-calendar"), "Calendar", "This week")}</div>
+    <div class="kh6-more"><button class="kh6-row" data-kidpanel="habits"><span class="kh6-ic sq-r">${ico3d("c-heart", "kh6-i3")}</span><span class="kh6-t"><b>Good habits</b><small>${hb.all ? `${hb.done} of ${hb.all} done today` : "None today"}</small></span><span class="kh6-go">${ico3d("c-chevron", "kh6-gi")}</span></button></div>
+    <div class="kh3-say">${sayBoxHtml(u)}</div>
     ${familySaysHtml(u.id)}
-    ${today.length || bedM != null ? `<div class="kd3-card"><div class="kd3-head">Today · ${safe(dayHead(d0))}</div>${today.slice(0, 8).map(row).join("")}${today.length > 8 ? `<button class="pl-more" data-kidcal>See all ${today.length}</button>` : ""}
-      ${bedM != null ? `<div class="kd3-bed"><b>Bedtime</b><span>${clock(bedM, true)}</span></div>` : ""}</div>` : ""}
     ${wishCardHtml(u)}`;
   $("homeMenu").hidden = true;
   const bar = [["data-go=\"points\"", "🏆", "Points"], ["data-kidpanel=\"habits\"", "⭐", "Habits"], ...(feat("diary") ? [["data-go=\"diary\"", "📔", "My day"]] : []),
                ...(feat("meeting") ? [[`data-extra="meeting"`, "🏡", "Community"]] : []), ["data-profile", "👤", "Me"], ["data-homemore", "☰", "More"]];
   $("homeHabits").innerHTML = (u.buddy || !feat("buddy") ? "" : buddyCardHtml(me))
     + `${free.count ? `<div class="card kid-week" style="--c:${colorsOf(u).color}">${free.count ? `<p class="kid-free">${freeLine(free)}</p>` : ""}</div>` : ""}
-    <nav class="kid-bar" aria-label="More">${bar.map(([attr, e, label]) => `<button ${attr} class="${(attr.includes("habits") && kidPanel === "habits") || (attr === "data-homemore" && homeMore) ? "on" : ""}"><span class="e">${e}</span><small>${label}</small></button>`).join("")}</nav>
+    <nav class="kid-bar" aria-label="More">${bar.map(([attr, e, label]) => `<button ${attr} class="${(attr.includes("habits") && kidPanel === "habits") || (attr === "data-homemore" && homeMore) ? "on" : ""}"><span class="e">${KID_BAR_CLAY[label] ? ico3d(KID_BAR_CLAY[label], "kb-clay") : e}</span><small>${label}</small></button>`).join("")}</nav>
     ${kidPanel === "habits" ? habitsCardHtml(me) + (feat("chores") ? choresTodayHtml(me) : "") || `<div class="card"><p class="sc-empty">No habits today.</p></div>` : ""}
     ${homeMore ? `<div class="menu kid-more">${moreTilesHtml()}</div>` : ""}`;
   $("homeCal").innerHTML = "";
@@ -280,6 +305,61 @@ function kidCardColors() {
     const c = !used.some(u => near(u.color, own.color)) ? own : (CARD_ORDER.map(n => PALETTE[n]).find(p => !used.some(u => near(u.color, p.color))) || own);
     used.push(c); out[k.id] = c; });
   return out;
+}
+// 🌈 v238 PARENT HOME (Broo2a's own design, 28 Nov): hero card · one row per kid with the STANDING character · This week chart · Needs you list.
+// ✨ little sparkles on the cards (Broo2a: "don't forget sparkles").
+const SPARKLES = `<span class="sp5" aria-hidden="true"><i></i><i></i><i></i></span>`;
+// 📅 v239 (Broo2a's picture): today as a little desk-calendar page (NOV · 28 · SAT)
+function calTileHtml() {
+  const dz = o => new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Dubai", ...o });
+  return `<span class="cal-tile" aria-label="${safe(dz({ weekday: "long", day: "numeric", month: "long" }))}"><b>${dz({ month: "short" }).toUpperCase()}</b><strong>${dz({ day: "numeric" })}</strong><small>${dz({ weekday: "short" }).toUpperCase()}</small></span>`;
+}
+// 🌈 v239 the ADROS logo, big, at the top of Home
+const homeLogoHtml = () => `<div class="home-logo"><img src="icons/logo-adros.webp" alt="ADROS"></div>`;
+function homeHeroHtml(u) {
+  const pic = charPic(u, "happy") || charPic(u, "wave");   // v239: just the face
+  return homeLogoHtml() + `<div class="ph5-hero ph6">${SPARKLES}${pic ? `<img class="ph6-pic" src="${pic}" alt="">` : `<span class="ph6-pic ph6-emo">${safe(u.emoji || "🙂")}</span>`}
+    <div class="ph5-r">${calTileHtml()}<h1 class="ph5-hi">Hi <em>${safe(u.name)}</em>!</h1><p class="ph5-sub">${kidsList().length ? "The kids are waiting for you" : "Let's set up your family"}</p>
+      <div class="ph5-say">${sayBoxHtml(u)}</div></div></div>`;
+}
+// One row per kid (Broo2a's design): standing character · name + emoji · today's bar · done / next dots · ⭐ this week · SCORE · 🔥 streak · today's line
+function kidRowHtml(k) {
+  const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), date = todayYmd(), now = dubaiMinutes(), items = todayItems(k.id);
+  const isD = x => isDone(date, x.id, k.id), done = items.filter(isD), pct = items.length ? Math.round(done.length / items.length * 100) : 0;
+  const all = items.length && done.length === items.length, pic = charPic(k, "stand") || charPic(k, all ? "proud" : "happy");
+  const next = items.find(x => !isD(x) && x.end > now), last = done[done.length - 1];
+  const nm = x => String(x.name).replace(/^\S+\s(?=\S)/u, m => /\p{Extended_Pictographic}/u.test(m) ? "" : m);
+  const dots = [last ? `<span class="kr5-dot ok">${safe(nm(last))} done</span>` : "", next ? `<span class="kr5-dot nx">${safe(nm(next))} ${next.start >= 0 && !last ? clock(next.start) : "next"}</span>` : ""].join("");
+  const streak = typeof dayStreak === "function" ? dayStreak(k.id) : 0, pts = pointsByUser()[k.id] || 0;
+  const L = hasSpark(k.id) ? levelOf(lifetimePoints(k.id)) : 0;
+  const line = !items.length ? "Nothing today" : all ? `All ${items.length} done today ✓` : `${done.length} of ${items.length} today${next ? ` · Next: ${nm(next)}${next.start >= 0 ? ` ${clock(next.start)}` : ""}` : ""}`;
+  return `<button class="kr5" data-kidpage="${safe(k.id)}" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}" aria-label="${safe(k.name)}: score ${sc.overall}. ${safe(line)}">${SPARKLES}
+    <span class="kr5-pic">${pic ? `<img src="${pic}" alt="">` : `<span class="kr5-face">${faceHtml(k)}</span>`}</span>
+    <span class="kr5-mid"><span class="kr5-name"><b>${safe(k.name)}</b><span class="kr5-emo">${safe(k.emoji || "")}</span>${stars().includes(k.id) ? `<span class="kr5-star">🌟 Star</span>` : ""}</span>
+      <span class="kr5-bar"><i style="width:${pct}%"></i></span>
+      <span class="kr5-info">${dots}<span class="kr5-wk">★ +${pts} this week</span></span>
+      <span class="kr5-foot">${streak ? `<span class="kr5-chip">🔥 ${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}${L ? `<span class="kr5-chip kr5-spark">✨ Lv ${L}</span>` : ""}<small>${safe(line)}</small></span></span>
+    <span class="kr5-sc"><small>Score</small><b>${sc.overall}</b></span></button>`;
+}
+// 📊 This week (family activity): ticks done by all the kids each day of this points week
+function homeWeekHtml() {
+  const kids = kidsList(); if (!kids.length) return "";
+  const cols = ["#8fb0c8", "#f5bd55", "#7fad9c", "#f78a63", "#b39bd6", "#e9776a", "#d9c3a5"], today = todayYmd();
+  const days = weekDates().map(d => ({ d, n: kids.reduce((t, k) => t + planDay(d).items.filter(it => it.people.includes(k.id) && !it.gone && isDone(d, it.actId, k.id)).length, 0) }));
+  const max = Math.max(1, ...days.map(x => x.n));
+  return `<div class="ph5-card ph5-week">${SPARKLES}<div class="ph5-h"><b>This week</b><small>Family activity</small></div>
+    <div class="ph5-bars">${days.map((x, i) => `<span class="ph5-col${x.d === today ? " today" : ""}${x.d > today ? " later" : ""}"><em>${x.n || ""}</em><i style="height:${Math.max(6, Math.round(x.n / max * 100))}%;--b:${cols[i % 7]}"></i><small>${DAYS[weekdayOf(x.d)][0]}</small></span>`).join("")}</div></div>`;
+}
+// 🔔 Needs you as a list card (a tap opens it, same as before)
+function homeNeedsHtml() {
+  if (needsOpen) return needsLineHtml();
+  const hid = needsHidden(), list = needsItems().filter(x => !hid[needsSig(x)]);
+  if (!list.length) return "";
+  const needClay = e => ({ ...CLAY_EMOJI, "🏫": "c-school", "📰": "c-news", "📌": "c-day", "🗞️": "c-news", "🧒": "c-starbox", "👦": "c-starbox", "👧": "c-starbox", "📚": "c-book", "🎯": "c-rocket", "💌": "c-gift", "🔥": "c-flame", "🕐": "c-clock", "⏰": "c-clock", "🌙": "c-clock" })[String(e).replace(/\uFE0F$/, "")] || CLAY_EMOJI[e];
+  const icoCols = ["#8fb0c8", "#f78a63", "#f5bd55", "#7fad9c", "#b39bd6"];
+  return `<div class="ph5-card ph5-needs"><div class="ph5-h"><b>${list.length} ${list.length === 1 ? "thing needs" : "things need"} you</b><small>Today</small></div>
+    ${list.map((x, i) => { const m = String(x.text).match(/^(\S+)\s+(.*)$/u), emo = m && /\p{Extended_Pictographic}/u.test(m[1]) ? m[1] : "🔔", txt = m && emo === m[1] ? m[2] : x.text;
+      return `<button class="ph5-need" data-needs="${safe(x.key)}">${needClay(emo) ? `<span class="ph5-ni ph5-ni-clay">${ico3d(needClay(emo))}</span>` : `<span class="ph5-ni" style="--b:${icoCols[i % icoCols.length]}">${safe(emo)}</span>`}<b>${safe(txt)}</b><span class="ph5-go" aria-hidden="true">›</span></button>`; }).join("")}</div>`;
 }
 function kidCardHtml(k) {
   const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);
@@ -637,12 +717,15 @@ function drawKidPage() {
   const secs = KID_SECS.filter(s => (s.id !== "habits" || habitsFor(k.id).length) && (s.id !== "moods" || feat("diary") || wishesListHtml(k.id)));
   if (kidSec && !secs.some(s => s.id === kidSec)) kidSec = null;
   if (kidSec) { $("kidBody").innerHTML = kidSectionHtml(k, kidSec); return plainHeads($("kidBody")); }
+  const KP_CLAY = { today: "c-day", habits: "c-heart", star: "c-star", score: "c-trophy", study: "c-book", points: "c-rocket", tasks: "c-check", school: "c-school",
+    tools: "c-pencil", work: "c-backpack", moods: "c-gift", report: "c-news" };   // 🧸 v239 clay icon per tile
+  const face = charPic(k, "happy");
   $("kidBody").innerHTML = `
     <div class="card kp-top" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-      <div class="kp-head"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="Score through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button><div><h1>${safe(k.emoji)} ${safe(k.name)}${e && moodFace(e.mood) ? ` ${moodFace(e.mood)}` : ""}${kidCardTags(k.id)}</h1>
+      <div class="kp-head"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="Score through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button>${face ? `<img class="kp-face" src="${face}" alt="">` : ""}<div><h1>${face ? "" : safe(k.emoji) + " "}${safe(k.name)}${e && moodFace(e.mood) ? ` ${moodFace(e.mood)}` : ""}${kidCardTags(k.id)}</h1>
         <small>${safe(kidTodayLine(k.id))}</small></div></div></div>
     <div class="kp-tiles" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">${secs.map(s => `<button class="kp-tile" data-kidsec="${s.id}">
-      <span class="e" aria-hidden="true">${s.emoji}</span><b>${s.label}</b><small>${safe(kidSecLine(k, s.id))}</small></button>`).join("")}</div>`;
+      <span class="e kp-clay" aria-hidden="true">${ico3d(KP_CLAY[s.id] || "c-star")}</span><b>${s.label}</b><small>${safe(kidSecLine(k, s.id))}</small></button>`).join("")}</div>`;
 }
 // A big button → only that part; "⬅️ All about …" (or ⬅️ Back on the page) → the menu. (Runs before the general taps, see taps.js)
 document.addEventListener("click", e => {

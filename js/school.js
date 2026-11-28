@@ -156,8 +156,9 @@ function drawSchool() {
   const views = { home: schoolHomeHtml, subject: schoolSubjectHtml, homework: schoolHomeworkHtml,
                   marks: schoolMarksHtml, reviews: schoolReviewsHtml, info: schoolInfoHtml, reports: schoolReportsHtml,
                   worksheet: schoolWorksheetHtml, explain: schoolExplainHtml, profile: schoolProfileHtml, brief: schoolBriefHtml, make: schoolMakeHtml,
-                  allws: schoolAllWsHtml };
+                  allws: schoolAllWsHtml, gaps: schoolGapsHtml };
   if (schoolView === "brief" && (!isDad || isKidDevice())) schoolView = "home";   // 📋 parents only
+  if (schoolView === "gaps") { $("schoolTitle").textContent = "Curriculum gaps"; $("schoolSub").textContent = ""; }   // 🧭 v239
   aiMounts = [];
   // (The 👤 profile isn't forced any more: only a missing 🏫 📚 🎓 basic is asked, one at a time, see askBasicHtml)
   const view = schoolView;
@@ -174,7 +175,7 @@ function drawSchool() {
 }
 
 // "🎒 School › ➗ Math › 📝 Worksheet" (tap a part to go back there)
-const VIEW_NAMES = { allws: "📝 All worksheets", make: "✏️ Make a worksheet", homework: "📝 Homework", marks: "📊 Marks", reviews: "⭐ Reviews", info: "🏫 School info", reports: "📄 Reports" };
+const VIEW_NAMES = { gaps: "Curriculum gaps", allws: "📝 All worksheets", make: "✏️ Make a worksheet", homework: "📝 Homework", marks: "📊 Marks", reviews: "⭐ Reviews", info: "🏫 School info", reports: "📄 Reports" };
 function crumbHtml(s) {
   if (schoolView === "home") return "";
   const parts = [["School", "home"]], f = schoolSubject && s.subjects[schoolSubject];
@@ -265,7 +266,9 @@ function schoolHomeHtml(s, isDad) {
   const looseHtml = loose.length ? `<div class="card bd-card"><h2>📂 School files</h2><ul class="list">${loose.map(x => fileRowHtml(x, s, true)).join("")}</ul></div>` : "";
   // 📝 Every worksheet of the kid, all subjects, with its score (the kid's own; a parent: look-only)
   const allWs = `<button class="ip-item" data-scgo="allws">${ico3d("k-ws")}<b>Worksheets</b><small>All of them</small></button>`;
-  const tools = `<section class="ip-sec"><span class="ip-rib ip-pink">School tools <i>🎀</i></span><div class="ip-panel ip-2">${up}${allWs}</div></section>`;
+  // 🧭 v239 Curriculum gaps (parents): every subject with a bar and Strong / Growing / Needs work
+  const gaps = isParentDevice() && list.length ? `<button class="ip-item" data-scgo="gaps">${ico3d("research")}<b>Curriculum gaps</b><small>What needs help</small></button>` : "";
+  const tools = `<section class="ip-sec"><span class="ip-rib ip-pink">School tools <i>🎀</i></span><div class="ip-panel ${gaps ? "ip-3" : "ip-2"}">${up}${allWs}${gaps}</div></section>`;
   return sess + tools + goalsLineHtml(schoolKid) + (list.length ? `<section class="ip-sec"><span class="ip-rib ip-butter">My subjects <i>★</i></span><div class="ip-panel ip-3">${list.map(x => subjectTileHtml(s, x)).join("")}</div></section>${looseHtml}${edit}`
     : edit ? `<div class="card"><p class="sc-empty">No subjects yet.</p>${edit}</div>` : `<div class="card"><p class="sc-empty">No subjects yet. ${look ? `Add them in ${safe(userById(schoolKid).name)}'s 👤 profile → ⚙️ Settings.` : "Add them in 👤 My profile → ⚙️ My settings."}</p>
       <div class="btnrow"><button class="pill" data-scprof="${safe(schoolKid)}">👤 Open the profile</button></div></div>`);
@@ -2164,7 +2167,7 @@ function schSetHtml() {
     <section class="ss-sec"><h3>${ico3d("school", "ss-hi")}About school</h3>${school}</section>
     <section class="ss-sec"><h3>${ico3d("study", "ss-hi")}Subjects to study</h3>${studyHtml}</section>
     <section class="ss-sec"><h3>${ico3d("homework", "ss-hi")}Extra worksheets a day</h3>${ws}<p class="hint">Worksheets in planned study sessions don't count.</p></section>
-    <section class="ss-sec"><h3>${ico3d("research", "ss-hi")}Compare with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${cmp}</section>
+    <section class="ss-sec"><h3>${ico3d("research", "ss-hi")}Compare with the official curriculum</h3><p class="hint">Pick a subject: see what school covered and what's missing.</p>${subs.length ? `<button type="button" class="ss-addbtn" data-ssgaps>🧭 See all subjects: Curriculum gaps</button>` : ""}${cmp}</section>
     ${edit ? `<div class="btnrow"><button type="button" class="primary" data-sssave>💾 Save</button></div>` : ""}</div>`;
 }
 function openSchoolSet(kid) {
@@ -2189,10 +2192,11 @@ function saveSchoolSet() {
   qePopClose(); keepNow(); toast(`🏫 Saved for ${u.name}.${added ? ` 📚 ${added} ${u.curriculum} ${added === 1 ? "subject" : "subjects"} added.` : ""}`, 3500);
 }
 document.addEventListener("click", e => {
-  const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp], [data-sssub], [data-ssunadd], [data-ssnew], [data-ssaddtyped]");
+  const b = e.target.closest && e.target.closest("[data-schoolset], [data-sskid], [data-ssper], [data-ssstep], [data-sssave], [data-sscmp], [data-ssgaps], [data-sssub], [data-ssunadd], [data-ssnew], [data-ssaddtyped]");
   if (!b) return;
   const ds = b.dataset;
   if ("schoolset" in ds) return openSchoolSet(ds.schoolset);
+  if ("ssgaps" in ds) { const kid = schSetKid; qePopClose(); schoolKid = kid; go("school"); return goSchool("gaps"); }   // 🧭 v239
   if (ds.sscmp) {   // 📊 that subject's page → 📚 Topics → Compare
     const kid = schSetKid, f = schoolOf(kid).subjects[ds.sscmp];
     if (!f) return;

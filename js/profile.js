@@ -480,9 +480,17 @@ function setupSignOutButtons() {
 }
 // 🌈 v233 (Broo2a's picture): the top buttons sit in ONE white bar · ⬅ Back square · Home + School pills · the rest = round
 // buttons with their name under them (Calendar, News, Sign out, Print …). Done once per button (rb-done).
+// 🧸 v239 the top bar's emoji → Broo2a's clay icons
+const CLAY_EMOJI = { "📅": "c-calendar", "🗓️": "c-calendar", "🔔": "c-bell", "🚪": "c-signout", "🎒": "c-backpack", "⭐": "c-star", "🏆": "c-trophy", "➕": "c-plus", "✏️": "c-pencil" };
+// 🧸 v239 a habit's clay icon from its name (prayers, teeth, clothes, reading …), else its emoji stays
+const HABIT_CLAY = [[/pray|salah|quran/i, "c-star"], [/read|book|story/i, "c-book"], [/teeth|brush|wash|shower|clean|clothes|tidy|bed/i, "c-check"], [/hug|love|kind|thank|help/i, "c-heart"],
+  [/home ?work|study|worksheet|write/i, "c-pencil"], [/sport|run|play|exercise|football/i, "c-football"], [/water|eat|fruit|lunch|breakfast/i, "c-gift"], [/sleep|wake|early/i, "c-clock"]];
+const habitClay = h => (HABIT_CLAY.find(([re]) => re.test(h.name || "")) || [])[1] || "";
+const clayOrEmoji = e => CLAY_EMOJI[e] ? `<img class="rb-clay" src="icons/3d/${CLAY_EMOJI[e]}.png" alt="">` : e;
 function tidyBars() {
   document.querySelectorAll(".screen .bar").forEach(bar => {
     bar.classList.add("bar3");
+    bar.querySelectorAll("button.sch-btn:not(.rb-clayed)").forEach(b => { b.classList.add("rb-clayed"); b.innerHTML = b.innerHTML.replace("🎒", clayOrEmoji("🎒")); });
     bar.querySelectorAll("button.pill").forEach(b => {
       if (b.classList.contains("rb-done") || b.hasAttribute("data-navback") || b.classList.contains("sch-btn")) return;
       b.classList.add("rb-done");
@@ -491,7 +499,7 @@ function tidyBars() {
       const m = txt.match(/^(\S+)\s+(.+)$/);
       if (!m) return;
       b.classList.add(b.getAttribute("data-go") === "home" ? "rb-home" : "rb");
-      b.innerHTML = `<span class="rb-ic" aria-hidden="true">${m[1]}</span><span class="rb-l">${m[2]}</span>`;
+      b.innerHTML = `<span class="rb-ic${CLAY_EMOJI[m[1]] ? " clay" : ""}" aria-hidden="true">${clayOrEmoji(m[1])}</span><span class="rb-l">${m[2]}</span>`;
       keep.forEach(k => b.appendChild(k));
       if (!b.getAttribute("aria-label")) b.setAttribute("aria-label", m[2]);
     });
@@ -631,13 +639,13 @@ function maybeShowStar() {
   const pics = win.map(id => charPic(userById(id), "stand") || charPic(userById(id), "confetti")).filter(Boolean);
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
   $("kCard").innerHTML = `<div class="sp3-bunting" aria-hidden="true">${["#f2a7c3", "#f2c14e", "#8fcf8a", "#b9a3e8", "#7fc4d6", "#ee8a7d", "#f2c14e"].map(c => `<i style="--b:${c}"></i>`).join("")}</div>
-    <div class="sp3-star" aria-hidden="true"><img src="icons/3d/k-stars.png" alt=""></div>
+    <div class="sp3-star" aria-hidden="true"><img src="icons/3d/c-star.png" alt=""></div>
     <div class="sp3-title">Shining Star<br>of the Week!</div><p class="sp3-hip">Hip hip hooray!</p>
     ${pics.length ? `<div class="sp3-stage">${pics.map(src => `<img class="sp3-char" src="${src}" alt="">`).join("")}<div class="sp3-podium">1</div></div>` : `<div class="sp3-podium solo">1</div>`}
     <div class="sp3-name">${win.map(id => safe(userById(id).name)).join(" & ")}</div><p class="sp3-sub">${win.length > 1 ? "Our superstars!" : "Our superstar!"}</p>
     <div class="sp3-board">${rows}</div>
     <p class="sp3-note">Well done everyone! A new week starts at midnight. Good luck!${win.includes(me) ? "<br><b>🎁 Choose your gift in My Stars!</b>" : ""}</p>
-    <button class="k-ok sp3-yay" id="kOk"><img src="icons/3d/k-stars.png" alt=""> Yay!</button>`;
+    <button class="k-ok sp3-yay" id="kOk"><img src="icons/3d/c-star.png" alt=""> Yay!</button>`;
   $("kModal").classList.add("star-pop");
   $("kModal").hidden = false;
 }
@@ -964,7 +972,7 @@ function myStarsHtml(id) {
   const hs = habitsFor(id), mark = h => data.habitMarks[habitKey(today, h.id, id)];
   const habits = hs.map(h => { const v = mark(h), full = habitDone(h, v), multi = h.kind === "prayers" || h.kind === "water";
     const n = h.kind === "prayers" ? (Array.isArray(v) ? v.filter(Boolean).length : 0) : (v || 0), of = h.kind === "prayers" ? PRAYERS.length : WATER_DROPS;
-    return `<div class="ms-hab${full ? " on" : ""}"><span class="ms-hico">${safe(h.emoji)}</span><span class="ms-htxt"><b>${safe(h.name)}</b><small>${full ? "Done today" : multi ? `${n} of ${of} today` : "Not yet"}</small></span>
+    return `<div class="ms-hab${full ? " on" : ""}"><span class="ms-hico ${habitClay(h) ? "ms-clay" : ""}">${habitClay(h) ? ico3d(habitClay(h)) : safe(h.emoji)}</span><span class="ms-htxt"><b>${safe(h.name)}</b><small>${full ? "Done today" : multi ? `${n} of ${of} today` : "Not yet"}</small></span>
       ${multi ? `<span class="ms-tick${full ? " on" : ""}" aria-hidden="true">${full ? "✓" : ""}</span>`
         : `<button class="ms-tick${full ? " on" : ""}" data-hb="${safe(id)}|${safe(h.id)}|0" aria-pressed="${full}" aria-label="${safe(h.name)}">${full ? "✓" : ""}</button>`}</div>`; }).join("");
   const star = stars(), fi = fairInfo(), lead = fairOrder(Object.fromEntries(Object.entries(fi).map(([k, x]) => [k, x.fair])))[0];
@@ -1044,14 +1052,14 @@ function drawHome() {
   $("homeDate").className = "home-date" + (isParentDevice() ? "" : " kid");
   // 🫧 v159: the date in the middle, in the puffy banner: "Thursday" (pink) · "5 November" (purple) · a soft pill
   $("homeDate").className += " puff-banner pb-home";
-  $("homeSay").innerHTML = exists(me) && isParentDevice() ? sayBoxHtml(u) : "";   // 💬 v233 my own line for the family
+  $("homeSay").innerHTML = "";   // (💬 v238 a parent's own line sits in the hero card now)
   $("scr-home").classList.toggle("p-home3", isParentDevice());
   if (isParentDevice()) {   // 🌈 v233 (Broo2a's picture): a white date card with the ADROS badge · my character waving, big
     $("homeDate").className = "home-date hd3";
-    $("homeDate").innerHTML = `<img class="hd-logo" src="icons/logo-adros.webp" alt="ADROS"><span class="hd-wd">${dz({ weekday: "long" })}</span><span class="hd-d">${dz({ day: "numeric", month: "long" })}</span>`;
+    $("homeDate").className = "home-date ph5";   // 🌈 v238 Broo2a's own design: the hero card (date · Hi · my line · ADROS)
+    $("homeDate").innerHTML = homeHeroHtml(u);
     if (charPic(u)) $("homeFace").innerHTML = `<img class="hello-char" src="${charPic(u, "wave")}" alt="">` + starBadge(me);
-  } else $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
-    <span class="bub-pill">${PUFF_PILLS.home}</span>`;
+  } else { $("homeDate").className = "home-date kh6-off"; $("homeDate").innerHTML = ""; }   // 🌈 v239 a kid: the date is in the hero card now
   const myPoints = pointsByUser()[me], myFair = scoreText(scoreOf(me));
   $("homePoints").textContent = (stars().includes(me) ? `🌟 Shining Star of the Week · ⭐ Score ${myFair} · ${myPoints} points` : `⭐ Score ${myFair} · ${myPoints} points this week`)
     + ` · ${kindsText(weekKinds(me))}`;
@@ -1074,8 +1082,8 @@ function drawHome() {
   $("homeNote").hidden = true;
   $("homeBig").hidden = false;
   $("homeBig").className = "p-home";
-  $("homeBig").innerHTML = needsLineHtml() + `<div class="kid-cards">${kidsList().map(kidCardHtml).join("")}</div>${kidsList().length ? "" : kidSetupHtml()}`
-    + familyRowHtml();
+  $("homeBig").innerHTML = `<div class="kid-cards kr5-list">${kidsList().map(kidRowHtml).join("")}</div>${kidsList().length ? "" : kidSetupHtml()}`
+    + homeWeekHtml() + homeNeedsHtml() + familyRowHtml();
   $("homeMenu").hidden = true;   // (v155: no ☰ More / ✏️ Add menus on a parent's home: everything is in the list above)
   $("homeMenu").innerHTML = "";
   $("homeHabits").innerHTML = "";

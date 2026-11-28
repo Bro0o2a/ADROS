@@ -2623,3 +2623,64 @@ function exAction(act) {
     leaveAiDoc();
   }
 }
+
+// ---------- 🧭 v239 CURRICULUM GAPS (Broo2a's design, 28 Nov): one page per kid, a card per subject ----------
+// Each subject: a bar (its average score, else how much of the official list is practised) + a chip
+// 🟢 Strong (80 %+) · 🟡 Growing · 🔴 Needs work (under 60 %, or a 🔴 topic) · ⚪ Not started. The thinking character says the weakest
+// and the strongest subject. "Suggested this week": the weakest subject's 🔴 (else not-practised) topics; "Add to X's week" sets that
+// subject's 🎯 worksheet goal to at least 3 a week (the same goal as on the subject page).
+const GAP_CHIP = { strong: ["Strong", "cg-ok"], growing: ["Growing", "cg-mid"], needs: ["Needs work", "cg-low"], none: ["Not started", "cg-none"] };
+function gapStats(kid, s, f) {
+  const rows = topicRows(kid, s, f), avgOf = t => meanPct(t.info.results.slice(-3).map(x => x.pct));
+  const done = rows.filter(t => t.info.results.length), avg = done.length ? meanPct(done.map(avgOf)) : null;
+  const needs = rows.filter(t => t.st === "needs").sort((a, b) => avgOf(a) - avgOf(b));
+  let cover = rows.length ? Math.round(rows.filter(t => t.st !== "new").length / rows.length * 100) : 0, missed = [];
+  const m = s.map && s.map[f.id];
+  if (m && m.list.length) {
+    const all = compareRows(kid, s, f).units.flatMap(u => u.parts);
+    if (all.length) cover = Math.round(all.filter(p => p.n).length / all.length * 100);
+    missed = all.filter(p => (p.taught || p.unitTaught) && !p.n).map(p => p.title);
+  }
+  const st = avg == null ? "none" : avg < 60 || needs.length ? "needs" : avg >= 80 ? "strong" : "growing";
+  const worst = done.length ? Math.min(...done.map(avgOf)) : 101;
+  return { f, rows, avg, needs, cover, missed, st, worst, bar: avg != null ? avg : cover };
+}
+function schoolGapsHtml(s, isDad, u) {
+  const kid = schoolKid, name = safe(u.name), list = subjectList(s).map(f => gapStats(kid, s, f));
+  if (!list.length) return `<div class="card"><p class="sc-empty">No subjects yet. Add them in 🏫 School settings.</p></div>`;
+  const scored = list.filter(x => x.avg != null).sort((a, b) => a.avg - b.avg);
+  const weak = [...list].filter(x => x.needs.length).sort((a, b) => a.worst - b.worst)[0] || scored.find(x => x.st !== "strong") || list.find(x => x.missed.length) || null;
+  const best = scored.length ? scored[scored.length - 1] : null, wName = weak && (weak.needs.length ? topicShort(weak.needs[0].title) : weak.f.name);
+  const say = [weak ? `<b>${safe(wName)} ${/s$/i.test(wName) && !/ss$/i.test(wName) ? "need" : "needs"} a little help</b>` : `<b>No gaps found so far</b>`,
+    best && best !== weak ? `${safe(best.f.name)} is going great 🌟` : scored.length ? "" : `A few worksheets first, then I can tell you more.`].filter(Boolean).join("<br>");
+  const pic = charPic(u, "think") || charPic(u);
+  const hero = `<div class="cg-hero"><span class="cg-pic">${SPARKLES}${pic ? `<img src="${pic}" alt="">` : `<span class="cg-emo">${safe(u.emoji)}</span>`}</span><p class="cg-bub">${say}</p></div>`;
+  const card = x => { const [label, cls] = GAP_CHIP[x.st], n = x.needs.length + x.missed.length;
+    return `<button type="button" class="cg-row" data-cgsub="${safe(x.f.id)}"><span class="cg-top"><b>${safe(x.f.name)}</b><span class="cg-chip ${cls}">${label}</span></span>
+      <span class="cg-bar ${cls}"><i style="width:${Math.max(4, x.bar)}%"></i></span>
+      <small>${x.avg != null ? `Average ${x.avg}%` : `${x.rows.length} ${x.rows.length === 1 ? "topic" : "topics"}`}${n ? ` · ${n} to practise` : ""}</small></button>`; };
+  const low = x => x.rows.filter(t => t.info.results.length && t.st !== "mastered").sort((a, b) => meanPct(a.info.results.slice(-3).map(r => r.pct)) - meanPct(b.info.results.slice(-3).map(r => r.pct))).map(t => t.title);
+  const pickT = weak ? (weak.needs.length ? weak.needs.map(t => t.title) : weak.missed.length ? weak.missed : low(weak)).slice(0, 3) : [];
+  const goal = weak && weak.f.goal || 0;
+  const sugg = weak && pickT.length ? `<div class="cg-sug"><span class="cg-sh">Suggested this week</span>
+      <p><b>${safe(weak.f.name)}: ${safe(pickT.map(topicShort).join(", "))}</b></p><small>3 short worksheets this week${goal >= 3 ? ` · already ${goal} a week 🎯` : ""}</small></div>
+      ${isParentDevice() ? `<button type="button" class="cg-add" data-cgadd="${safe(weak.f.id)}">Add to ${name}'s week</button>` : ""}` : "";
+  return `<div class="cg-page">${hero}<h3 class="cg-h">Topics</h3><div class="cg-list">${list.map(card).join("")}</div>${sugg}
+    <p class="hint cg-tip">Tap a subject to see each topic next to the official curriculum.</p></div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-cgsub], [data-cgadd]");
+  if (!b) return;
+  const kid = schoolKid, s = schoolOf(kid);
+  if (b.dataset.cgsub) {   // → that subject's 📊 Compare (the old table)
+    if (!s.subjects[b.dataset.cgsub]) return;
+    goSchool("subject", b.dataset.cgsub);
+    stSub = b.dataset.cgsub; stSec = "topics"; stPick = []; stFilter = "all"; stOpen = null; stWs = false; stFiles = false; stMapPick = []; stCmp = true; stCmpPick = [];
+    return render();
+  }
+  if (!isParentDevice()) return;
+  const x = schoolFor(kid).subjects[b.dataset.cgadd];
+  if (!x) return;
+  x.goal = Math.max(3, x.goal || 0); keepNow();
+  toast(`🎯 Added: ${x.name}, ${x.goal} worksheets a week for ${kidNameOf(kid)}.`, 3000, null, [kid, "proud"]);
+});

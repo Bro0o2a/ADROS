@@ -55,7 +55,9 @@ const SET_GROUPS = [
     ["kidHabitsCard", "svg:check", "#dff0d6", "Kids' habits", "The daily checklist"], ["featCard", "svg:sliders", "#fde3ea", "Features", "Pick what the app shows"],
     ["setNotify", "svg:phone", "#f3ebe2", "Notifications", "On this device"]]]];
 const SET_INK = { "#dff0d6": "#3f7d3a", "#fde3ea": "#b1455c", "#e1ecfa": "#3d6aa6", "#fbf0d4": "#9a6b12", "#efe6fb": "#6f4fa8", "#fdeacc": "#b0661c", "#e3e0f7": "#5b4fa0", "#f3ebe2": "#7a6656" };
-const setIcon = (ic, bg) => `<span class="set3-ic" style="background:${bg};color:${SET_INK[bg] || "#5c422b"}">${ic.startsWith("svg:")
+// 🧸 v239 (Broo2a "use all new icons"): the line icons become clay icons too, no coloured square
+const SET_CLAY = { sync: "c-shield", save: "c-starbox", sun: "c-clock", list: "c-check", star: "c-star", moon: "c-day", check: "c-check", sliders: "c-pencil", phone: "c-bell" };
+const setIcon = (ic, bg) => SET_CLAY[ic.slice(4)] || !ic.startsWith("svg:") ? `<span class="set3-ic set3-clay">${ico3d(SET_CLAY[ic.slice(4)] || ic)}</span>` : `<span class="set3-ic" style="background:${bg};color:${SET_INK[bg] || "#5c422b"}">${ic.startsWith("svg:")
   ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SET_SVG[ic.slice(4)]}</svg>` : ico3d(ic)}</span>`;
 const setRowInner = (ic, bg, title, sub, extra = "") => `${setIcon(ic, bg)}<span class="set3-t"><b>${title}</b><small>${safe(sub)}</small></span>${extra}<span class="set3-go" aria-hidden="true">›</span>`;
 const setOpen = new Set();
