@@ -4930,3 +4930,8 @@ button.kh6-tile { all: unset; box-sizing: border-box; cursor: pointer; display: 
 .kh6-bed .kh6-ic.sq-l { background: #e4d6f5; }
 .kh6-chip { display: inline-flex; align-items: center; white-space: nowrap; }
 .kh6-chip .kh6-ci { margin-right: 6px; vertical-align: 0; }
+/* 🧸 v239 (Broo2a): the clay icons stand on their own, no coloured square behind */
+.kh6-ic, .kh6-ic[class*="sq-"], .kh6-bed .kh6-ic.sq-l { background: none !important; box-shadow: none !important; }
+.kh6-ic .kh6-i3 { width: 50px; height: 50px; }
+.kh6-ti, .kh6-tile .kh6-ti { background: none !important; box-shadow: none !important; }
+.kh6-ti .i3d { width: 64px; height: 64px; }
