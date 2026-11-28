@@ -41,13 +41,15 @@ function drawBuddies() {
   const id = buddyId(), u = userById(id), h = scr.querySelector("h1.page-title, .home-date");
   const old = scr.querySelector(":scope .buddy-row"); if (old) old.remove();
   const subj = screen === "school" && typeof schoolView !== "undefined" && schoolView === "subject" ? plainWords((h && h.dataset.puffed) || "") : "";
-  const line = subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
+  const gapV = screen === "school" && typeof schoolView !== "undefined" && schoolView === "gaps";   // (🧭 v239: that page has its own thinking character)
+  const line = gapV ? null : subj ? ["think", `Let's practise ${subj}, {n}!`, "A little every day makes it easy"] : BUDDY_LINES[screen], pic = line && charPic(u, line[0]);
   if (h && pic && screen !== "home") h.insertAdjacentHTML("afterend", `<div class="buddy-row"><img src="${pic}" alt=""><div class="buddy-bub"><b>${safe(line[1].replace("{n}", u.name))}</b>${line[2] ? `<small>${safe(line[2].replace("{n}", u.name))}</small>` : ""}</div></div>`);
   const oldS = scr.querySelector(":scope > .buddy-strip"); if (oldS) oldS.remove();
   const words = STRIP_WORDS[screen], kids = (screen === "home" ? [u, ...otherKids(id)] : [u]).filter(k => charPic(k));   // (only my character, except on home)
-  if (words && kids.length) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
+  if (words && kids.length && !gapV) scr.insertAdjacentHTML("beforeend", `<div class="buddy-strip" aria-hidden="true">${words.map(([m, w], i) =>
     `<figure><img src="${charPic(kids[i % kids.length], m)}" alt=""><figcaption>${w}</figcaption></figure>`).join("")}</div>`);
 }
+const gapsPill = () => { const k = userById(schoolKid) || {}; return [k.curriculum ? `${k.curriculum} curriculum` : "", gradeOf(schoolKid)].filter(Boolean).join(", ") || "what needs a little help"; };
 const plainWords = t => String(t || "").replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u200D\uFE0F⬅️➡️›‹·]/gu, "").replace(/\s+/g, " ").trim();
 function puffBannerHtml(title, pill, mood) {
   const w = plainWords(title).split(" "), last = w.pop();
@@ -58,10 +60,10 @@ function puffTitles() {
   const scr = document.querySelector(".screen:not([hidden])"); if (!scr) return;
   scr.querySelectorAll("h1.page-title").forEach(h => {
     const raw = h.dataset.puffed && h.querySelector(".pb-t") ? h.dataset.puffed : h.textContent, t = plainWords(raw);
-    const who = `${buddyId()}|${userById(buddyId()).avatar || ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
+    const who = `${buddyId()}|${userById(buddyId()).avatar || ""}|${screen === "school" && schoolView === "gaps" ? schoolKid : ""}`;   // (🎭 v233: draw again when someone else uses the app or picks a new character)
     if (!t || (h.dataset.puffed === raw && h.dataset.puffWho === who && h.querySelector(".pb-t"))) return;
     h.dataset.puffWho = who;
-    const sub = screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
+    const sub = screen === "school" && schoolView === "gaps" ? gapsPill() : screen === "school" && schoolView === "subject" ? (SUBJECT_PILLS.find(([re]) => re.test(t)) || [0, "you can do it!"])[1] : PUFF_PILLS[screen] || "";
     h.classList.add("puff-banner"); h.innerHTML = puffBannerHtml(raw, sub); h.dataset.puffed = raw;
   });
   drawBuddies();   // 🌈 v233
