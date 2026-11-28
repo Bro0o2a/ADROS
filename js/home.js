@@ -333,15 +333,15 @@ function kidRowHtml(k) {
   const streak = typeof dayStreak === "function" ? dayStreak(k.id) : 0, pts = pointsByUser()[k.id] || 0;
   const L = hasSpark(k.id) ? levelOf(lifetimePoints(k.id)) : 0;
   const line = !items.length ? "Nothing today" : all ? `All ${items.length} done today ✓` : `${done.length} of ${items.length} today${next ? ` · Next: ${nm(next)}${next.start >= 0 ? ` ${clock(next.start)}` : ""}` : ""}`;
-  return `<button class="kr5" data-kidpage="${safe(k.id)}" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}" aria-label="${safe(k.name)}: score ${sc.overall}. ${safe(line)}">${SPARKLES}
+  return `<div class="kr5-box" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><button class="kr5" data-kidpage="${safe(k.id)}" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}" aria-label="${safe(k.name)}: score ${sc.overall}. ${safe(line)}">${SPARKLES}
     <span class="kr5-pic">${pic ? `<img src="${pic}" alt="">` : `<span class="kr5-face">${faceHtml(k)}</span>`}</span>
     <span class="kr5-mid"><span class="kr5-name"><b>${safe(k.name)}</b><span class="kr5-emo">${safe(k.emoji || "")}</span>${stars().includes(k.id) ? `<span class="kr5-star">🌟 Star</span>` : ""}</span>
       <span class="kr5-bar"><i style="width:${pct}%"></i></span>
       <span class="kr5-info">${dots}<span class="kr5-wk">★ +${pts} this week</span></span>
       <span class="kr5-foot">${streak ? `<span class="kr5-chip">🔥 ${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}${L ? `<span class="kr5-chip kr5-spark">✨ Lv ${L}</span>` : ""}<small>${safe(line)}</small></span></span>
     <span class="kr5-sc"><small>Score</small><b>${sc.overall}</b></span></button>
-    <div class="kr5-acts" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><button class="kr5-act" data-viewcal="${safe(k.id)}">${ico3d("c-calendar")}<b>Calendar</b></button>
-      <button class="kr5-act" data-school="${safe(k.id)}">${ico3d("c-school")}<b>School</b></button></div>`;   // 🧸 v240 (Broo2a): Calendar + School for every kid
+    <div class="kr5-acts"><button class="kr5-act" data-viewcal="${safe(k.id)}">${ico3d("c-calendar")}<b>Calendar</b></button>
+      <button class="kr5-act" data-school="${safe(k.id)}">${ico3d("c-school")}<b>School</b></button></div></div>`;   // 🧸 v240 (Broo2a): Calendar + School for every kid
 }
 // 📊 This week (family activity): ticks done by all the kids each day of this points week
 function homeWeekHtml() {
