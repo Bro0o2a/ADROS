@@ -5001,3 +5001,5 @@ h1.kh6-hi, .ph6 h1.ph5-hi { font-size: 28px !important; margin-top: 4px !importa
 #scr-home .kh6-hero .cal-tile, #scr-home .ph6 .cal-tile { width: 54px !important; }
 #scr-home .kh6-hero .cal-tile strong, #scr-home .ph6 .cal-tile strong { font-size: 22px !important; }
 #scr-home .kh6-hero .cal-tile b, #scr-home .ph6 .cal-tile b, #scr-home .kh6-hero .cal-tile small, #scr-home .ph6 .cal-tile small { font-size: 11px !important; }
+.ph5-ni.ph5-ni-clay { background: none !important; box-shadow: none !important; }
+.ph5-ni-clay .i3d { width: 46px; height: 46px; object-fit: contain; }

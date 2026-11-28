@@ -70,7 +70,11 @@ function puffTitles() {
 }
 // 🧸 v159 planner style (Broo2a's "Daily Planner" picture): 3D icons (icons/3d/<name>.png, cut from their icon set),
 //   ribbon titles, lined paper cards: ❤️ Top 3 (must-do habits first, then what's next) · 🕒 My schedule (+ a sticky note) · 💧 Habit tracker · a kind quote
-const ico3d = (n, cls = "") => `<img class="i3d ${cls}" src="icons/3d/${n}.png" alt="">`;
+// 🧸 v239 (Broo2a: "use all new icons"): old 3D icons swap to the new clay set wherever one fits
+const CLAY_SWAP = { calendar: "c-calendar", "k-calendar": "c-calendar", heart: "c-heart", "k-habits": "c-heart", excellent: "c-trophy", achieve: "c-trophy", medal: "c-trophy", milestone: "c-trophy",
+  paper: "c-shield", "k-stars": "c-star", school: "c-backpack", read: "c-book", study: "c-book", "k-study": "c-book", lesson: "c-book", time: "c-clock",
+  homework: "c-pencil", "k-ws": "c-pencil", practice: "c-pencil", exam: "c-pencil", basketball: "c-football", goal: "c-rocket", "k-goal": "c-rocket", "k-upload": "c-plus" };
+const ico3d = (n, cls = "") => `<img class="i3d ${cls} ${CLAY_SWAP[n] ? "i3d-clay" : ""}" src="icons/3d/${CLAY_SWAP[n] || n}.png" alt="">`;
 const ribbon = (txt, tone) => `<span class="pl-rib pl-rib-${tone}">${txt}</span>`;
 const KID_QUOTES = ["Small steps every day lead to big changes", "You are braver than you think", "Mistakes help you learn", "Try your best, that is enough", "Every day is a fresh start"];
 function kidPlannerHtml(u, today, hb) {
@@ -351,10 +355,11 @@ function homeNeedsHtml() {
   if (needsOpen) return needsLineHtml();
   const hid = needsHidden(), list = needsItems().filter(x => !hid[needsSig(x)]);
   if (!list.length) return "";
+  const needClay = e => ({ ...CLAY_EMOJI, "🏫": "c-backpack", "📰": "c-book", "🧒": "c-starbox", "👦": "c-starbox", "👧": "c-starbox", "📌": "c-pencil", "📚": "c-book", "🎯": "c-rocket", "💌": "c-gift", "🔥": "c-flame", "🕐": "c-clock", "⏰": "c-clock", "🌙": "c-clock" })[String(e).replace(/\uFE0F$/, "")] || CLAY_EMOJI[e];
   const icoCols = ["#8fb0c8", "#f78a63", "#f5bd55", "#7fad9c", "#b39bd6"];
   return `<div class="ph5-card ph5-needs"><div class="ph5-h"><b>${list.length} ${list.length === 1 ? "thing needs" : "things need"} you</b><small>Today</small></div>
     ${list.map((x, i) => { const m = String(x.text).match(/^(\S+)\s+(.*)$/u), emo = m && /\p{Extended_Pictographic}/u.test(m[1]) ? m[1] : "🔔", txt = m && emo === m[1] ? m[2] : x.text;
-      return `<button class="ph5-need" data-needs="${safe(x.key)}"><span class="ph5-ni" style="--b:${icoCols[i % icoCols.length]}">${safe(emo)}</span><b>${safe(txt)}</b><span class="ph5-go" aria-hidden="true">›</span></button>`; }).join("")}</div>`;
+      return `<button class="ph5-need" data-needs="${safe(x.key)}">${needClay(emo) ? `<span class="ph5-ni ph5-ni-clay">${ico3d(needClay(emo))}</span>` : `<span class="ph5-ni" style="--b:${icoCols[i % icoCols.length]}">${safe(emo)}</span>`}<b>${safe(txt)}</b><span class="ph5-go" aria-hidden="true">›</span></button>`; }).join("")}</div>`;
 }
 function kidCardHtml(k) {
   const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);

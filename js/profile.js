@@ -635,13 +635,13 @@ function maybeShowStar() {
   const pics = win.map(id => charPic(userById(id), "stand") || charPic(userById(id), "confetti")).filter(Boolean);
   $("kCard").style.cssText = "--soft:#fef3c7;--ink:#92400e";
   $("kCard").innerHTML = `<div class="sp3-bunting" aria-hidden="true">${["#f2a7c3", "#f2c14e", "#8fcf8a", "#b9a3e8", "#7fc4d6", "#ee8a7d", "#f2c14e"].map(c => `<i style="--b:${c}"></i>`).join("")}</div>
-    <div class="sp3-star" aria-hidden="true"><img src="icons/3d/k-stars.png" alt=""></div>
+    <div class="sp3-star" aria-hidden="true"><img src="icons/3d/c-star.png" alt=""></div>
     <div class="sp3-title">Shining Star<br>of the Week!</div><p class="sp3-hip">Hip hip hooray!</p>
     ${pics.length ? `<div class="sp3-stage">${pics.map(src => `<img class="sp3-char" src="${src}" alt="">`).join("")}<div class="sp3-podium">1</div></div>` : `<div class="sp3-podium solo">1</div>`}
     <div class="sp3-name">${win.map(id => safe(userById(id).name)).join(" & ")}</div><p class="sp3-sub">${win.length > 1 ? "Our superstars!" : "Our superstar!"}</p>
     <div class="sp3-board">${rows}</div>
     <p class="sp3-note">Well done everyone! A new week starts at midnight. Good luck!${win.includes(me) ? "<br><b>🎁 Choose your gift in My Stars!</b>" : ""}</p>
-    <button class="k-ok sp3-yay" id="kOk"><img src="icons/3d/k-stars.png" alt=""> Yay!</button>`;
+    <button class="k-ok sp3-yay" id="kOk"><img src="icons/3d/c-star.png" alt=""> Yay!</button>`;
   $("kModal").classList.add("star-pop");
   $("kModal").hidden = false;
 }
