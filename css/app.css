@@ -5039,5 +5039,9 @@ h1.kh6-hi, .ph6 h1.ph5-hi { font-size: 28px !important; margin-top: 4px !importa
   .bar.bar3 .rb small, .bar.bar3 .rb-l { font-size: 10px !important; } }
 .kp-tile .e.kp-clay { display: block !important; } .kp-clay .i3d { width: 46px; height: 46px; object-fit: contain; }
 .kp-face { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 4px 10px rgba(120, 60, 30, .15); }
-/* 🧸 v239 parent home: big Calendar + School buttons under the hello card */
-.ph6-tiles { grid-template-columns: repeat(2, 1fr); margin: 12px 0 4px; }
+/* 🧸 v240 (Broo2a): Calendar + School buttons under every kid's card on the parent home */
+.kr5-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -4px 0 14px; }
+button.kr5-act { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 10px; border-radius: 18px;
+  background: var(--soft, #fff8ee); box-shadow: 0 3px 0 rgba(0, 0, 0, .06); font: 700 16px/1 Fredoka, Nunito, sans-serif; color: var(--ink, #492d15); }
+.kr5-act .i3d { width: 38px; height: 38px; object-fit: contain; }
+.kr5:has(+ .kr5-acts) { margin-bottom: 8px !important; } .kr5-acts { margin: 0 0 22px !important; }

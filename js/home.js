@@ -320,9 +320,7 @@ function homeHeroHtml(u) {
   const pic = charPic(u, "happy") || charPic(u, "wave");   // v239: just the face
   return homeLogoHtml() + `<div class="ph5-hero ph6">${SPARKLES}${pic ? `<img class="ph6-pic" src="${pic}" alt="">` : `<span class="ph6-pic ph6-emo">${safe(u.emoji || "🙂")}</span>`}
     <div class="ph5-r">${calTileHtml()}<h1 class="ph5-hi">Hi <em>${safe(u.name)}</em>!</h1><p class="ph5-sub">${kidsList().length ? "The kids are waiting for you" : "Let's set up your family"}</p>
-      <div class="ph5-say">${sayBoxHtml(u)}</div></div></div>
-    <div class="kh6-tiles ph6-tiles"><button class="kh6-tile b" data-go="mine"><span class="kh6-ti">${ico3d("c-calendar")}</span><b>Calendar</b><small>Everyone's week</small></button>
-      <button class="kh6-tile y" data-schoolnav><span class="kh6-ti">${ico3d("c-school")}</span><b>School</b><small>Subjects and work</small></button></div>`;   // 🧸 v239 (Broo2a): big Calendar + School buttons
+      <div class="ph5-say">${sayBoxHtml(u)}</div></div></div>`;
 }
 // One row per kid (Broo2a's design): standing character · name + emoji · today's bar · done / next dots · ⭐ this week · SCORE · 🔥 streak · today's line
 function kidRowHtml(k) {
@@ -341,7 +339,9 @@ function kidRowHtml(k) {
       <span class="kr5-bar"><i style="width:${pct}%"></i></span>
       <span class="kr5-info">${dots}<span class="kr5-wk">★ +${pts} this week</span></span>
       <span class="kr5-foot">${streak ? `<span class="kr5-chip">🔥 ${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}${L ? `<span class="kr5-chip kr5-spark">✨ Lv ${L}</span>` : ""}<small>${safe(line)}</small></span></span>
-    <span class="kr5-sc"><small>Score</small><b>${sc.overall}</b></span></button>`;
+    <span class="kr5-sc"><small>Score</small><b>${sc.overall}</b></span></button>
+    <div class="kr5-acts" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}"><button class="kr5-act" data-viewcal="${safe(k.id)}">${ico3d("c-calendar")}<b>Calendar</b></button>
+      <button class="kr5-act" data-school="${safe(k.id)}">${ico3d("c-school")}<b>School</b></button></div>`;   // 🧸 v240 (Broo2a): Calendar + School for every kid
 }
 // 📊 This week (family activity): ticks done by all the kids each day of this points week
 function homeWeekHtml() {
