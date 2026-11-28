@@ -1051,8 +1051,7 @@ function drawHome() {
     $("homeDate").className = "home-date ph5";   // 🌈 v238 Broo2a's own design: the hero card (date · Hi · my line · ADROS)
     $("homeDate").innerHTML = homeHeroHtml(u);
     if (charPic(u)) $("homeFace").innerHTML = `<img class="hello-char" src="${charPic(u, "wave")}" alt="">` + starBadge(me);
-  } else $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
-    <span class="bub-pill">${PUFF_PILLS.home}</span>`;
+  } else { $("homeDate").className = "home-date kh6-off"; $("homeDate").innerHTML = ""; }   // 🌈 v239 a kid: the date is in the hero card now
   const myPoints = pointsByUser()[me], myFair = scoreText(scoreOf(me));
   $("homePoints").textContent = (stars().includes(me) ? `🌟 Shining Star of the Week · ⭐ Score ${myFair} · ${myPoints} points` : `⭐ Score ${myFair} · ${myPoints} points this week`)
     + ` · ${kindsText(weekKinds(me))}`;
