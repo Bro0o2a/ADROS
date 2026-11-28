@@ -281,6 +281,17 @@ function kidCardColors() {
     used.push(c); out[k.id] = c; });
   return out;
 }
+// 🧩 v238 (Broo2a 28 Nov: "a lot of space between kids"): each kid = a small tile, 2 per row, like the number cards in her picture:
+// the character, name, big score, today's progress bar + "2 of 4 today"; the tile opens the kid page (School · Calendar · Report are there).
+function kidTileHtml(k) {
+  const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), date = todayYmd(), items = todayItems(k.id), done = items.filter(x => isDone(date, x.id, k.id)).length;
+  const pct = items.length ? Math.round(done / items.length * 100) : 0, all = items.length && done === items.length, pic = charPic(k, all ? "proud" : "happy");
+  return `<button class="kt4" data-kidpage="${safe(k.id)}" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}" aria-label="${safe(k.name)}: score ${sc.overall}, ${done} of ${items.length} done today">
+    <span class="kt4-top">${pic ? `<img class="kt4-pic" src="${pic}" alt="">` : `<span class="kt4-pic kt4-face">${faceHtml(k)}</span>`}<span class="kt4-sc"><b>${sc.overall}</b><small>score</small></span></span>
+    <b class="kt4-name">${safe(k.name)}${stars().includes(k.id) ? " 🌟" : ""}</b>
+    <span class="kt4-bar"><i style="width:${pct}%"></i></span>
+    <small class="kt4-line">${!items.length ? "Nothing today" : all ? "All done today ✓" : `${done} of ${items.length} today`}</small></button>`;
+}
 function kidCardHtml(k) {
   const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);
   const [main, rest] = line.split(" · "), allDone = /^All finished/.test(line);

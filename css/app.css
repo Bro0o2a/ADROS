@@ -4745,3 +4745,14 @@ body { background: radial-gradient(60% 35% at 100% 0%, #fcd9c2 0, rgba(252, 217,
 .kt3-blue { background: #d8e3ea !important; color: #2f5470 !important; } .kt3-yellow { background: #fde0b7 !important; color: #7a5410 !important; }
 .kt3-pink { background: #fccfb6 !important; color: #8a3a1c !important; } .kt3-green { background: #dce8d8 !important; color: #2e5a4b !important; }
 .kc-btns button:nth-child(1) { background: #d8e3ea !important; color: #2f5470 !important; } .kc-btns button:nth-child(2) { background: #dce8d8 !important; color: #2e5a4b !important; } .kc-btns button:nth-child(3) { background: #fccfb6 !important; color: #8a3a1c !important; }
+/* 🧩 v238 parent home: kids as small tiles, 2 per row */
+.kid-cards.kt4-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 12px; }
+button.kt4 { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-height: 0; padding: 12px 12px 14px; border: 0; border-radius: 26px; background: var(--soft); color: var(--ink); text-align: left; box-shadow: 0 4px 0 rgba(0,0,0,.06), 0 8px 16px rgba(120,90,60,.08); cursor: pointer; }
+.kt4-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.kt4-pic { width: 76px; height: 82px; object-fit: contain; margin: -4px 0 -4px -6px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.1)); }
+.kt4-face { display: grid; place-items: center; font-size: 40px; }
+.kt4-sc { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; background: #fffaf3; box-shadow: 0 3px 0 rgba(0,0,0,.05); }
+.kt4-sc b { font: 800 20px/1 Fredoka, Nunito, sans-serif; color: var(--ink); } .kt4-sc small { font: 800 8.5px/1.2 Nunito, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); opacity: .7; }
+.kt4-name { font: 800 19px/1.1 Fredoka, Nunito, sans-serif; color: #492d15; }
+.kt4-bar { height: 9px; border-radius: 999px; background: rgba(255,255,255,.7); overflow: hidden; } .kt4-bar i { display: block; height: 100%; border-radius: 999px; background: var(--c); }
+.kt4-line { font: 700 12.5px/1.2 Nunito, sans-serif; color: var(--ink); opacity: .85; }
