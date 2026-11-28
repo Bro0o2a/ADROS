@@ -128,9 +128,9 @@ function drawKidHome(u) {
     const when = x.start >= 0 ? (isNext && !ok ? `Next up · ${clock(x.start)}` : `${clock(x.start)}${len ? ` · ${len} min` : ""}`) : isNext && !ok ? "Next up · any time" : "Any time";
     return `<button class="kh6-row ${ok ? "done" : ""}" data-kidcal>${clayAct(x.name, x.type)}<span class="kh6-t"><b>${safe(x.name)}</b><small>${when}</small></span><span class="kh6-box ${ok ? "ok" : ""}" aria-label="${ok ? "Done" : "Not done yet"}">${ok ? ico3d("c-check", "kh6-ck") : ""}</span></button>`; };
   const tile6 = (cls, attr, icon, title, sub2) => `<button class="kh6-tile ${cls}" ${attr}><span class="kh6-ti">${icon}</span><b>${title}</b><small>${sub2}</small></button>`;
-  $("homeBig").innerHTML = `<div class="kh6-hero" style="--soft:${c.soft};--c:${c.color}">${SPARKLES}
+  $("homeBig").innerHTML = `${homeLogoHtml()}<div class="kh6-hero" style="--soft:${c.soft};--c:${c.color}">${SPARKLES}${calTileHtml()}
       ${stand ? `<img class="kh6-pic" src="${stand}" alt="">` : `<button class="kh6-pic k-pickchar" data-pickchar aria-label="Choose your character">${safe(u.emoji)}<small>Choose your character</small></button>`}
-      <div class="kh6-mid"><span class="kh6-date"><b>${dz({ weekday: "long" })}</b>${dz({ day: "numeric", month: "long" })}</span>
+      <div class="kh6-mid">
         <h1 class="kh6-hi">Hi <em>${safe(u.name)}!</em></h1><p class="kh6-sub">${safe(head)}</p>
         <div class="kh6-chips">${streak ? `<span class="kh6-chip fire">${ico3d("c-flame", "kh6-ci")}${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}<button class="kh6-chip pts" data-go="points">${ico3d("c-star", "kh6-ci")}+${pts} this week</button>${
           feat("buddy") && hasSpark(u.id) ? `<button class="kh6-chip spark" data-buhist="${safe(u.id)}" aria-label="Spark level ${L}, ${pct}% to level ${L + 1}">✨ Lv ${L} · ${pct}%</button>` : ""}</div></div></div>
@@ -304,11 +304,17 @@ function kidCardColors() {
 // 🌈 v238 PARENT HOME (Broo2a's own design, 28 Nov): hero card · one row per kid with the STANDING character · This week chart · Needs you list.
 // ✨ little sparkles on the cards (Broo2a: "don't forget sparkles").
 const SPARKLES = `<span class="sp5" aria-hidden="true"><i></i><i></i><i></i></span>`;
+// 📅 v239 (Broo2a's picture): today as a little desk-calendar page (NOV · 28 · SAT)
+function calTileHtml() {
+  const dz = o => new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Dubai", ...o });
+  return `<span class="cal-tile" aria-label="${safe(dz({ weekday: "long", day: "numeric", month: "long" }))}"><b>${dz({ month: "short" }).toUpperCase()}</b><strong>${dz({ day: "numeric" })}</strong><small>${dz({ weekday: "short" }).toUpperCase()}</small></span>`;
+}
+// 🌈 v239 the ADROS logo, big, at the top of Home
+const homeLogoHtml = () => `<div class="home-logo"><img src="icons/logo-adros.webp" alt="ADROS"></div>`;
 function homeHeroHtml(u) {
-  const dn = new Date(), dz = o => dn.toLocaleDateString("en-GB", { timeZone: "Asia/Dubai", ...o });
-  return `<div class="ph5-hero">${SPARKLES}<img class="ph5-logo" src="icons/logo-adros.webp" alt="ADROS">
-    <div class="ph5-r"><span class="ph5-date"><b>${dz({ weekday: "long" })}</b><i>•</i>${dz({ day: "numeric", month: "long" })}</span>
-      <h1 class="ph5-hi">Hi <em>${safe(u.name)}</em>!</h1><p class="ph5-sub">${kidsList().length ? "The kids are waiting for you" : "Let's set up your family"}</p>
+  const pic = charPic(u, "stand") || charPic(u, "wave");
+  return homeLogoHtml() + `<div class="ph5-hero ph6">${SPARKLES}${pic ? `<img class="ph6-pic" src="${pic}" alt="">` : `<span class="ph6-pic ph6-emo">${safe(u.emoji || "🙂")}</span>`}
+    <div class="ph5-r">${calTileHtml()}<h1 class="ph5-hi">Hi <em>${safe(u.name)}</em>!</h1><p class="ph5-sub">${kidsList().length ? "The kids are waiting for you" : "Let's set up your family"}</p>
       <div class="ph5-say">${sayBoxHtml(u)}</div></div></div>`;
 }
 // One row per kid (Broo2a's design): standing character · name + emoji · today's bar · done / next dots · ⭐ this week · SCORE · 🔥 streak · today's line
