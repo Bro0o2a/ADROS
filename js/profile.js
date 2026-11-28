@@ -482,6 +482,10 @@ function setupSignOutButtons() {
 // buttons with their name under them (Calendar, News, Sign out, Print …). Done once per button (rb-done).
 // 🧸 v239 the top bar's emoji → Broo2a's clay icons
 const CLAY_EMOJI = { "📅": "c-calendar", "🗓️": "c-calendar", "🔔": "c-bell", "🚪": "c-signout", "🎒": "c-backpack", "⭐": "c-star", "🏆": "c-trophy", "➕": "c-plus", "✏️": "c-pencil" };
+// 🧸 v239 a habit's clay icon from its name (prayers, teeth, clothes, reading …), else its emoji stays
+const HABIT_CLAY = [[/pray|salah|quran/i, "c-star"], [/read|book|story/i, "c-book"], [/teeth|brush|wash|shower|clean|clothes|tidy|bed/i, "c-check"], [/hug|love|kind|thank|help/i, "c-heart"],
+  [/home ?work|study|worksheet|write/i, "c-pencil"], [/sport|run|play|exercise|football/i, "c-football"], [/water|eat|fruit|lunch|breakfast/i, "c-gift"], [/sleep|wake|early/i, "c-clock"]];
+const habitClay = h => (HABIT_CLAY.find(([re]) => re.test(h.name || "")) || [])[1] || "";
 const clayOrEmoji = e => CLAY_EMOJI[e] ? `<img class="rb-clay" src="icons/3d/${CLAY_EMOJI[e]}.png" alt="">` : e;
 function tidyBars() {
   document.querySelectorAll(".screen .bar").forEach(bar => {
@@ -968,7 +972,7 @@ function myStarsHtml(id) {
   const hs = habitsFor(id), mark = h => data.habitMarks[habitKey(today, h.id, id)];
   const habits = hs.map(h => { const v = mark(h), full = habitDone(h, v), multi = h.kind === "prayers" || h.kind === "water";
     const n = h.kind === "prayers" ? (Array.isArray(v) ? v.filter(Boolean).length : 0) : (v || 0), of = h.kind === "prayers" ? PRAYERS.length : WATER_DROPS;
-    return `<div class="ms-hab${full ? " on" : ""}"><span class="ms-hico">${safe(h.emoji)}</span><span class="ms-htxt"><b>${safe(h.name)}</b><small>${full ? "Done today" : multi ? `${n} of ${of} today` : "Not yet"}</small></span>
+    return `<div class="ms-hab${full ? " on" : ""}"><span class="ms-hico ${habitClay(h) ? "ms-clay" : ""}">${habitClay(h) ? ico3d(habitClay(h)) : safe(h.emoji)}</span><span class="ms-htxt"><b>${safe(h.name)}</b><small>${full ? "Done today" : multi ? `${n} of ${of} today` : "Not yet"}</small></span>
       ${multi ? `<span class="ms-tick${full ? " on" : ""}" aria-hidden="true">${full ? "✓" : ""}</span>`
         : `<button class="ms-tick${full ? " on" : ""}" data-hb="${safe(id)}|${safe(h.id)}|0" aria-pressed="${full}" aria-label="${safe(h.name)}">${full ? "✓" : ""}</button>`}</div>`; }).join("");
   const star = stars(), fi = fairInfo(), lead = fairOrder(Object.fromEntries(Object.entries(fi).map(([k, x]) => [k, x.fair])))[0];

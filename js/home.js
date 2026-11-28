@@ -72,7 +72,7 @@ function puffTitles() {
 //   ribbon titles, lined paper cards: ❤️ Top 3 (must-do habits first, then what's next) · 🕒 My schedule (+ a sticky note) · 💧 Habit tracker · a kind quote
 // 🧸 v239 (Broo2a: "use all new icons"): old 3D icons swap to the new clay set wherever one fits
 const CLAY_SWAP = { calendar: "c-calendar", "k-calendar": "c-calendar", heart: "c-heart", "k-habits": "c-heart", excellent: "c-trophy", achieve: "c-trophy", medal: "c-trophy", milestone: "c-trophy",
-  paper: "c-shield", "k-stars": "c-star", school: "c-backpack", read: "c-book", study: "c-book", "k-study": "c-book", lesson: "c-book", time: "c-clock",
+  paper: "c-shield", "k-stars": "c-star", school: "c-school", read: "c-book", study: "c-book", "k-study": "c-book", lesson: "c-book", time: "c-clock",
   homework: "c-pencil", "k-ws": "c-pencil", practice: "c-pencil", exam: "c-pencil", basketball: "c-football", goal: "c-rocket", "k-goal": "c-rocket", "k-upload": "c-plus" };
 const ico3d = (n, cls = "") => `<img class="i3d ${cls} ${CLAY_SWAP[n] ? "i3d-clay" : ""}" src="icons/3d/${CLAY_SWAP[n] || n}.png" alt="">`;
 const ribbon = (txt, tone) => `<span class="pl-rib pl-rib-${tone}">${txt}</span>`;
@@ -355,7 +355,7 @@ function homeNeedsHtml() {
   if (needsOpen) return needsLineHtml();
   const hid = needsHidden(), list = needsItems().filter(x => !hid[needsSig(x)]);
   if (!list.length) return "";
-  const needClay = e => ({ ...CLAY_EMOJI, "🏫": "c-backpack", "📰": "c-book", "🧒": "c-starbox", "👦": "c-starbox", "👧": "c-starbox", "📌": "c-pencil", "📚": "c-book", "🎯": "c-rocket", "💌": "c-gift", "🔥": "c-flame", "🕐": "c-clock", "⏰": "c-clock", "🌙": "c-clock" })[String(e).replace(/\uFE0F$/, "")] || CLAY_EMOJI[e];
+  const needClay = e => ({ ...CLAY_EMOJI, "🏫": "c-school", "📰": "c-news", "📌": "c-day", "🗞️": "c-news", "🧒": "c-starbox", "👦": "c-starbox", "👧": "c-starbox", "📚": "c-book", "🎯": "c-rocket", "💌": "c-gift", "🔥": "c-flame", "🕐": "c-clock", "⏰": "c-clock", "🌙": "c-clock" })[String(e).replace(/\uFE0F$/, "")] || CLAY_EMOJI[e];
   const icoCols = ["#8fb0c8", "#f78a63", "#f5bd55", "#7fad9c", "#b39bd6"];
   return `<div class="ph5-card ph5-needs"><div class="ph5-h"><b>${list.length} ${list.length === 1 ? "thing needs" : "things need"} you</b><small>Today</small></div>
     ${list.map((x, i) => { const m = String(x.text).match(/^(\S+)\s+(.*)$/u), emo = m && /\p{Extended_Pictographic}/u.test(m[1]) ? m[1] : "🔔", txt = m && emo === m[1] ? m[2] : x.text;
@@ -717,12 +717,15 @@ function drawKidPage() {
   const secs = KID_SECS.filter(s => (s.id !== "habits" || habitsFor(k.id).length) && (s.id !== "moods" || feat("diary") || wishesListHtml(k.id)));
   if (kidSec && !secs.some(s => s.id === kidSec)) kidSec = null;
   if (kidSec) { $("kidBody").innerHTML = kidSectionHtml(k, kidSec); return plainHeads($("kidBody")); }
+  const KP_CLAY = { today: "c-day", habits: "c-heart", star: "c-star", score: "c-trophy", study: "c-book", points: "c-rocket", tasks: "c-check", school: "c-school",
+    tools: "c-pencil", work: "c-backpack", moods: "c-gift", report: "c-news" };   // 🧸 v239 clay icon per tile
+  const face = charPic(k, "happy");
   $("kidBody").innerHTML = `
     <div class="card kp-top" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-      <div class="kp-head"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="Score through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button><div><h1>${safe(k.emoji)} ${safe(k.name)}${e && moodFace(e.mood) ? ` ${moodFace(e.mood)}` : ""}${kidCardTags(k.id)}</h1>
+      <div class="kp-head"><button class="kc-ringbtn" data-sdpop="${safe(k.id)}" aria-label="Score through the day">${scoreRingHtml(sc.overall, c.color, lastWeekScore(k.id))}${ringTrendHtml(k.id)}</button>${face ? `<img class="kp-face" src="${face}" alt="">` : ""}<div><h1>${face ? "" : safe(k.emoji) + " "}${safe(k.name)}${e && moodFace(e.mood) ? ` ${moodFace(e.mood)}` : ""}${kidCardTags(k.id)}</h1>
         <small>${safe(kidTodayLine(k.id))}</small></div></div></div>
     <div class="kp-tiles" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">${secs.map(s => `<button class="kp-tile" data-kidsec="${s.id}">
-      <span class="e" aria-hidden="true">${s.emoji}</span><b>${s.label}</b><small>${safe(kidSecLine(k, s.id))}</small></button>`).join("")}</div>`;
+      <span class="e kp-clay" aria-hidden="true">${ico3d(KP_CLAY[s.id] || "c-star")}</span><b>${s.label}</b><small>${safe(kidSecLine(k, s.id))}</small></button>`).join("")}</div>`;
 }
 // A big button → only that part; "⬅️ All about …" (or ⬅️ Back on the page) → the menu. (Runs before the general taps, see taps.js)
 document.addEventListener("click", e => {

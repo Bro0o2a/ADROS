@@ -5003,3 +5003,39 @@ h1.kh6-hi, .ph6 h1.ph5-hi { font-size: 28px !important; margin-top: 4px !importa
 #scr-home .kh6-hero .cal-tile b, #scr-home .ph6 .cal-tile b, #scr-home .kh6-hero .cal-tile small, #scr-home .ph6 .cal-tile small { font-size: 11px !important; }
 .ph5-ni.ph5-ni-clay { background: none !important; box-shadow: none !important; }
 .ph5-ni-clay .i3d { width: 46px; height: 46px; object-fit: contain; }
+/* 🌈 v239 NEW LOOK on every page (Broo2a 28 Nov: "same design rules as home"): small round face card instead of the big buddy,
+   no character strip at the bottom, plain section headings instead of ribbons, clay icons float free (no coloured squares) */
+.buddy-row { gap: 12px; margin: 12px 0 14px; padding: 10px 14px; border-radius: 24px; background: rgba(255, 250, 244, .92); box-shadow: 0 6px 14px rgba(120, 90, 60, .08); }
+.buddy-row img { width: 64px !important; height: 64px !important; border-radius: 50% !important; box-shadow: 0 4px 10px rgba(120, 60, 30, .15) !important; }
+.buddy-bub { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+.buddy-bub::before { display: none; }
+.buddy-bub b { font: 700 18px/1.2 Fredoka, Nunito, sans-serif !important; color: #6b3a1c; }
+.buddy-bub small { font-size: 14px !important; }
+.buddy-strip { display: none !important; }
+.ip-sec { margin: 18px 0 10px !important; }
+.ip-rib, .pl-rib { position: static !important; transform: none !important; display: block; margin: 0 0 8px 6px; padding: 0 !important; background: none !important; box-shadow: none !important;
+  font: 700 21px/1.2 Fredoka, Nunito, sans-serif !important; letter-spacing: 0 !important; text-transform: none !important; color: #6b3a1c !important; text-align: left; }
+.ip-rib::before, .ip-rib::after, .pl-rib::before, .pl-rib::after { display: none !important; }
+.ip-rib i, .pl-rib i { display: none; }
+.ip-panel { padding-top: 14px !important; }
+.ip-item .i3d { background: none !important; border: 0 !important; box-shadow: none !important; padding: 4px !important; width: 74px !important; height: 74px !important; object-fit: contain; }
+.ip-sec .ip-rib[class], .pl-rib[class] { background: none !important; color: #6b3a1c !important; }
+/* the same small face card on Stars, School subject, Family, Settings */
+:is(.ms-buddy, .sj3-buddy, .fam3-buddy, .set3-buddy) { gap: 12px !important; padding: 10px 14px !important; border-radius: 24px !important; background: rgba(255, 250, 244, .92) !important; box-shadow: 0 6px 14px rgba(120, 90, 60, .08) !important; }
+:is(.ms-buddy, .sj3-buddy, .fam3-buddy, .set3-buddy) img { width: 64px !important; height: 64px !important; border-radius: 50%; object-fit: cover !important; filter: none !important; box-shadow: 0 4px 10px rgba(120, 60, 30, .15); }
+:is(.ms-buddy, .sj3-buddy, .fam3-buddy, .set3-buddy) p { background: none !important; box-shadow: none !important; padding: 0 !important; }
+:is(.ms-buddy, .sj3-buddy, .fam3-buddy, .set3-buddy) p::before { display: none !important; }
+:is(.ms-buddy, .sj3-buddy) b, .fam3-buddy p, .set3-buddy p { font: 700 17px/1.25 Fredoka, Nunito, sans-serif !important; color: #6b3a1c !important; }
+.me3-face { width: 96px !important; height: 96px !important; }
+/* clay icons with no square: settings rows, habits, subject rows/heads */
+.set3-ic.set3-clay, .ms-hico.ms-clay, .rps-ic, .sj3-ic { background: none !important; box-shadow: none !important; }
+.set3-clay .i3d, .ms-clay .i3d { width: 46px !important; height: 46px !important; object-fit: contain; }
+.rps-ic .rps-i { width: 46px !important; height: 46px !important; }
+#scr-report .kc-big { width: 84px !important; height: 84px !important; border-radius: 50% !important; object-fit: cover !important; box-shadow: 0 4px 10px rgba(120, 60, 30, .15) !important; }
+.rp3-kid .kc-big[class] { width: 84px !important; height: 84px !important; margin: 0 !important; align-self: center; border-radius: 50% !important; object-fit: cover !important; object-position: center top !important; background: #fff8ee !important; box-shadow: 0 4px 10px rgba(120, 60, 30, .15) !important; }
+@media (max-width: 380px) { .bar.bar3 .rb-ic.clay .rb-clay { width: 34px; height: 34px; } .bar.bar3 .rb:has(.rb-ic.clay) { min-width: 0 !important; padding-left: 1px !important; padding-right: 1px !important; } .bar.bar3 .sch-btn { padding-left: 10px !important; padding-right: 12px !important; } }
+@media (max-width: 380px) { .bar.bar3 { gap: 3px !important; padding-left: 8px !important; padding-right: 8px !important; }
+  .bar.bar3 .rb:has(.rb-ic.clay) { width: 38px !important; } .bar.bar3 .nav-btn { width: 36px !important; min-width: 36px !important; } .bar.bar3 .rb-home { width: 40px !important; }
+  .bar.bar3 .rb small, .bar.bar3 .rb-l { font-size: 10px !important; } }
+.kp-tile .e.kp-clay { display: block !important; } .kp-clay .i3d { width: 46px; height: 46px; object-fit: contain; }
+.kp-face { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 4px 10px rgba(120, 60, 30, .15); }
