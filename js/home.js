@@ -281,18 +281,53 @@ function kidCardColors() {
     used.push(c); out[k.id] = c; });
   return out;
 }
-// 🧩 v238 (Broo2a 28 Nov: "a lot of space between kids"; she chose ONE SLIM ROW per kid, like "Recently played" in her picture):
-// small character · name + today's line + progress bar · score circle, and 3 small buttons School · Calendar · Report under it.
+// 🌈 v238 PARENT HOME (Broo2a's own design, 28 Nov): hero card · one row per kid with the STANDING character · This week chart · Needs you list.
+// ✨ little sparkles on the cards (Broo2a: "don't forget sparkles").
+const SPARKLES = `<span class="sp5" aria-hidden="true"><i></i><i></i><i></i></span>`;
+function homeHeroHtml(u) {
+  const dn = new Date(), dz = o => dn.toLocaleDateString("en-GB", { timeZone: "Asia/Dubai", ...o });
+  return `<div class="ph5-hero">${SPARKLES}<img class="ph5-logo" src="icons/logo-adros.webp" alt="ADROS">
+    <div class="ph5-r"><span class="ph5-date"><b>${dz({ weekday: "long" })}</b><i>•</i>${dz({ day: "numeric", month: "long" })}</span>
+      <h1 class="ph5-hi">Hi <em>${safe(u.name)}</em>!</h1><p class="ph5-sub">${kidsList().length ? "The kids are waiting for you" : "Let's set up your family"}</p>
+      <div class="ph5-say">${sayBoxHtml(u)}</div></div></div>`;
+}
+// One row per kid (Broo2a's design): standing character · name + emoji · today's bar · done / next dots · ⭐ this week · SCORE · 🔥 streak · today's line
 function kidRowHtml(k) {
-  const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), date = todayYmd(), items = todayItems(k.id), done = items.filter(x => isDone(date, x.id, k.id)).length;
-  const pct = items.length ? Math.round(done / items.length * 100) : 0, all = items.length && done === items.length, pic = charPic(k, all ? "proud" : "happy");
-  const line = kidTodayLine(k.id).replace(" · next ", " · Next: ");
-  return `<div class="kr4" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}">
-    <button class="kr4-main" data-kidpage="${safe(k.id)}" aria-label="${safe(k.name)}: all about ${safe(k.name)}">
-      <span class="kr4-pic">${pic ? `<img src="${pic}" alt="">` : faceHtml(k)}</span>
-      <span class="kr4-t"><b>${safe(k.name)}${kidCardTags(k.id)}</b><small>${safe(line)}</small><span class="kr4-bar"><i style="width:${pct}%"></i></span></span>
-      <span class="kr4-sc" data-sdpop="${safe(k.id)}"><b>${sc.overall}</b><small>score</small></span></button>
-    <div class="kr4-btns"><button data-school="${safe(k.id)}">School</button><button data-viewcal="${safe(k.id)}">Calendar</button><button data-kidreport="${safe(k.id)}">Report</button></div></div>`;
+  const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), date = todayYmd(), now = dubaiMinutes(), items = todayItems(k.id);
+  const isD = x => isDone(date, x.id, k.id), done = items.filter(isD), pct = items.length ? Math.round(done.length / items.length * 100) : 0;
+  const all = items.length && done.length === items.length, pic = charPic(k, "stand") || charPic(k, all ? "proud" : "happy");
+  const next = items.find(x => !isD(x) && x.end > now), last = done[done.length - 1];
+  const nm = x => String(x.name).replace(/^\S+\s(?=\S)/u, m => /\p{Extended_Pictographic}/u.test(m) ? "" : m);
+  const dots = [last ? `<span class="kr5-dot ok">${safe(nm(last))} done</span>` : "", next ? `<span class="kr5-dot nx">${safe(nm(next))} ${next.start >= 0 && !last ? clock(next.start) : "next"}</span>` : ""].join("");
+  const streak = typeof dayStreak === "function" ? dayStreak(k.id) : 0, pts = pointsByUser()[k.id] || 0;
+  const L = hasSpark(k.id) ? levelOf(lifetimePoints(k.id)) : 0;
+  const line = !items.length ? "Nothing today" : all ? `All ${items.length} done today ✓` : `${done.length} of ${items.length} today${next ? ` · Next: ${nm(next)}${next.start >= 0 ? ` ${clock(next.start)}` : ""}` : ""}`;
+  return `<button class="kr5" data-kidpage="${safe(k.id)}" style="--c:${c.color};--soft:${c.soft};--ink:${c.ink}" aria-label="${safe(k.name)}: score ${sc.overall}. ${safe(line)}">${SPARKLES}
+    <span class="kr5-pic">${pic ? `<img src="${pic}" alt="">` : `<span class="kr5-face">${faceHtml(k)}</span>`}</span>
+    <span class="kr5-mid"><span class="kr5-name"><b>${safe(k.name)}</b><span class="kr5-emo">${safe(k.emoji || "")}</span>${stars().includes(k.id) ? `<span class="kr5-star">🌟 Star</span>` : ""}</span>
+      <span class="kr5-bar"><i style="width:${pct}%"></i></span>
+      <span class="kr5-info">${dots}<span class="kr5-wk">★ +${pts} this week</span></span>
+      <span class="kr5-foot">${streak ? `<span class="kr5-chip">🔥 ${streak} ${streak === 1 ? "day" : "days"}</span>` : ""}${L ? `<span class="kr5-chip kr5-spark">✨ Lv ${L}</span>` : ""}<small>${safe(line)}</small></span></span>
+    <span class="kr5-sc"><small>Score</small><b>${sc.overall}</b></span></button>`;
+}
+// 📊 This week (family activity): ticks done by all the kids each day of this points week
+function homeWeekHtml() {
+  const kids = kidsList(); if (!kids.length) return "";
+  const cols = ["#8fb0c8", "#f5bd55", "#7fad9c", "#f78a63", "#b39bd6", "#e9776a", "#d9c3a5"], today = todayYmd();
+  const days = weekDates().map(d => ({ d, n: kids.reduce((t, k) => t + planDay(d).items.filter(it => it.people.includes(k.id) && !it.gone && isDone(d, it.actId, k.id)).length, 0) }));
+  const max = Math.max(1, ...days.map(x => x.n));
+  return `<div class="ph5-card ph5-week">${SPARKLES}<div class="ph5-h"><b>This week</b><small>Family activity</small></div>
+    <div class="ph5-bars">${days.map((x, i) => `<span class="ph5-col${x.d === today ? " today" : ""}${x.d > today ? " later" : ""}"><em>${x.n || ""}</em><i style="height:${Math.max(6, Math.round(x.n / max * 100))}%;--b:${cols[i % 7]}"></i><small>${DAYS[weekdayOf(x.d)][0]}</small></span>`).join("")}</div></div>`;
+}
+// 🔔 Needs you as a list card (a tap opens it, same as before)
+function homeNeedsHtml() {
+  if (needsOpen) return needsLineHtml();
+  const hid = needsHidden(), list = needsItems().filter(x => !hid[needsSig(x)]);
+  if (!list.length) return "";
+  const icoCols = ["#8fb0c8", "#f78a63", "#f5bd55", "#7fad9c", "#b39bd6"];
+  return `<div class="ph5-card ph5-needs"><div class="ph5-h"><b>${list.length} ${list.length === 1 ? "thing needs" : "things need"} you</b><small>Today</small></div>
+    ${list.map((x, i) => { const m = String(x.text).match(/^(\S+)\s+(.*)$/u), emo = m && /\p{Extended_Pictographic}/u.test(m[1]) ? m[1] : "🔔", txt = m && emo === m[1] ? m[2] : x.text;
+      return `<button class="ph5-need" data-needs="${safe(x.key)}"><span class="ph5-ni" style="--b:${icoCols[i % icoCols.length]}">${safe(emo)}</span><b>${safe(txt)}</b><span class="ph5-go" aria-hidden="true">›</span></button>`; }).join("")}</div>`;
 }
 function kidCardHtml(k) {
   const c = kidCardColors()[k.id] || colorsOf(k), sc = scoreOf(k.id), e = feat("diary") ? diaryOf(k.id, todayYmd()) : null, line = kidTodayLine(k.id);

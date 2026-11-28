@@ -1044,11 +1044,12 @@ function drawHome() {
   $("homeDate").className = "home-date" + (isParentDevice() ? "" : " kid");
   // 🫧 v159: the date in the middle, in the puffy banner: "Thursday" (pink) · "5 November" (purple) · a soft pill
   $("homeDate").className += " puff-banner pb-home";
-  $("homeSay").innerHTML = exists(me) && isParentDevice() ? sayBoxHtml(u) : "";   // 💬 v233 my own line for the family
+  $("homeSay").innerHTML = "";   // (💬 v238 a parent's own line sits in the hero card now)
   $("scr-home").classList.toggle("p-home3", isParentDevice());
   if (isParentDevice()) {   // 🌈 v233 (Broo2a's picture): a white date card with the ADROS badge · my character waving, big
     $("homeDate").className = "home-date hd3";
-    $("homeDate").innerHTML = `<img class="hd-logo" src="icons/logo-adros.webp" alt="ADROS"><span class="hd-wd">${dz({ weekday: "long" })}</span><span class="hd-d">${dz({ day: "numeric", month: "long" })}</span>`;
+    $("homeDate").className = "home-date ph5";   // 🌈 v238 Broo2a's own design: the hero card (date · Hi · my line · ADROS)
+    $("homeDate").innerHTML = homeHeroHtml(u);
     if (charPic(u)) $("homeFace").innerHTML = `<img class="hello-char" src="${charPic(u, "wave")}" alt="">` + starBadge(me);
   } else $("homeDate").innerHTML = `${puffDeco("happy")}<span class="pb-t"><span class="bub bub-pink">${dz({ weekday: "long" })}</span><br><span class="bub bub-lilac bub-sm">${dz({ day: "numeric", month: "long" })}</span></span>
     <span class="bub-pill">${PUFF_PILLS.home}</span>`;
@@ -1074,8 +1075,8 @@ function drawHome() {
   $("homeNote").hidden = true;
   $("homeBig").hidden = false;
   $("homeBig").className = "p-home";
-  $("homeBig").innerHTML = needsLineHtml() + `<div class="kid-cards kr4-list">${kidsList().map(kidRowHtml).join("")}</div>${kidsList().length ? "" : kidSetupHtml()}`
-    + familyRowHtml();
+  $("homeBig").innerHTML = `<div class="kid-cards kr5-list">${kidsList().map(kidRowHtml).join("")}</div>${kidsList().length ? "" : kidSetupHtml()}`
+    + homeWeekHtml() + homeNeedsHtml() + familyRowHtml();
   $("homeMenu").hidden = true;   // (v155: no ☰ More / ✏️ Add menus on a parent's home: everything is in the list above)
   $("homeMenu").innerHTML = "";
   $("homeHabits").innerHTML = "";
