@@ -124,7 +124,7 @@ function drawKidHome(u) {
   // 🌈 v239 (Broo2a's kid-home design, 28 Nov): hero (standing me · date pill · Hi Name! · today's line · 🔥 days · ★ +N this week · ✨ Lv) ·
   //   MY SCORE + TODAY cards · My day list · 3 tiles (My Stars · School · Calendar). ⭐ points and 🎯 score stay apart (two different numbers).
   const streak = dayStreak(u.id), pts = pointsByUser()[u.id] || 0, scored = scoredUsers().some(x => x.id === u.id);
-  const stand = faceAvatar(u) ? (heroMood === "wave" ? charPic(u, "stand") : "") || charPic(u, heroMood) || avatarSrc(u.avatar) : "";
+  const stand = faceAvatar(u) ? charPic(u, heroMood === "sleepy" ? "sleepy" : "happy") || avatarSrc(u.avatar) : "";   // v239 (Broo2a): just the face, small
   const row6 = x => { const ok = isDone(d0, x.id, u.id), isNext = next && x.id === next.id, len = x.start >= 0 && x.end > x.start ? x.end - x.start : 0;
     const when = x.start >= 0 ? (isNext && !ok ? `Next up · ${clock(x.start)}` : `${clock(x.start)}${len ? ` · ${len} min` : ""}`) : isNext && !ok ? "Next up · any time" : "Any time";
     return `<button class="kh6-row ${ok ? "done" : ""}" data-kidcal>${clayAct(x.name, x.type)}<span class="kh6-t"><b>${safe(x.name)}</b><small>${when}</small></span><span class="kh6-box ${ok ? "ok" : ""}" aria-label="${ok ? "Done" : "Not done yet"}">${ok ? ico3d("c-check", "kh6-ck") : ""}</span></button>`; };
@@ -313,7 +313,7 @@ function calTileHtml() {
 // 🌈 v239 the ADROS logo, big, at the top of Home
 const homeLogoHtml = () => `<div class="home-logo"><img src="icons/logo-adros.webp" alt="ADROS"></div>`;
 function homeHeroHtml(u) {
-  const pic = charPic(u, "stand") || charPic(u, "wave");
+  const pic = charPic(u, "happy") || charPic(u, "wave");   // v239: just the face
   return homeLogoHtml() + `<div class="ph5-hero ph6">${SPARKLES}${pic ? `<img class="ph6-pic" src="${pic}" alt="">` : `<span class="ph6-pic ph6-emo">${safe(u.emoji || "🙂")}</span>`}
     <div class="ph5-r">${calTileHtml()}<h1 class="ph5-hi">Hi <em>${safe(u.name)}</em>!</h1><p class="ph5-sub">${kidsList().length ? "The kids are waiting for you" : "Let's set up your family"}</p>
       <div class="ph5-say">${sayBoxHtml(u)}</div></div></div>`;
