@@ -480,9 +480,13 @@ function setupSignOutButtons() {
 }
 // 🌈 v233 (Broo2a's picture): the top buttons sit in ONE white bar · ⬅ Back square · Home + School pills · the rest = round
 // buttons with their name under them (Calendar, News, Sign out, Print …). Done once per button (rb-done).
+// 🧸 v239 the top bar's emoji → Broo2a's clay icons
+const CLAY_EMOJI = { "📅": "c-calendar", "🗓️": "c-calendar", "🔔": "c-bell", "🚪": "c-signout", "🎒": "c-backpack", "⭐": "c-star", "🏆": "c-trophy", "➕": "c-plus", "✏️": "c-pencil" };
+const clayOrEmoji = e => CLAY_EMOJI[e] ? `<img class="rb-clay" src="icons/3d/${CLAY_EMOJI[e]}.png" alt="">` : e;
 function tidyBars() {
   document.querySelectorAll(".screen .bar").forEach(bar => {
     bar.classList.add("bar3");
+    bar.querySelectorAll("button.sch-btn:not(.rb-clayed)").forEach(b => { b.classList.add("rb-clayed"); b.innerHTML = b.innerHTML.replace("🎒", clayOrEmoji("🎒")); });
     bar.querySelectorAll("button.pill").forEach(b => {
       if (b.classList.contains("rb-done") || b.hasAttribute("data-navback") || b.classList.contains("sch-btn")) return;
       b.classList.add("rb-done");
@@ -491,7 +495,7 @@ function tidyBars() {
       const m = txt.match(/^(\S+)\s+(.+)$/);
       if (!m) return;
       b.classList.add(b.getAttribute("data-go") === "home" ? "rb-home" : "rb");
-      b.innerHTML = `<span class="rb-ic" aria-hidden="true">${m[1]}</span><span class="rb-l">${m[2]}</span>`;
+      b.innerHTML = `<span class="rb-ic${CLAY_EMOJI[m[1]] ? " clay" : ""}" aria-hidden="true">${clayOrEmoji(m[1])}</span><span class="rb-l">${m[2]}</span>`;
       keep.forEach(k => b.appendChild(k));
       if (!b.getAttribute("aria-label")) b.setAttribute("aria-label", m[2]);
     });

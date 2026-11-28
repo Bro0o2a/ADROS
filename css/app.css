@@ -4956,3 +4956,35 @@ h1.kh6-hi { margin-top: 18px; }
 #scr-home .cal-tile strong { display: block; font: 800 34px/1 Fredoka, Nunito, sans-serif !important; color: #3b2a1e; padding-top: 6px; }
 #scr-home .cal-tile small { display: block; font: 800 13px/1 Nunito, sans-serif !important; letter-spacing: .12em; color: #7a6656; padding: 4px 0 9px; }
 @media (max-width: 370px) { #scr-home .cal-tile strong { font-size: 28px !important; } }
+/* 🧸 v239 clay icons in the top bar and the kid's menu (no circle behind) */
+.bar.bar3 .rb:has(.rb-ic.clay) { background: none !important; box-shadow: none !important; }
+.bar.bar3 .rb-ic.clay .rb-clay { width: 42px; height: 42px; display: block; filter: drop-shadow(0 3px 3px rgba(73, 45, 21, .15)); }
+.bar.bar3 .sch-btn .rb-clay { width: 30px; height: 30px; margin: -6px 0; }
+.kid-bar .kb-clay { width: 30px; height: 30px; display: block; margin: 0 auto 2px; }
+/* 🧒 v239 kid hero: character in the middle, items tidy */
+.kh6-hero { align-items: center; min-height: 190px; }
+.kh6-pic { margin: 0; align-self: center; height: 150px; }
+.kh6-chips { gap: 6px; } .kh6-chip { padding: 6px 11px; font-size: 13px; }
+.kh6-hero .kh6-mid { padding-right: 0; } h1.kh6-hi { margin-top: 0; padding-right: 74px; }
+.kh6-sub { padding-right: 74px; }
+@media (max-width: 370px) { h1.kh6-hi, .kh6-sub { padding-right: 60px; } .kh6-pic { height: 132px; } }
+/* 🧒 v239 (Broo2a): the character in the middle, everything centred under it */
+.kh6-hero { grid-template-columns: 1fr !important; justify-items: center; text-align: center; padding: 18px 16px 18px !important; }
+.kh6-pic { width: 150px !important; height: 160px !important; margin: 0 !important; object-position: center bottom; }
+button.kh6-pic { width: 150px; }
+.kh6-hero .kh6-mid { width: 100%; }
+h1.kh6-hi, .kh6-sub { padding-right: 0 !important; }
+h1.kh6-hi { margin-top: 6px !important; }
+.kh6-chips { justify-content: center; flex-wrap: wrap; }
+.kh6-hero .cal-tile { top: 14px; right: 14px; }
+@media (max-width: 370px) { .kh6-pic { width: 130px !important; height: 140px !important; } }
+/* 👩 v239 (Broo2a): parent hero like the kids' one: character in the middle, text centred under it */
+.ph5-hero.ph6 { grid-template-columns: 1fr !important; justify-items: center; text-align: center; padding: 18px 16px 18px !important; }
+.ph6-pic { width: 150px !important; height: 160px !important; margin: 0 !important; align-self: center; object-position: center bottom; }
+.ph6 .ph5-r { padding-top: 0 !important; width: 100%; align-items: center; }
+.ph6 .ph5-say { align-self: stretch; }
+.ph6 h1.ph5-hi { margin-top: 6px; }
+.ph6 .ph5-say { text-align: left; }
+.ph6 .cal-tile { top: 14px !important; right: 14px !important; }
+@media (max-width: 370px) { .ph6-pic { width: 130px !important; height: 140px !important; } }
+.ph6 h1.ph5-hi, .ph6 .ph5-sub { text-align: center !important; }

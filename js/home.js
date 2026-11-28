@@ -97,6 +97,7 @@ function clayAct(name, type) {
   const hit = CLAY_ACT.find(([re]) => re.test(name || "")) || (type === "study" ? CLAY_ACT[1] : type === "sport" ? CLAY_ACT[2] : type === "free" || type === "family" ? CLAY_ACT[5] : null);
   return hit ? `<span class="kh6-ic sq-${hit[2]}">${ico3d("c-" + hit[1], "kh6-i3")}</span>` : `<span class="kh6-ic">${actIcon3d(name, type, "kh6-i3")}</span>`;
 }
+const KID_BAR_CLAY = { Points: "c-trophy", Habits: "c-heart", "My day": "c-book", Community: "c-gift", Me: "c-starbox", More: "c-plus" };   // 🧸 v239 clay icons in the kid's menu
 function drawKidHome(u) {
   const p = lifetimePoints(u.id), L = levelOf(p), pct = levelPct(p), from = data.points.week, to = weekEnd();
   const today = todayItems(u.id), doneToday = today.filter(x => isDone(todayYmd(), x.id, u.id)).length;
@@ -151,7 +152,7 @@ function drawKidHome(u) {
                ...(feat("meeting") ? [[`data-extra="meeting"`, "🏡", "Community"]] : []), ["data-profile", "👤", "Me"], ["data-homemore", "☰", "More"]];
   $("homeHabits").innerHTML = (u.buddy || !feat("buddy") ? "" : buddyCardHtml(me))
     + `${free.count ? `<div class="card kid-week" style="--c:${colorsOf(u).color}">${free.count ? `<p class="kid-free">${freeLine(free)}</p>` : ""}</div>` : ""}
-    <nav class="kid-bar" aria-label="More">${bar.map(([attr, e, label]) => `<button ${attr} class="${(attr.includes("habits") && kidPanel === "habits") || (attr === "data-homemore" && homeMore) ? "on" : ""}"><span class="e">${e}</span><small>${label}</small></button>`).join("")}</nav>
+    <nav class="kid-bar" aria-label="More">${bar.map(([attr, e, label]) => `<button ${attr} class="${(attr.includes("habits") && kidPanel === "habits") || (attr === "data-homemore" && homeMore) ? "on" : ""}"><span class="e">${KID_BAR_CLAY[label] ? ico3d(KID_BAR_CLAY[label], "kb-clay") : e}</span><small>${label}</small></button>`).join("")}</nav>
     ${kidPanel === "habits" ? habitsCardHtml(me) + (feat("chores") ? choresTodayHtml(me) : "") || `<div class="card"><p class="sc-empty">No habits today.</p></div>` : ""}
     ${homeMore ? `<div class="menu kid-more">${moreTilesHtml()}</div>` : ""}`;
   $("homeCal").innerHTML = "";
