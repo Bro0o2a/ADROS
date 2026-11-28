@@ -5045,3 +5045,12 @@ button.kr5-act { all: unset; box-sizing: border-box; cursor: pointer; display: f
   background: var(--soft, #fff8ee); box-shadow: 0 3px 0 rgba(0, 0, 0, .06); font: 700 16px/1 Fredoka, Nunito, sans-serif; color: var(--ink, #492d15); }
 .kr5-act .i3d { width: 38px; height: 38px; object-fit: contain; }
 .kr5:has(+ .kr5-acts) { margin-bottom: 8px !important; } .kr5-acts { margin: 0 0 22px !important; }
+/* 🧸 v240 (Broo2a "make the boxes 3D"): puffy clay buttons, thick coloured edge + soft shine, press down on tap */
+button.kr5-act { padding: 8px 10px !important; border-radius: 20px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 55%), var(--soft) !important;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), inset 0 -3px 0 rgba(0, 0, 0, .05), 0 6px 0 color-mix(in srgb, var(--c) 55%, transparent), 0 12px 18px rgba(120, 90, 60, .14) !important;
+  transition: transform .08s, box-shadow .08s; }
+button.kr5-act:active { transform: translateY(4px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .8), 0 2px 0 color-mix(in srgb, var(--c) 55%, transparent), 0 4px 8px rgba(120, 90, 60, .12) !important; }
+.kr5-act .i3d { filter: drop-shadow(0 3px 3px rgba(73, 45, 21, .18)); }
+.kr5-act b { text-shadow: 0 1px 0 rgba(255, 255, 255, .7); }
+.kr5-acts { gap: 10px !important; margin-bottom: 26px !important; }
